@@ -8,7 +8,7 @@ extern std::unordered_map<std::string, int> names;
 int main()
 {
     yy::HeaderParser parser;
-    
+
     parser.parse();
     YAML::Emitter yamlout;
 

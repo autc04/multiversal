@@ -31,6 +31,7 @@
 %token STAR "*";
 %token ASSIGN "=";
 %token COLON ":";
+%token DOUBLECOLON "::";
 %token SHIFTLEFT "<<";
 %token SHIFTRIGHT ">>";
 %token EQUAL "==";
@@ -66,9 +67,19 @@
 %token LOWMEMGLOBAL "LowMemGlobal";
 
 %token DISPATCHER_TRAP "DISPATCHER_TRAP";
+%token EXTERN_DISPATCHER_TRAP "EXTERN_DISPATCHER_TRAP";
 %token PASCAL_TRAP "PASCAL_TRAP";
 %token PASCAL_SUBTRAP "PASCAL_SUBTRAP";
 %token PASCAL_FUNCTION "PASCAL_FUNCTION";
+%token REGISTER_TRAP "REGISTER_TRAP";
+%token REGISTER_TRAP2 "REGISTER_TRAP2";
+%token REGISTER_FLAG_TRAP "REGISTER_FLAG_TRAP";
+%token REGISTER_2FLAG_TRAP "REGISTER_2FLAG_TRAP";
+%token REGISTER_SUBTRAP "REGISTER_SUBTRAP";
+%token REGISTER_SUBTRAP2 "REGISTER_SUBTRAP2";
+%token REGISTER_FUNCTION "REGISTER_FUNCTION";
+%token NOTRAP_FUNCTION "NOTRAP_FUNCTION";
+%token NOTRAP_FUNCTION2 "NOTRAP_FUNCTION2";
 
 %token FOURCC "FOURCC";
 
@@ -492,8 +503,6 @@ typedef:
 			}
 			addComment(things.back(), true, $6);
 		}
-
-	|	"using" IDENTIFIER "=" "UPP" "<" type "(" argument_list ")" ">"*/
 	;
 
 %type <YAML::Node> complex_type;
@@ -542,12 +551,15 @@ lowmem:
 
 trap:
 		"DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," IDENTIFIER ")" ";"
+	|	"EXTERN_DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," IDENTIFIER ")" ";"
 	|	"PASCAL_TRAP" "(" IDENTIFIER "," INTLIT ")" ";"
 		{
 			renameThing("C_"+$3, $3);
 			thingByName($3).begin()->second["trap"] = $5;
 		}
 	|	"PASCAL_FUNCTION" "(" IDENTIFIER ")" ";"
+	|	"NOTRAP_FUNCTION" "(" IDENTIFIER ")" ";"
+	|	"NOTRAP_FUNCTION2" "(" IDENTIFIER ")" ";"
 	|	"PASCAL_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 		{
 			renameThing("C_"+$3, $3);
@@ -556,6 +568,47 @@ trap:
 			fun.begin()->second["trap"] = $5;
 			fun.begin()->second["selector"] = $7;
 		}
+	|	"REGISTER_TRAP2" "(" IDENTIFIER "," INTLIT "," regcall_conv regcall_extras ")" ";"
+	|	"REGISTER_FLAG_TRAP" "("
+			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," 
+			INTLIT "," 
+			type_pre type_op "(" argument_list ")" ","
+			regcall_conv regcall_extras ")" ";"
+	|	"REGISTER_2FLAG_TRAP" "("
+			IDENTIFIER "," 
+			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," IDENTIFIER ","
+			INTLIT "," 
+			type_pre type_op "(" argument_list ")" ","
+			regcall_conv regcall_extras ")" ";"
+	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
+
+	;
+
+regcall_conv:
+		IDENTIFIER "(" regcall_args ")"
+	;
+
+regcall_args:
+		%empty
+	|	regcall_args1
+	;
+
+regcall_args1:
+		regcall_arg
+	|	regcall_args1 "," regcall_arg
+	;
+
+regcall_arg:
+		IDENTIFIER
+	|	IDENTIFIER "<" IDENTIFIER ">"
+	|	IDENTIFIER "<" INTLIT ">"
+	|	IDENTIFIER "<" IDENTIFIER "," IDENTIFIER ">"
+	;
+
+regcall_extras:
+		%empty
+	|	"," IDENTIFIER "<" IDENTIFIER ">"
+	|	"," IDENTIFIER "::" IDENTIFIER "<" IDENTIFIER ">"
 	;
 
 function:

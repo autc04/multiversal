@@ -14,6 +14,9 @@ static std::string strip(const char *p, const char *q)
     return std::string(p,q);
 }
 
+bool preambleRequested = true;
+
+
 %}
 
 %option noyywrap
@@ -26,7 +29,10 @@ static std::string strip(const char *p, const char *q)
     using token = hp::token;
     atBOL = false;
 
-^"#if !defined(_"[A-Za-z0-9_]+_H_")"$  BEGIN(preamble);
+    if(preambleRequested) BEGIN(preamble);
+    preambleRequested = false;
+
+^"#if !defined(_"[A-Za-z0-9_]+_")"$  BEGIN(preamble);
 
 <preamble>^"namespace Executor"  BEGIN(INITIAL);
 <preamble>.|\n  ;
@@ -48,6 +54,7 @@ static std::string strip(const char *p, const char *q)
 "*"     return token::STAR;
 "="     return token::ASSIGN;
 ":"     return token::COLON;
+"::"    return token::DOUBLECOLON;
 "<<"    return token::SHIFTLEFT;
 ">>"    return token::SHIFTRIGHT;
 "=="    return token::EQUAL;
@@ -79,11 +86,22 @@ static std::string strip(const char *p, const char *q)
 "GUEST_STRUCT"      return token::GUEST_STRUCT;
 "UPP"               return token::UPP;
 "LowMemGlobal"      return token::LOWMEMGLOBAL;
-"DISPATCHER_TRAP"   return token::DISPATCHER_TRAP;
-"PASCAL_TRAP"       return token::PASCAL_TRAP;
-"PASCAL_SUBTRAP"    return token::PASCAL_SUBTRAP;
-"PASCAL_FUNCTION"   return token::PASCAL_FUNCTION;
 "FOURCC"            return token::FOURCC;
+
+"DISPATCHER_TRAP"      return token::DISPATCHER_TRAP;
+"EXTERN_DISPATCHER_TRAP"      return token::EXTERN_DISPATCHER_TRAP;
+"PASCAL_TRAP"          return token::PASCAL_TRAP;
+"PASCAL_SUBTRAP"       return token::PASCAL_SUBTRAP;
+"PASCAL_FUNCTION"      return token::PASCAL_FUNCTION;
+"REGISTER_TRAP"        return token::REGISTER_TRAP;
+"REGISTER_TRAP2"       return token::REGISTER_TRAP2;
+"REGISTER_FLAG_TRAP"   return token::REGISTER_FLAG_TRAP;
+"REGISTER_2FLAG_TRAP"  return token::REGISTER_2FLAG_TRAP;
+"REGISTER_SUBTRAP"     return token::REGISTER_SUBTRAP;
+"REGISTER_SUBTRAP2"    return token::REGISTER_SUBTRAP2;
+"REGISTER_FUNCTION"    return token::REGISTER_FUNCTION;
+"NOTRAP_FUNCTION"      return token::NOTRAP_FUNCTION;
+"NOTRAP_FUNCTION2"     return token::NOTRAP_FUNCTION2;
 
 
 [[:digit:]]+        return hp::make_INTLIT(yytext);
