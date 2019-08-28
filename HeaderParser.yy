@@ -16,6 +16,7 @@
 %token<std::string> COMMENT;
 %token<std::string> RIGHTCOMMENT;
 %token<std::string> EXECUTOR_ONLY;
+%token<std::string> COMMONDEFS;
 
 %token LEFTBRACE "{";
 %token RIGHTBRACE "}";
@@ -33,7 +34,6 @@
 %token COLON ":";
 %token DOUBLECOLON "::";
 %token SHIFTLEFT "<<";
-%token SHIFTRIGHT ">>";
 %token EQUAL "==";
 %token NOTEQUAL "!=";
 %token AND "&";
@@ -80,11 +80,16 @@
 %token REGISTER_FUNCTION "REGISTER_FUNCTION";
 %token NOTRAP_FUNCTION "NOTRAP_FUNCTION";
 %token NOTRAP_FUNCTION2 "NOTRAP_FUNCTION2";
+%token FILE_TRAP "FILE_TRAP";
+%token HFS_TRAP "HFS_TRAP";
+%token FILE_SUBTRAP "FILE_SUBTRAP";
+%token HFS_SUBTRAP "HFS_SUBTRAP";
 
 %token FOURCC "FOURCC";
 
-%left EXECUTOR_ONLY;
-%right COMMENT;
+%left "-"
+%left "<<";
+
 
 %code requires {
 	#include "yaml-cpp/yaml.h"
@@ -190,6 +195,78 @@
 	{
 		addComment(node, wrapped, pre);
 		addComment(node, wrapped, right);
+	}
+
+	void handleTypedef(
+			const std::string& comments,
+			const std::string& type_pre, 
+			const std::vector<std::pair<std::string, std::string>>& declaratorList,
+			const std::string& rcomment)
+	{
+		bool first = true;
+		for(auto [typeOpPost, name] : declaratorList)
+		{
+			YAML::Node node;
+			node["name"] = name;
+			node["type"] = type_pre + typeOpPost;
+			if(first)
+				addComment(node, false, comments);
+			first = false;
+			declare(wrap("typedef", node));
+		}
+		addComment(things.back(), true, rcomment);
+	}
+	void handleTypedef(
+		const std::string& comments,
+		YAML::Node& type, 
+		const std::vector<std::pair<std::string, std::string>>& declaratorList,
+		const std::string& rcomment)
+
+	{
+		std::string typeName = "";
+		if(type.begin()->second["name"])
+			typeName = type.begin()->second["name"].as<std::string>();
+		
+		if(typeName.empty())
+		{
+			for(auto [typeOpPost, name] : declaratorList)
+			{
+				if(typeOpPost.empty())
+				{
+					typeName = name;
+					break;
+				}
+			}
+			if(typeName.empty())
+			{
+				std::ostringstream str;
+				str << "_anonymous" << ++gAnonymousIndex;	// FIXME: file name?
+				typeName = str.str();
+			}
+			type.begin()->second["name"] = typeName;
+		}
+		declare(type);
+
+		bool first = true;
+		for(auto [typeOpPost, name] : declaratorList)
+		{
+			if(name == typeName)
+			{
+				if(!typeOpPost.empty())
+					;
+			}
+			else
+			{
+				YAML::Node node;
+				node["name"] = name;
+				node["type"] = typeName + typeOpPost;
+				if(first)
+					addComment(node, false, comments);
+				first = false;
+				declare(wrap("typedef", node));
+			}
+		}
+		addComment(things.back(), true, rcomment);
 	}
 }
 
@@ -302,6 +379,7 @@ expression:
 	|	IDENTIFIER
 	|	"-" expression { $$ = "-" + $2; }
 	|	"(" expression ")" { $$ = $2; }
+	|	expression "<<" expression
 	;
 
 struct_decl:
@@ -356,6 +434,7 @@ struct_or_union:
 struct_members:
 		%empty { $$ = {}; }
 	|	"GUEST_STRUCT" ";" { $$ = {}; }
+	|	struct_members COMMONDEFS ";"		/* ### COMMONDEFS */
 	|	struct_members struct_member
 		{ $$ = std::move($1); $$.push_back($2); }
 	;
@@ -430,7 +509,7 @@ type_post:
 
 %type <YAML::Node> funptr;
 funptr:
-		"UPP" "<" type "(" argument_list ")" ">"
+		"UPP" "<" type "(" argument_list ")" funptr_callconv ">"
 		{
 			YAML::Node node;
 			node["return"] = $3;
@@ -440,69 +519,20 @@ funptr:
 		}
 	;
 
+funptr_callconv:
+		%empty
+	|	"," IDENTIFIER "<" regcall_conv regcall_extras ">"
+	;
+
 typedef:
 		comments "typedef" type_pre typedef_declarator_list ";" rcomment
-		{
-			bool first = true;
-			for(auto [typeOpPost, name] : $4)
-			{
-				YAML::Node node;
-				node["name"] = name;
-				node["type"] = $3 + typeOpPost;
-				if(first)
-					addComment(node, false, $1);
-				first = false;
-				declare(wrap("typedef", node));
-			}
-			addComment(things.back(), true, $6);
-		}
+		{ handleTypedef($1, $3, $4, $6); }
 	|	comments "typedef" complex_type typedef_declarator_list ";" rcomment
-		{
-			std::string typeName = "";
-			if($3.begin()->second["name"])
-				typeName = $3.begin()->second["name"].as<std::string>();
-			
-			if(typeName.empty())
-			{
-				for(auto [typeOpPost, name] : $4)
-				{
-					if(typeOpPost.empty())
-					{
-						typeName = name;
-						break;
-					}
-				}
-				if(typeName.empty())
-				{
-					std::ostringstream str;
-					str << "_anonymous" << ++gAnonymousIndex;	// FIXME: file name?
-					typeName = str.str();
-				}
-				$3.begin()->second["name"] = typeName;
-			}
-			declare($3);
-
-			bool first = true;
-			for(auto [typeOpPost, name] : $4)
-			{
-				if(name == typeName)
-				{
-					if(!typeOpPost.empty())
-						error("contradictory: " + name);
-				}
-				else
-				{
-					YAML::Node node;
-					node["name"] = name;
-					node["type"] = typeName + typeOpPost;
-					if(first)
-						addComment(node, false, $1);
-					first = false;
-					declare(wrap("typedef", node));
-				}
-			}
-			addComment(things.back(), true, $6);
-		}
+		{ handleTypedef($1, $3, $4, $6); }
+	|	comments "using" IDENTIFIER "=" type ";" rcomment
+		{ handleTypedef($1, $5, { {"", $3} }, $7); }
+	|	comments "using" IDENTIFIER "=" complex_type ";" rcomment
+		{ handleTypedef($1, $5, { {"", $3} }, $7); }
 	;
 
 %type <YAML::Node> complex_type;
@@ -550,8 +580,8 @@ lowmem:
 	;
 
 trap:
-		"DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," IDENTIFIER ")" ";"
-	|	"EXTERN_DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," IDENTIFIER ")" ";"
+		comments "DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
+	|	comments "EXTERN_DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
 	|	"PASCAL_TRAP" "(" IDENTIFIER "," INTLIT ")" ";"
 		{
 			renameThing("C_"+$3, $3);
@@ -581,7 +611,16 @@ trap:
 			type_pre type_op "(" argument_list ")" ","
 			regcall_conv regcall_extras ")" ";"
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
+	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
+	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
+	|	"HFS_TRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
+	|	"FILE_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
+	|	"HFS_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
+	;
 
+selector_location:
+		IDENTIFIER
+	|	IDENTIFIER "<" INTLIT ">"
 	;
 
 regcall_conv:

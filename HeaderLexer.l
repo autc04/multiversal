@@ -56,7 +56,6 @@ bool preambleRequested = true;
 ":"     return token::COLON;
 "::"    return token::DOUBLECOLON;
 "<<"    return token::SHIFTLEFT;
-">>"    return token::SHIFTRIGHT;
 "=="    return token::EQUAL;
 "!="    return token::NOTEQUAL;
 "&"     return token::AND;
@@ -102,10 +101,17 @@ bool preambleRequested = true;
 "REGISTER_FUNCTION"    return token::REGISTER_FUNCTION;
 "NOTRAP_FUNCTION"      return token::NOTRAP_FUNCTION;
 "NOTRAP_FUNCTION2"     return token::NOTRAP_FUNCTION2;
+"FILE_TRAP"            return token::FILE_TRAP;
+"HFS_TRAP"             return token::HFS_TRAP;
+"FILE_SUBTRAP"         return token::FILE_SUBTRAP;
+"HFS_SUBTRAP"          return token::HFS_SUBTRAP;
 
+"COMMON"[A-Z]+"DEFS"    return hp::make_COMMONDEFS(yytext);
 
 [[:digit:]]+        return hp::make_INTLIT(yytext);
 0x[[:xdigit:]]+     return hp::make_INTLIT(yytext);
+[[:digit:]]+L       return hp::make_INTLIT(std::string(yytext,yytext+yyleng-1));
+0x[[:xdigit:]]+L    return hp::make_INTLIT(std::string(yytext,yytext+yyleng-1));
 
 \'.\'               return hp::make_CHARLIT(yytext);
 
