@@ -19,13 +19,14 @@ static std::string strip(const char *p, const char *q)
 %option noyywrap
 
 %x preamble
+%x executor_only
 
 %%
     using hp = yy::HeaderParser;
     using token = hp::token;
     atBOL = false;
 
-^"#if !defined(_"[A-Z_]+_H_")"$  BEGIN(preamble);
+^"#if !defined(_"[A-Za-z0-9_]+_H_")"$  BEGIN(preamble);
 
 <preamble>^"namespace Executor"  BEGIN(INITIAL);
 <preamble>.|\n  ;
@@ -92,7 +93,11 @@ static std::string strip(const char *p, const char *q)
 
 [[:alpha:]_][[:alnum:]_]*   return hp::make_IDENTIFIER(yytext);
 
-^" "*#.*    ;
+^" "*#.*(\\\n.*)*     return hp::make_EXECUTOR_ONLY(yytext);
+
+^"BEGIN_EXECUTOR_ONLY"\n                   BEGIN(executor_only);
+<executor_only>^"END_EXECUTOR_ONLY"\n      BEGIN(INITIAL); atBOL = true;
+<executor_only>.*\n                        return hp::make_EXECUTOR_ONLY(std::string(yytext, yytext + yyleng - 1));
 
 "/*"[^*]*("*"+[^*/]*)*"*"+"/" {
         if(atBOL)
