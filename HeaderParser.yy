@@ -84,11 +84,13 @@
 %token HFS_TRAP "HFS_TRAP";
 %token FILE_SUBTRAP "FILE_SUBTRAP";
 %token HFS_SUBTRAP "HFS_SUBTRAP";
+%token LOWMEM_ACCESSOR "LOWMEM_ACCESSOR";
 
 %token FOURCC "FOURCC";
 
 %left "-"
 %left "<<";
+%left "|";
 
 
 %code requires {
@@ -305,6 +307,7 @@ declaration:
 	|	struct_decl
 	|	typedef
 	|	lowmem
+	|	lowmem_accessor
 	|	trap
 	|	function
 	|	size_assertion
@@ -335,7 +338,8 @@ enum:
 enum_values:
 		%empty { }
 	|	enum_values1
-	|	enum_values1 ","
+	|	enum_values1 "," rcomment
+		{ $$ = $1; addComment($$.back(), $3); }
 	;
 
 %type <std::vector<YAML::Node>> enum_values1;
@@ -379,7 +383,10 @@ expression:
 	|	IDENTIFIER
 	|	"-" expression { $$ = "-" + $2; }
 	|	"(" expression ")" { $$ = $2; }
-	|	expression "<<" expression
+	|	expression "-" expression { $$ = $1 + " - " + $3; }
+	|	expression "<<" expression { $$ = $1 + " << " + $3; }
+	|	expression "|" expression { $$ = $1 + " | " + $3; }
+	|	"sizeof" "(" IDENTIFIER ")" { $$ = "sizeof(" + $3 + ")"; }
 	;
 
 struct_decl:
@@ -446,6 +453,12 @@ struct_member:
 			$$["name"] = $4;
 			$$["type"] = $2 + $3 + $5;
 			addComment($$, false, $1, $7);
+		}
+	|	comments struct_or_union "{" struct_members "}" IDENTIFIER ";" rcomment
+		{
+			$$["name"] = $6;
+			$$[$2 ? "union" : "struct"] = sequence($4);
+			addComment($$, false, $1, $8);
 		}
 	;
 
@@ -579,6 +592,10 @@ lowmem:
 		comments "const" "LowMemGlobal" "<" type ">" IDENTIFIER "{" INTLIT "}" ";" rcomment
 	;
 
+lowmem_accessor:
+		LOWMEM_ACCESSOR "(" IDENTIFIER ")" ";"
+	;
+
 trap:
 		comments "DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
 	|	comments "EXTERN_DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
@@ -646,12 +663,13 @@ regcall_arg:
 
 regcall_extras:
 		%empty
-	|	"," IDENTIFIER "<" IDENTIFIER ">"
-	|	"," IDENTIFIER "::" IDENTIFIER "<" IDENTIFIER ">"
+	|	regcall_extras "," IDENTIFIER
+	|	regcall_extras "," IDENTIFIER "<" IDENTIFIER ">"
+	|	regcall_extras "," IDENTIFIER "::" IDENTIFIER "<" IDENTIFIER ">"
 	;
 
 function:
-		comments "extern" type_pre type_op IDENTIFIER "(" argument_list ")" ";" rcomment
+		comments opt_extern type_pre type_op IDENTIFIER "(" argument_list ")" ";" rcomment
 		{
 			YAML::Node node;
 			node["name"] = $5;
@@ -661,6 +679,11 @@ function:
 			addComment(node, false, $1, $10);
 			declare(wrap("function", node));
 		}
+	;
+
+opt_extern:
+		%empty
+	|	"extern"
 	;
 
 size_assertion:
