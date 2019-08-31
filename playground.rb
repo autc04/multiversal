@@ -1,5 +1,4 @@
 require 'yaml'
-require 'prettyprint'
 
 data = YAML::load(File.read("out/QuickDraw.yaml"))
 
@@ -7,66 +6,73 @@ def first_elem(item)
     item.each { |key, value| return key, value }
 end
 
-q = PrettyPrint.new(out=STDOUT, maxwidth=9999, newline=nil)
-#maxwidth=79)
+def out(str)
+    print str
+    print " "
+end
 
-if true then
-data.each do |item|
-    q.group do
-        key, value = first_elem(item)
-        case key
-        when "struct"
-            q.text("typedef struct #{value["name"]} {")
-            q.nest(4) do
-                value["members"].each do |member|
-                    #q.breakable
-                    q.text "\n#{' '*q.indent}"
-                    q.text "#{member["type"]} #{member["name"]};"
-                end
-            end
-            q.breakable
-            q.text "} #{value["name"]};"
+def box(str)
+    maxlinelen = str.lines.map{|s| s.length}.max
+    
+    print "/#{'*'*77}\n"
+    #print " *#{' '*75}*\n"
 
-        when "function"
-            if value["trap"] and not value["selector"] and not value["registers"] then
-                q.text "pascal "
-            end
-            q.text (value["return"] or "void")
-            q.breakable
-            q.text value["name"]
-        end
+    str.each_line do |s|
+        c = (75 - s.length)
+        b = c/2
+        a = c-b
+        print " *#{' '*a}#{s}#{' '*b}*\n"
     end
-    q.text "\n\n"
-end
-q.flush
 
+    print " #{'*'*77}/\n"
+    
 end
 
-if false then
-    q.text "foo"
-    q.text " "
-    q.text "bar"
-    q.text("(")
-    q.nest(4) {
-            q.group {
-                q.nest(4) {
-                    q.breakable(sep="")
-                    q.text "quux,"
-                    q.breakable
-                    q.text "bar,"
-                    q.breakable
-                    q.text "bar,"
-                    q.breakable
-                    q.text "quuxbar"
-                }
-                q.breakable("")
-                q.text(")")
-            }
-            q.group {
-                q.breakable
-                q.text("= blah blah blah blah")
-            }
-        }
-    q.newline
-    q.flush
+def decl(type, thing)
+    type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
+    return "#{$1}#{$2} #{$3}#{thing}#{$5}"
+end
+
+data.each do |item|
+    key, value = first_elem(item)
+
+    box(value["name"]) if value["name"]
+
+    case key
+    when "struct"
+        out "typedef struct #{value["name"]} {"
+        value["members"].each do |member|
+            out decl(member["type"], member["name"])
+            out ";"
+        end
+        out "} #{value["name"]};"
+
+    when "typedef"
+        out "typedef "
+        out decl(value["type"], value["name"])
+        out ";"
+
+
+    when "function"
+        if value["trap"] and not value["selector"] and not value["registers"] then
+            out "pascal"
+        end
+        out (value["return"] or "void")
+        out value["name"]
+        out "("
+        first = true
+        value["args"] and value["args"].each do |arg|
+            out "," unless first
+            first = false
+
+            if arg["name"] then
+                out decl(arg["type"], arg["name"])
+            else
+                out arg["type"]
+            end
+        end
+        out ");\n"
+    end
+
+    print "\n\n"
 end
