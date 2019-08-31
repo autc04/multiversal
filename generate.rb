@@ -11,18 +11,29 @@ def out(str)
     print " "
 end
 
-def box(str)
+def starredtext(str, align)
     maxlinelen = str.lines.map{|s| s.length}.max
     
-    print "/#{'*'*77}\n"
-    #print " *#{' '*75}*\n"
-
     str.each_line do |s|
         c = (75 - s.length)
-        b = c/2
-        a = c-b
+        b = case align
+            when "center" then c/2
+            when "left" then c - 1
+            when "right" then 1
+        end
+        a = c - b
         print " *#{' '*a}#{s}#{' '*b}*\n"
     end
+
+end
+
+def box(title, comment=nil)
+    return unless title or comment
+    print "/#{'*'*77}\n"
+    #print " *#{' '*75}*\n"
+    starredtext(title, 'center') if title
+    print " *#{' '*75}*\n" if title and comment
+    starredtext(comment, 'left') if comment
 
     print " #{'*'*77}/\n"
     
@@ -36,7 +47,7 @@ end
 data.each do |item|
     key, value = first_elem(item)
 
-    box(value["name"]) if value["name"]
+    box(value["name"], value["comment"])
 
     case key
     when "struct"

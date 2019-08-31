@@ -125,6 +125,7 @@
 			int idx = p->second;
 			names.erase(p);
 			names[newName] = idx;
+			things[idx].begin()->second["name"] = newName;
 		}
 	}
 
@@ -525,9 +526,11 @@ funptr:
 		"UPP" "<" type "(" argument_list ")" funptr_callconv ">"
 		{
 			YAML::Node node;
-			node["return"] = $3;
-			if($5.size())
+			if($3 != "void")
+				node["return"] = $3;
+			if($5 && $5.size() > 0)
 				node["args"] = $5;
+			
 			$$ = wrap("funptr", node);
 		}
 	;
@@ -571,7 +574,7 @@ argument_list:
 
 %type <YAML::Node> argument_list1;
 argument_list1:
-		argument { $$.push_back($1); }
+		argument { if($1 && $1.size()) $$.push_back($1); }
 	|	argument_list1 "," argument { $$ = std::move($1); $$.push_back($3); }
 	;
 
@@ -579,7 +582,10 @@ argument_list1:
 argument:
 		type
 		{
-			$$["type"] = $1;
+			if($1 == "void")
+				$$ = {};
+			else
+				$$["type"] = $1;
 		}
 	|	type_pre type_op IDENTIFIER type_post
 		{
@@ -673,8 +679,9 @@ function:
 		{
 			YAML::Node node;
 			node["name"] = $5;
-			node["return"] = $3 + $4;
-			if($7.size())
+			if($3 + $4 != "void")
+				node["return"] = $3 + $4;
+			if($7 && $7.size() > 0)
 				node["args"] = $7;
 			addComment(node, false, $1, $10);
 			declare(wrap("function", node));

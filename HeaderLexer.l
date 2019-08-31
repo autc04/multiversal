@@ -2,6 +2,8 @@
 #include "HeaderParser.hpp"
 #include <cctype>
 
+#define register   /* bring lex into the 21st century */
+
 bool atBOL;
 #define YY_DECL yy::HeaderParser::symbol_type yylex (void)
 

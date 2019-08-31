@@ -16,6 +16,6 @@ add_executable(ParseExecutorHeaders ParseExecutorHeaders.cc HeaderLexer.cc Heade
 target_include_directories(ParseExecutorHeaders PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(ParseExecutorHeaders yaml-cpp)
 
-set(YAML_CPP_BUILD_TESTS NO)
-set(YAML_CPP_BUILD_TOOLS NO)
+set(YAML_CPP_BUILD_TESTS NO CACHE BOOL "yamlcpp tests" FORCE)
+set(YAML_CPP_BUILD_TOOLS NO CACHE BOOL "yamlcpp tools" FORCE)
 add_subdirectory(yaml-cpp)
