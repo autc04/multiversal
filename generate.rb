@@ -13,6 +13,15 @@ BUILTIN_NAMES=Set.new [
     "sizeof"
 ]
 
+def hexlit(thing)
+    case thing
+    when Integer
+        return "0x" + thing.to_s(16).upcase
+    else
+        return thing.to_s
+    end
+end
+
 class HeaderFile
     attr_reader :file, :name, :declared_names, :required_names, :included
     def initialize(file)
@@ -181,9 +190,33 @@ public
                 @out << ";"
         
             when "function"
-                if value["trap"] and not value["selector"] and not value["registers"] then
-                    @out << "pascal "
+                complex = false
+
+                if value["args"] or value["returnreg"] then
+                    regs = []
+                    regs << value["returnreg"] if value["returnreg"]
+                    
+                    value["args"] and value["args"].each do |arg|
+                        regs << arg["register"] if arg["register"]
+                    end
+
+                    simpleregs = regs.map { |txt| next "__"+txt if txt =~ /^[AD][0-7]$/ }.compact
+
+                    if simpleregs.length > 0 and not complex then
+                        @out << "#pragma parameter "
+                        @out << simpleregs.shift if value["returnreg"]
+                        @out << " " << value["name"]
+                        @out << "(" << simpleregs.join(", ") << ")" if simpleregs.length > 0
+                        @out << "\n"
+                    end
                 end
+
+                m68kinlines = []
+                m68kinlines << hexlit(value["trap"]) if value["trap"]
+
+                complex = true if value["selector"]
+
+                @out << "pascal "
                 @out << (value["return"] or "void") << " "
                 @out << value["name"] << "("
                 
@@ -198,7 +231,11 @@ public
                         @out << arg["type"]
                     end
                 end
-                @out << ");"
+                @out << ")"
+
+                @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
+
+                @out << ";"
 
             when "funptr"
                 @out << "typedef pascal "
