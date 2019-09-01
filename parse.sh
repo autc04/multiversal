@@ -1,5 +1,10 @@
 mkdir -p defs
 mkdir -p out
-for x in "$1"/src/include/*.h;
-    do ./build/ParseExecutorHeaders < $x > defs/`basename -s .h "$x"`.yaml;
+for x in "$1"/src/include/*.h; do
+    name=`basename -s .h "$x"`
+    if [ "$name" = "ExMacTypes" ]; then
+        name=MacTypes
+    fi
+    echo $name
+    ./build/ParseExecutorHeaders < $x > defs/$name.yaml;
 done
