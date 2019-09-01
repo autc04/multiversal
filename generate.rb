@@ -70,7 +70,7 @@ private
     end
 
     def collect_dep(str)
-        tmp = str.to_s
+        tmp = str.to_s.dup
         tmp.gsub!(/'[^']+'/,"")
         tmp.scan(/[a-zA-Z_][a-zA-Z0-9_]*/).each do |x|
             @required_names << x unless BUILTIN_NAMES.member?(x)
@@ -98,6 +98,8 @@ private
                     @declared_names << val["name"]
                     collect_dep(val["value"]) if val["value"]
                 end
+            when "typedef"
+                collect_dep(value["type"])
             when "struct", "union"
                 collect_members_dependencies value["members"] if value["members"]
             when "function", "funptr"
@@ -119,6 +121,19 @@ public
         }
     end
 
+    def declare_members(members)
+        members.each do |member|
+            sub = (member["struct"] or member["union"])
+            if sub then
+                @out << (if member["struct"] then "struct" else "union" end) << "{"
+                declare_members sub
+                @out << "} " << member["name"] << ";"
+            else
+                @out << decl(member["type"], member["name"]) << ";"
+            end
+        end
+    end
+
     def generate_header
         @out = ""
         @out << "#pragma once\n"
@@ -127,6 +142,7 @@ public
             @out << "#include \"#{file}.h\"\n"
         end
         @out << "\n\n"
+
 
         @data.each do |item|
             key, value = first_elem(item)
@@ -140,7 +156,7 @@ public
                 value["values"].each do |val|
                     @out << val["name"]
                     if val["value"] then
-                        @out << "=" << val["value"].to_s << ","
+                        @out << "= " << val["value"].to_s << ","
                     else
                         @out << ","
                     end
@@ -154,9 +170,7 @@ public
                 
                 if value["members"] then
                     @out << "#{key} #{value["name"]} {"
-                    value["members"].each do |member|
-                        @out << decl(member["type"], member["name"]) << ";"
-                    end
+                    declare_members(value["members"])
                     @out << "};"
                 end
                 
@@ -258,4 +272,8 @@ headers.each do |name, header|
         f << out
     end
 
+end
+
+File.open("out/Multiverse.h", "w") do |file|
+    headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
 end
