@@ -121,6 +121,7 @@ public
 
     def generate_header
         @out = ""
+        @out << "#pragma once\n"
         @out << "#include <stdint.h>\n"
         @included.each do |file|
             @out << "#include \"#{file}.h\"\n"
