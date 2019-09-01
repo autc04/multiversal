@@ -150,16 +150,16 @@ public
                 @out << ";"
 
             when "struct", "union"
-                @out << "typedef #{key} #{value["name"] or ""}"
+                @out << "typedef #{key} #{value["name"]} #{value["name"]};"
+                
                 if value["members"] then
-                    @out << " {"
+                    @out << "#{key} #{value["name"]} {"
                     value["members"].each do |member|
                         @out << decl(member["type"], member["name"]) << ";"
                     end
-                    @out << "}"
+                    @out << "};"
                 end
-                @out << " #{value["name"]};"
-        
+                
 
             when "typedef"
                 @out << "typedef "
@@ -173,6 +173,24 @@ public
                 @out << (value["return"] or "void") << " "
                 @out << value["name"] << "("
                 
+                first = true
+                value["args"] and value["args"].each do |arg|
+                    @out << "," unless first
+                    first = false
+        
+                    if arg["name"] then
+                        @out << decl(arg["type"], arg["name"])
+                    else
+                        @out << arg["type"]
+                    end
+                end
+                @out << ");"
+
+            when "funptr"
+                @out << "typedef pascal "
+                @out << (value["return"] or "void") << " "
+                @out << "(*" << value["name"] << ")("
+
                 first = true
                 value["args"] and value["args"].each do |arg|
                     @out << "," unless first
