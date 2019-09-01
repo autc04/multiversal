@@ -97,6 +97,13 @@
 	#include "yaml-cpp/yaml.h"
 	#include <unordered_map>
 	#include <sstream>
+
+	struct RegConv
+	{
+		std::string ret;
+		std::vector<std::string> args;
+	};
+
 }
 %code provides {
 	yy::HeaderParser::symbol_type yylex();
@@ -271,6 +278,24 @@
 		}
 		addComment(things.back(), true, rcomment);
 	}
+
+	void adjustRegisterArgs(YAML::Node& n, const RegConv& regconv, int remove = 0)
+	{
+		auto oldArgs = n["args"];
+		YAML::Node args(YAML::NodeType::Sequence);
+		if(regconv.ret != "void")
+			n["returnreg"] = regconv.ret;
+
+		for(int i = 0; i < oldArgs.size() - remove; i++)
+		{
+			oldArgs[i]["register"] = regconv.args[i];
+			args.push_back(oldArgs[i]);
+		}
+		if(args.size())
+			n["args"] = args;
+		else
+			n.remove("args");
+	}
 }
 
 %%
@@ -405,12 +430,8 @@ struct:
 			YAML::Node node;
 			node["name"] = $2;
 			if($3)
-			{
 				node["members"] = sequence(*$3);
-				$$ = wrap($1 ? "union" : "struct", node);
-			}
-			else
-				$$ = wrap("forward_struct", node);
+			$$ = wrap($1 ? "union" : "struct", node);
 		}
 	|	struct_or_union "{" struct_members "}"
 		{
@@ -612,6 +633,7 @@ trap:
 		}
 	|	"PASCAL_FUNCTION" "(" IDENTIFIER ")" ";"
 	|	"NOTRAP_FUNCTION" "(" IDENTIFIER ")" ";"
+		{ renameThing("C_"+$3, $3); }
 	|	"NOTRAP_FUNCTION2" "(" IDENTIFIER ")" ";"
 	|	"PASCAL_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 		{
@@ -622,17 +644,38 @@ trap:
 			fun.begin()->second["selector"] = $7;
 		}
 	|	"REGISTER_TRAP2" "(" IDENTIFIER "," INTLIT "," regcall_conv regcall_extras ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["trap"] = $5;
+			adjustRegisterArgs(n, $7);
+		}
 	|	"REGISTER_FLAG_TRAP" "("
 			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," 
 			INTLIT "," 
 			type_pre type_op "(" argument_list ")" ","
 			regcall_conv regcall_extras ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["trap"] = $9;
+			renameThing($3, $5);
+			adjustRegisterArgs(n, $17, 1);
+			
+			// ###
+		}
 	|	"REGISTER_2FLAG_TRAP" "("
 			IDENTIFIER "," 
 			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," IDENTIFIER ","
 			INTLIT "," 
 			type_pre type_op "(" argument_list ")" ","
 			regcall_conv regcall_extras ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["trap"] = $13;
+			renameThing($3, $5);
+			adjustRegisterArgs(n, $21, 2);
+
+			// ###
+		}
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
@@ -646,25 +689,31 @@ selector_location:
 	|	IDENTIFIER "<" INTLIT ">"
 	;
 
+%type <RegConv> regcall_conv;
 regcall_conv:
 		IDENTIFIER "(" regcall_args ")"
+		{ $$ = {$1, std::move($3)}; }
 	;
 
+%type <std::vector<std::string>> regcall_args;
 regcall_args:
-		%empty
+		%empty	{ $$ = {}; }
 	|	regcall_args1
 	;
 
+%type <std::vector<std::string>> regcall_args1;
 regcall_args1:
-		regcall_arg
+		regcall_arg	{ $$ = { $1 }; }
 	|	regcall_args1 "," regcall_arg
+		{ $$ = std::move($1); $$.push_back($3); }
 	;
 
+%type <std::string> regcall_arg;
 regcall_arg:
 		IDENTIFIER
-	|	IDENTIFIER "<" IDENTIFIER ">"
-	|	IDENTIFIER "<" INTLIT ">"
-	|	IDENTIFIER "<" IDENTIFIER "," IDENTIFIER ">"
+	|	IDENTIFIER "<" IDENTIFIER ">" { $$ = $1 + "<" + $3 + ">"; }
+	|	IDENTIFIER "<" INTLIT ">" { $$ = $1 + "<" + $3 + ">"; }
+	|	IDENTIFIER "<" IDENTIFIER "," IDENTIFIER ">" { $$ = $1 + "<" + $3 + ", " + $5 + ">"; }
 	;
 
 regcall_extras:
