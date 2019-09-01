@@ -279,21 +279,15 @@
 		addComment(things.back(), true, rcomment);
 	}
 
-	void adjustRegisterArgs(YAML::Node& n, const RegConv& regconv, int remove = 0)
+	void setRegisterArgs(YAML::Node& n, const RegConv& regconv)
 	{
-		auto oldArgs = n["args"];
-		YAML::Node args(YAML::NodeType::Sequence);
+		auto args = n["args"];
 		if(regconv.ret != "void")
 			n["returnreg"] = regconv.ret;
 
-		for(int i = 0; i < oldArgs.size() - remove; i++)
-		{
-			oldArgs[i]["register"] = regconv.args[i];
-			args.push_back(oldArgs[i]);
-		}
-		if(args.size())
-			n["args"] = args;
-		else
+		for(int i = 0; i < args.size(); i++)
+			args[i]["register"] = regconv.args[i];
+		if(!args.size())
 			n.remove("args");
 	}
 }
@@ -647,7 +641,7 @@ trap:
 		{
 			auto& n = thingByName($3).begin()->second;
 			n["trap"] = $5;
-			adjustRegisterArgs(n, $7);
+			setRegisterArgs(n, $7);
 		}
 	|	"REGISTER_FLAG_TRAP" "("
 			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," 
@@ -658,8 +652,9 @@ trap:
 			auto& n = thingByName($3).begin()->second;
 			n["trap"] = $9;
 			renameThing($3, $5);
-			adjustRegisterArgs(n, $17, 1);
+			setRegisterArgs(n, $17);
 			
+			n["variants"] = std::vector<std::string>{ $5, $7 };
 			// ###
 		}
 	|	"REGISTER_2FLAG_TRAP" "("
@@ -672,11 +667,17 @@ trap:
 			auto& n = thingByName($3).begin()->second;
 			n["trap"] = $13;
 			renameThing($3, $5);
-			adjustRegisterArgs(n, $21, 2);
+			setRegisterArgs(n, $21);
+
+			n["variants"] = std::vector<std::string>{ $5, $7, $9, $11 };
 
 			// ###
 		}
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
+		{
+			renameThing("C_"+$3, $3);
+			//###
+		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
 	|	"HFS_TRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"

@@ -116,6 +116,7 @@ private
                 (value ["args"] or []).each do |arg|
                     collect_dep(arg["type"])
                 end
+                @declared_names.merge value["variants"] if value["variants"]
             end
         end
         @required_names = @required_names - @declared_names
@@ -141,6 +142,81 @@ public
                 @out << decl(member["type"], member["name"]) << ";"
             end
         end
+    end
+
+    def declare_function(fun, variant_index:nil)
+        complex = false
+
+        name = fun["name"]
+        args = (fun["args"] or [])
+
+        trapbits = 0
+
+        if variant_index then
+            name = fun["variants"][variant_index]
+            nbits = Math.log2(fun["variants"].length).ceil
+
+            (0..nbits-1).each do |bitidx|
+                bitarg = args[-bitidx-1]
+                if (variant_index & (1 << bitidx)) != 0 then
+                    bitarg["register"] =~ /TrapBit<(.*)>/
+                    bitval =
+                        case $1 
+                        when "SYSBIT" then 0x0400
+                        when "CLRBIT" then 0x0200
+                        else Integer($1)
+                        end
+                    trapbits |= bitval
+                end
+            end
+
+            args = args[0..-nbits-1]
+        end
+
+        if fun["args"] or fun["returnreg"] then
+            regs = []
+            regs << fun["returnreg"] if fun["returnreg"]
+            
+            args.each do |arg|
+                regs << arg["register"] if arg["register"]
+            end
+
+            simpleregs = regs.map { |txt| next "__"+txt if txt =~ /^[AD][0-7]$/ }.compact
+
+            if simpleregs.length > 0 and not complex then
+                @out << "#pragma parameter "
+                @out << simpleregs.shift if fun["returnreg"]
+                @out << " " << name
+                @out << "(" << simpleregs.join(", ") << ")" if simpleregs.length > 0
+                @out << "\n"
+            end
+        end
+
+        m68kinlines = []
+        m68kinlines << hexlit(fun["trap"] | trapbits) if fun["trap"]
+
+        complex = true if fun["selector"]
+
+        @out << "pascal "
+        @out << (fun["return"] or "void") << " "
+        @out << name << "("
+        
+        first = true
+        args.each do |arg|
+            @out << ", " unless first
+            first = false
+
+            if arg["name"] then
+                @out << decl(arg["type"], arg["name"])
+            else
+                @out << arg["type"]
+            end
+        end
+        @out << ")"
+
+        @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
+
+        @out << ";\n"
     end
 
     def generate_header
@@ -190,52 +266,11 @@ public
                 @out << ";"
         
             when "function"
-                complex = false
-
-                if value["args"] or value["returnreg"] then
-                    regs = []
-                    regs << value["returnreg"] if value["returnreg"]
-                    
-                    value["args"] and value["args"].each do |arg|
-                        regs << arg["register"] if arg["register"]
-                    end
-
-                    simpleregs = regs.map { |txt| next "__"+txt if txt =~ /^[AD][0-7]$/ }.compact
-
-                    if simpleregs.length > 0 and not complex then
-                        @out << "#pragma parameter "
-                        @out << simpleregs.shift if value["returnreg"]
-                        @out << " " << value["name"]
-                        @out << "(" << simpleregs.join(", ") << ")" if simpleregs.length > 0
-                        @out << "\n"
-                    end
+                if value["variants"] then
+                    value["variants"].each_index { |i| declare_function(value, variant_index:i) }
+                else
+                    declare_function(value)
                 end
-
-                m68kinlines = []
-                m68kinlines << hexlit(value["trap"]) if value["trap"]
-
-                complex = true if value["selector"]
-
-                @out << "pascal "
-                @out << (value["return"] or "void") << " "
-                @out << value["name"] << "("
-                
-                first = true
-                value["args"] and value["args"].each do |arg|
-                    @out << "," unless first
-                    first = false
-        
-                    if arg["name"] then
-                        @out << decl(arg["type"], arg["name"])
-                    else
-                        @out << arg["type"]
-                    end
-                end
-                @out << ")"
-
-                @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
-
-                @out << ";"
 
             when "funptr"
                 @out << "typedef pascal "
@@ -306,6 +341,7 @@ headers.each do |name, header|
     out = header.generate_header
 
     IO.popen("clang-format > out/#{header.name}.h", "w") do |f|
+    #File.open("out/#{header.name}.h", "w") do |f|
         f << out
     end
 
