@@ -219,15 +219,16 @@ public
         @out << ";\n"
     end
 
-    def generate_header
+    def generate_header(add_includes:true)
         @out = ""
-        @out << "#pragma once\n"
-        @out << "#include <stdint.h>\n"
-        @included.each do |file|
-            @out << "#include \"#{file}.h\"\n"
+        if add_includes then
+            @out << "#pragma once\n"
+            @out << "#include <stdint.h>\n"
+            @included.each do |file|
+                @out << "#include \"#{file}.h\"\n"
+            end
+            @out << "\n\n"
         end
-        @out << "\n\n"
-
 
         @data.each do |item|
             key, value = first_elem(item)
@@ -316,14 +317,14 @@ headers.each do |name, header|
     header.collect_includes(declared_names)
 end
 
-def visit(visited, headers, name, stack="")
+def check_cycle(visited, headers, name, stack="")
     visited << name
 
     headers[name].included.each do |inc|
         if visited.member?(inc) then
             print "INCLUDE CYCLE #{stack} -> #{name} --> #{inc}\n"
         end
-        visit(visited, headers, inc, stack + " -> " + name)
+        check_cycle(visited, headers, inc, stack + " -> " + name)
     end
 
     visited.delete(name)
@@ -331,22 +332,61 @@ end
 headers.each do |name, header|
     #print "Checking #{name}...\n"
 
-    visit(Set.new, headers, name)
+    check_cycle(Set.new, headers, name)
 end
 
-headers.each do |name, header|
-    print "Processing #{name}...\n"
+def write_ordered(file, header, headers, visited)
+    return if visited.member?(header.name)
+    visited << header.name
+    print "Generating #{header.name}\n"
     
-
-    out = header.generate_header
-
-    IO.popen("clang-format > out/#{header.name}.h", "w") do |f|
-    #File.open("out/#{header.name}.h", "w") do |f|
-        f << out
+    header.included.each do |incname|
+        write_ordered(file, headers[incname], headers, visited)
     end
 
+    file << header.generate_header(add_includes: false)
 end
 
-File.open("out/Multiverse.h", "w") do |file|
-    headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
+if false then
+    headers.each do |name, header|
+        print "Processing #{name}...\n"
+
+        out = header.generate_header
+
+        IO.popen("clang-format > out/#{header.name}.h", "w") do |f|
+            f << out
+        end
+
+    end
+
+    File.open("out/Multiverse.h", "w") do |file|
+        headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
+    end
+else
+    IO.popen("clang-format > out/Multiverse.h", "w") do |f|
+        f << "#pragma once\n"
+        f << "#include <stdint.h>\n"
+        f << "#include <stdbool.h>\n"
+        f << "\n"
+        f << "typedef void (*ProcPtr)();\n"
+        f << "\n\n"
+
+        visited = Set.new
+        headers.each do |name, header|
+            write_ordered(f, header, headers, visited)
+        end
+
+        f << "\n\nextern QDGlobals qd;\n"
+    end
+
+    ["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
+     "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
+     "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
+     "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
+     "Traps", "Windows", "ConditionalMacros"].each do |name|
+        File.open("out/#{name}.h", "w") do |f|
+            f << "#pragma once\n"
+            f << "#include \"Multiverse.h\"\n"
+        end
+    end
 end
