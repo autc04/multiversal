@@ -22,6 +22,8 @@ def hexlit(thing)
     end
 end
 
+$global_name_map = {}
+
 class HeaderFile
     attr_reader :file, :name, :declared_names, :required_names, :included
     def initialize(file, filter_key:nil)
@@ -107,6 +109,7 @@ private
             collect_dep(member["type"]) if member["type"]
             collect_members_dependencies(member["struct"]) if member["struct"]
             collect_members_dependencies(member["union"]) if member["union"]
+            collect_dep(member["common"]) if member["common"]
         end
     end
 
@@ -116,7 +119,7 @@ private
         @data.each do |item|
             key, value = first_elem(item)
             @declared_names << value["name"] if value["name"]
-
+            $global_name_map[value["name"]] = item if value["name"]
             case key
             when "enum"
                 value["values"].each do |val|
@@ -154,6 +157,8 @@ public
                 @out << (if member["struct"] then "struct" else "union" end) << "{"
                 declare_members sub
                 @out << "} " << member["name"] << ";"
+            elsif member["common"]
+                declare_members($global_name_map[member["common"]]["common"]["members"])
             else
                 @out << decl(member["type"], member["name"]) << ";"
             end

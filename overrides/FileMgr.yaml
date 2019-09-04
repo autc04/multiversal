@@ -1,0 +1,38 @@
+
+- common:
+    name: COMMONFSQUEUEDEFS
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: ioTrap
+        type: INTEGER
+      - name: ioCmdAddr
+        type: Ptr
+      - name: ioCompletion
+        type: ProcPtr
+      - name: ioResult
+        type: OSErr
+      - name: ioNamePtr
+        type: StringPtr
+      - name: ioVRefNum
+        type: INTEGER
+
+
+- common:
+    name: COMMONCINFODEFS
+    members:
+      - common: COMMONFSQUEUEDEFS
+      - name: ioFRefNum
+        type: INTEGER
+      - name: ioFVersNum
+        type: SignedByte
+      - name: filler1
+        type: SignedByte
+      - name: ioFDirIndex
+        type: INTEGER
+      - name: ioFlAttrib
+        type: SignedByte
+      - name: ioACUser
+        type: SignedByte

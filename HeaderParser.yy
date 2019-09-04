@@ -114,6 +114,7 @@
 	std::vector<YAML::Node> things;
 	std::unordered_map<std::string, int> names;
 	int gAnonymousIndex = 0;
+	std::unordered_map<std::string, std::vector<YAML::Node>> commonDefs;
 
 	std::ostringstream executorOnly;
 
@@ -457,7 +458,11 @@ struct_or_union:
 struct_members:
 		%empty { $$ = {}; }
 	|	"GUEST_STRUCT" ";" { $$ = {}; }
-	|	struct_members COMMONDEFS ";"		/* ### COMMONDEFS */
+	|	struct_members COMMONDEFS ";"	{ 
+			YAML::Node n;
+			n["common"] = $2;
+			$$ = std::move($1); $$.push_back(std::move(n)); 
+		}
 	|	struct_members struct_member
 		{ $$ = std::move($1); $$.push_back($2); }
 	;
