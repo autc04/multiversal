@@ -217,6 +217,8 @@ public
         @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
 
         @out << ";\n"
+
+        @out << "enum { _#{name} = #{hexlit(fun["trap"] | trapbits)} };\n" if fun["trap"] and not fun["selector"]
     end
 
     def generate_header(add_includes:true)
@@ -367,8 +369,10 @@ else
         f << "#pragma once\n"
         f << "#include <stdint.h>\n"
         f << "#include <stdbool.h>\n"
+        f << "#include <stddef.h>\n"
         f << "\n"
         f << "typedef void (*ProcPtr)();\n"
+        f << "typedef ProcPtr UniversalProcPtr;\n"
         f << "\n\n"
 
         visited = Set.new
