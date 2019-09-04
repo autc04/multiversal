@@ -1,0 +1,22 @@
+---
+- only-for: Executor
+  function:
+    name: StripAddress
+    return: uint32_t
+    args:
+      - name: l
+        type: uint32_t
+        register: D0
+    trap: 0xA055
+    returnreg: D0
+
+- not-for: Executor
+  function:
+    name: StripAddress
+    return: Ptr
+    args:
+      - name: p
+        type: Ptr
+        register: D0
+    trap: 0xA055
+    returnreg: D0

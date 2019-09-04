@@ -2,6 +2,8 @@
 #include <iostream>
 #include <regex>
 #include <vector>
+#include <unordered_set>
+#include <stdio.h>
 #include "yaml-cpp/yaml.h"
 
 extern std::vector<YAML::Node> things;
@@ -65,22 +67,72 @@ void output(YAML::Emitter& yamlout, const YAML::Node& node, std::string path)
     
 }
 
-int main()
+extern FILE *yyin;
+
+int main(int argc, char *argv[])
 {
+    YAML::Node override;
+    bool haveOverride = false;
+    try
+    {
+        override = YAML::LoadFile(argv[2]);
+        haveOverride = true;
+    }
+    catch(YAML::BadFile)
+    {
+    }
+
+    yyin = fopen(argv[1], "r");
     yy::HeaderParser parser;
 
     parser.parse();
     YAML::Emitter yamlout;
 
+
+    std::unordered_set<std::string> overriddenNames;
+
+    if(haveOverride)
+    {
+        for(const auto& thing : override)
+        {
+            std::string name;
+            for(auto n : thing)
+            {
+                if(n.second.IsMap() && n.second["name"])
+                    name = n.second["name"].as<std::string>();
+            }
+            if(!name.empty())
+                overriddenNames.insert(name);
+        }
+    }
+
     yamlout << YAML::BeginSeq;
     bool first = true;
-    for(const auto& n : things)
+    for(const auto& thing : things)
     {
+        std::string name;
+        for(auto n : thing)
+        {
+            if(n.second.IsMap() && n.second["name"])
+                name = n.second["name"].as<std::string>();
+        }
+
+        if(!name.empty() && overriddenNames.find(name) != overriddenNames.end())
+            continue;
+
         if(!first)
             yamlout << YAML::Newline << YAML::Newline << YAML::Comment("####") << YAML::Newline;
         first = false;
-        //yamlout << n;
-        output(yamlout, n, "");
+        output(yamlout, thing, "");
+    }
+
+    if(haveOverride)
+    {
+        for(const auto& thing : override)
+        {
+            yamlout << YAML::Newline << YAML::Newline << YAML::Comment("####") << YAML::Newline;
+            output(yamlout, thing, "");
+        }
     }
     yamlout << YAML::EndSeq;
 
