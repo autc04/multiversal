@@ -24,12 +24,28 @@ end
 
 class HeaderFile
     attr_reader :file, :name, :declared_names, :required_names, :included
-    def initialize(file)
+    def initialize(file, filter_key:nil)
         @file = file
         @name = File.basename(@file, ".yaml")
 
         @data = YAML::load(File.read(@file))
         @out = ""
+
+        @data.reject! do |item|
+            onlyfor = item["only-for"]
+            notfor = item["not-for"]
+
+            onlyfor = [onlyfor] if onlyfor and not onlyfor.is_a? Array
+            notfor = [notfor] if notfor and not notfor.is_a? Array
+            
+            next true if onlyfor and not onlyfor.index(filter_key)
+            next true if notfor and notfor.index(filter_key)
+            next false
+        end
+
+        @data.each do |item|
+            item.reject! { |k| k == "only-for" or k == "not-for" }
+        end
 
         collect_dependencies
 
@@ -308,7 +324,7 @@ declared_names = {}
 Dir.glob('defs/*.yaml') do |file|
     print "Reading #{file}...\n"
     
-    header = HeaderFile.new(file)
+    header = HeaderFile.new(file, filter_key: "CIncludes")
     headers[header.name] = header
 
     header.declared_names.each { |n| declared_names[n] = header.name }
