@@ -6,5 +6,5 @@ for x in "$1"/src/include/*.h; do
         name=MacTypes
     fi
     echo $name
-    ./build/ParseExecutorHeaders < $x > defs/$name.yaml;
+    ./build/ParseExecutorHeaders $x overrides/$name.yaml > defs/$name.yaml;
 done

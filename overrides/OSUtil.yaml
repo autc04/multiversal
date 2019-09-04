@@ -1,4 +1,3 @@
----
 - only-for: Executor
   function:
     name: StripAddress

@@ -291,6 +291,11 @@
 		if(!args.size())
 			n.remove("args");
 	}
+
+	int toInt(std::string str)
+	{
+		return strtol(str.c_str(), nullptr, 0);
+	}
 }
 
 %%
@@ -685,7 +690,34 @@ trap:
 		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["file_trap"] = true;
+			n["trap"] = $7;
+			n["returnreg"] = "D0";
+			n["args"][0]["register"] = "A0";
+			n["args"][1]["register"] = "TrapBit<0x400>";
+			n["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
+		}
 	|	"HFS_TRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
+		{
+			auto& mfs = thingByName($3).begin()->second;
+			auto& hfs = thingByName($5).begin()->second;
+
+			mfs["file_trap"] = "mfs";
+			mfs["trap"] = $9;
+			mfs["returnreg"] = "D0";
+			mfs["args"][0]["register"] = "A0";
+			mfs["args"][1]["register"] = "TrapBit<0x400>";
+			mfs["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
+
+			hfs["file_trap"] = "hfs";
+			hfs["trap"] = toInt($9) | 0x200;	// ###
+			hfs["returnreg"] = "D0";
+			hfs["args"][0]["register"] = "A0";
+			hfs["args"][1]["register"] = "TrapBit<0x400>";
+			hfs["variants"] = std::vector<std::string>{ $5 + "Sync", $5 + "Async" };
+		}
 	|	"FILE_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 	|	"HFS_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 	;
