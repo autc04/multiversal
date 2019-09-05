@@ -1,0 +1,5 @@
+- function:
+    name: ApplicationZone
+    return: THz
+    returnreg: D0
+    m68k-inline: [0x2038, 0x02aa]

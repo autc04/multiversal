@@ -19,3 +19,9 @@
         register: D0
     trap: 0xA055
     returnreg: D0
+
+- function:
+    name: SetCurrentA5
+    return: LONGINT
+    returnreg: D0
+    m68k-inline: [ 0x200D, 0x2A78, 0x0904 ]

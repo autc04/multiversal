@@ -1,0 +1,12 @@
+- typedef:
+    name: DialogRef
+    type: DialogPtr
+
+- typedef:
+    name: DialogItemIndex
+    type: int16_t
+
+- typedef:
+    name: DialogItemType
+    type: int16_t
+  
