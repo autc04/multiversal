@@ -32,17 +32,26 @@ public:
 const std::vector<SpecialStyle> specialStyles =
 {
     { ".*/comment", YAML::Literal },
-    { ".*/code", YAML::Literal }
+    { ".*/code", YAML::Literal },
+    { ".*/m68k-inline", YAML::Flow },
+    { ".*/m68k-inline/", YAML::Hex },
+    { ".*/trap", YAML::Hex }
 };
 
 void output(YAML::Emitter& yamlout, const YAML::Node& node, std::string path)
 {
+    yamlout << YAML::Block;
+    yamlout << YAML::Auto;
+    yamlout << YAML::Dec;
+    for(const auto& s : specialStyles)
+        s.apply(yamlout, path);
+
     if(node.IsSequence())
     {
         yamlout << YAML::BeginSeq;
 
         for(const auto& x : node)
-            output(yamlout, x, path);
+            output(yamlout, x, path + "/");
 
         yamlout << YAML::EndSeq;
     }
@@ -60,9 +69,19 @@ void output(YAML::Emitter& yamlout, const YAML::Node& node, std::string path)
     }
     else
     {
+        YAML::Node n = node;
         for(const auto& s : specialStyles)
             s.apply(yamlout, path);
-        yamlout << node;
+        
+        /*char *endptr;
+        std::string scalar = n.Scalar();
+        long long parsed = std::strtoll(scalar.c_str(), &endptr, 0);
+        if(!scalar.empty() && !*endptr)
+        {
+            yamlout << parsed;
+        }
+        else*/
+            yamlout << n;
     }
     
 }
