@@ -79,16 +79,22 @@ private
 
     end
 
-    def box(title, comment=nil)
-        return unless title or comment
-        @out << "/#{'*'*77}\n"
-        #print " *#{' '*75}*\n"
-        starredtext(title, 'center') if title
-        @out << " *#{' '*75}*\n" if title and comment
-        starredtext(comment, 'left') if comment
+    def starline
+        @out << "/#{'*'*77}/\n"
+    end
 
-        @out << " #{'*'*77}/\n"
-        
+    def box(title, comment=nil)
+        if title or comment then
+            @out << "/#{'*'*77}\n"
+            #print " *#{' '*75}*\n"
+            starredtext(title, 'center') if title
+            @out << " *#{' '*75}*\n" if title and comment
+            starredtext(comment, 'left') if comment
+
+            @out << " #{'*'*77}/\n"
+        else
+            starline
+        end
     end
 
     def decl(type, thing)
@@ -215,6 +221,7 @@ public
 
         m68kinlines = []
         m68kinlines << hexlit(fun["trap"] | trapbits) if fun["trap"]
+        m68kinlines = fun["m68k-inline"].map {|x| hexlit(x)} if fun["m68k-inline"]
 
         complex = true if fun["selector"]
 
@@ -256,7 +263,7 @@ public
         @data.each do |item|
             key, value = first_elem(item)
         
-            box(value["name"], value["comment"])
+            box(value["name"], value["comment"]) unless key == "executor_only"
         
             case key
             when "enum"
