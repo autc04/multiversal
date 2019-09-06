@@ -82,6 +82,8 @@ void output(YAML::Emitter& yamlout, const YAML::Node& node, std::string path)
         }
         else*/
             yamlout << n;
+
+        yamlout << YAML::Auto;
     }
     
 }
