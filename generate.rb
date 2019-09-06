@@ -409,13 +409,17 @@ if false then
     end
 else
     IO.popen("clang-format > out/Multiverse.h", "w") do |f|
-        f << "#pragma once\n"
-        f << "#include <stdint.h>\n"
-        f << "#include <stdbool.h>\n"
-        f << "#include <stddef.h>\n"
-        f << "\n"
-        f << "typedef void (*ProcPtr)();\n"
-        f << "\n\n"
+        f << <<~PREAMBLE
+            #pragma once
+            #include <stdint.h>
+            #include <stdbool.h>
+            #include <stddef.h>
+            
+            typedef void (*ProcPtr)();
+            #define nil NULL
+
+
+        PREAMBLE
 
         visited = Set.new
         headers.each do |name, header|
