@@ -208,7 +208,9 @@ public
                 regs << arg["register"] if arg["register"]
             end
 
-            simpleregs = regs.map { |txt| next "__"+txt if txt =~ /^[AD][0-7]$/ }.compact
+            simpleregs = regs.map { |txt| if txt =~ /^[AD][0-7]$/ then "__"+txt else nil end }.compact
+            complex = true if simpleregs.length < regs.length
+            
 
             if simpleregs.length > 0 and not complex then
                 @out << "#pragma parameter "
@@ -305,8 +307,18 @@ public
 
             when "funptr"
                 @out << "typedef pascal "
+
+                name = value["name"]
+                if name=~/^([A-Za-z_][A-Za-z0-9]*)(ProcPtr|UPP)$/ then
+                    print "ProcPtr: #{name} -> #{$1}\n"
+                    name = $1 
+                else
+                    print "WARNING: strange function pointer #{name}\n"
+                end
+                              
+
                 @out << (value["return"] or "void") << " "
-                @out << "(*" << value["name"] << ")("
+                @out << "(*" << name << "ProcPtr" << ")("
 
                 first = true
                 value["args"] and value["args"].each do |arg|
@@ -319,7 +331,10 @@ public
                         @out << arg["type"]
                     end
                 end
-                @out << ");"
+                @out << ");\n"
+
+                @out << "typedef #{name}ProcPtr #{name}UPP;\n"
+                @out << "#define New#{name}Proc(proc) (proc)\n"
             end
         
             @out << "\n\n"
@@ -400,7 +415,6 @@ else
         f << "#include <stddef.h>\n"
         f << "\n"
         f << "typedef void (*ProcPtr)();\n"
-        f << "typedef ProcPtr UniversalProcPtr;\n"
         f << "\n\n"
 
         visited = Set.new
@@ -415,7 +429,7 @@ else
      "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
      "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-     "Traps", "Windows", "ConditionalMacros"].each do |name|
+     "Traps", "Windows", "ConditionalMacros", "Gestalt"].each do |name|
         File.open("out/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
