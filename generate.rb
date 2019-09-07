@@ -171,6 +171,10 @@ public
         end
     end
 
+    def declare_trapnum(name, trapno)
+        @out << "enum { _#{name} = #{hexlit(trapno)} };\n"
+    end
+
     def declare_function(fun, variant_index:nil)
         complex = false
 
@@ -200,6 +204,8 @@ public
             args = args[0..-nbits-1]
         end
 
+        declare_trapnum(name, fun["trap"] | trapbits) if fun["trap"] and not fun["selector"]
+        
         if fun["m68k-inline"] then
             m68kinlines = fun["m68k-inline"]
         else
@@ -280,7 +286,6 @@ public
 
         @out << ";\n"
 
-        @out << "enum { _#{name} = #{hexlit(fun["trap"] | trapbits)} };\n" if fun["trap"] and not fun["selector"]
     end
 
     def generate_header(add_includes:true)
@@ -324,7 +329,9 @@ public
                     @out << "};"
                 end
                 
-
+            when "dispatcher"
+                declare_trapnum(value["name"], value["trap"]) unless value["selector-location"] == "TrapBits"
+                
             when "typedef"
                 @out << "typedef "
                 @out << decl(value["type"], value["name"])
@@ -338,8 +345,8 @@ public
                 end
 
             when "lowmem"
-                if value["type"] =~ /\[[^\[\]]*\]$/ then
-                    @out << "#define LMGet#{value["name"]}() ((#{value["type"]}*)#{hexlit(value["address"])})\n"
+                if value["type"] =~ /^(.*)\[[^\[\]]*\]$/ then
+                    @out << "#define LMGet#{value["name"]}() ((#{$1}*)#{hexlit(value["address"])})\n"
                 else
                     @out << "#define LMGet#{value["name"]}() (*(#{value["type"]}*)#{hexlit(value["address"])})\n"
                     @out << "#define LMSet#{value["name"]}(val) ((*(#{value["type"]}*)#{hexlit(value["address"])}) = (val))\n"
