@@ -87,6 +87,7 @@
 %token LOWMEM_ACCESSOR "LOWMEM_ACCESSOR";
 
 %token FOURCC "FOURCC";
+%token TICK "TICK";
 
 %left "-"
 %left "<<";
@@ -405,6 +406,10 @@ expression:
 		{ 
 			auto q = [](const std::string& a) { return a.substr(1, a.size()-2); };
 			$$ = "'" + q($3) + q($5) + q($7) + q($9) + "'";
+		}
+	|	"TICK" "(" STRINGLIT ")"
+		{
+			$$ = "'" + $3 + "'";
 		}
 	|	IDENTIFIER
 	|	"-" expression { $$ = "-" + $2; }
