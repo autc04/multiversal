@@ -305,6 +305,14 @@ public
                     declare_function(value)
                 end
 
+            when "lowmem"
+                if value["type"] =~ /\[[^\[\]]*\]$/ then
+                    @out << "#define LMGet#{value["name"]}() ((#{value["type"]}*)#{hexlit(value["address"])})\n"
+                else
+                    @out << "#define LMGet#{value["name"]}() (*(#{value["type"]}*)#{hexlit(value["address"])})\n"
+                    @out << "#define LMSet#{value["name"]}(val) ((*(#{value["type"]}*)#{hexlit(value["address"])}) = (val))\n"
+                end
+
             when "funptr"
                 @out << "typedef pascal "
 

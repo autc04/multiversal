@@ -621,6 +621,15 @@ argument:
 
 lowmem:
 		comments "const" "LowMemGlobal" "<" type ">" IDENTIFIER "{" INTLIT "}" ";" rcomment
+		{
+			YAML::Node node;
+			node["name"] = $7;
+			node["type"] = $5;
+			node["address"] = $9;
+			
+			addComment(node, false, $1, $12);
+			declare(wrap("lowmem", node));
+		}
 	;
 
 lowmem_accessor:
