@@ -385,6 +385,8 @@ public
                 @out << "typedef #{name}ProcPtr #{name}UPP;\n"
                 @out << "#define New#{name}Proc(proc) (proc)\n"
                 @out << "#define New#{name}UPP(proc) (proc)\n"
+                @out << "#define Dispose#{name}Proc(proc) do { } while(false)\n"
+                @out << "#define Dispose#{name}UPP(proc) do { } while(false)\n"
             end
         
             @out << "\n\n"
@@ -465,7 +467,13 @@ else
             #include <stdbool.h>
             #include <stddef.h>
             
-            typedef void (*ProcPtr)();
+            #define TARGET_CPU_68K 1
+            #define TARGET_CPU_PPC 0
+            #define TARGET_RT_MAC_CFM 0
+            #define TARGET_API_CARBON 0
+
+            //typedef void (*ProcPtr)();
+            typedef struct RoutineDescriptor *ProcPtr;
             #define nil NULL
 
             #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
@@ -483,7 +491,7 @@ else
      "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
      "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents"].each do |name|
+     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", "StandardFile"].each do |name|
         File.open("out/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
