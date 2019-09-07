@@ -25,3 +25,14 @@
     return: LONGINT
     returnreg: D0
     m68k-inline: [ 0x200D, 0x2A78, 0x0904 ]
+
+  
+- function:
+    name: SetA5
+    return: LONGINT
+    returnreg: D0
+    args:
+      - name: a5
+        type: LONGINT
+        register: D0
+    m68k-inline: [ 0xC18D ]
