@@ -638,6 +638,15 @@ lowmem_accessor:
 
 trap:
 		comments "DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
+		{
+			YAML::Node node;
+			node["name"] = $4;
+			node["trap"] = $6;
+			node["selector-location"] = $8;
+			
+			addComment(node, false, $1, $11);
+			declare(wrap("dispatcher", node));
+		}
 	|	comments "EXTERN_DISPATCHER_TRAP" "(" IDENTIFIER "," INTLIT "," selector_location ")" ";" rcomment
 	|	"PASCAL_TRAP" "(" IDENTIFIER "," INTLIT ")" ";"
 		{
@@ -653,7 +662,6 @@ trap:
 			renameThing("C_"+$3, $3);
 			auto& fun = thingByName($3);
 			fun.begin()->second["dispatcher"] = $9;
-			fun.begin()->second["trap"] = $5;
 			fun.begin()->second["selector"] = $7;
 		}
 	|	"REGISTER_TRAP2" "(" IDENTIFIER "," INTLIT "," regcall_conv regcall_extras ")" ";"
@@ -674,7 +682,6 @@ trap:
 			setRegisterArgs(n, $17);
 			
 			n["variants"] = std::vector<std::string>{ $5, $7 };
-			// ###
 		}
 	|	"REGISTER_2FLAG_TRAP" "("
 			IDENTIFIER "," 
@@ -689,15 +696,22 @@ trap:
 			setRegisterArgs(n, $21);
 
 			n["variants"] = std::vector<std::string>{ $5, $7, $9, $11 };
-
-			// ###
 		}
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
 			renameThing("C_"+$3, $3);
-			//###
+			auto& n = thingByName($3).begin()->second;
+			n["dispatcher"] = $9;
+			n["selector"] = $7;
+			setRegisterArgs(n, $11);
 		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["dispatcher"] = $9;
+			n["selector"] = $7;
+			setRegisterArgs(n, $11);
+		}
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
@@ -721,19 +735,53 @@ trap:
 			mfs["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
 
 			hfs["file_trap"] = "hfs";
-			hfs["trap"] = toInt($9) | 0x200;	// ###
+			hfs["trap"] = toInt($9) | 0x200;
 			hfs["returnreg"] = "D0";
 			hfs["args"][0]["register"] = "A0";
 			hfs["args"][1]["register"] = "TrapBit<0x400>";
 			hfs["variants"] = std::vector<std::string>{ $5 + "Sync", $5 + "Async" };
 		}
 	|	"FILE_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["file_trap"] = true;
+			n["trap"] = $7;
+			n["dispatcher"] = $11;
+			n["selector"] = $9;
+			n["returnreg"] = "D0";
+			n["args"][0]["register"] = "A0";
+			n["args"][1]["register"] = "TrapBit<0x400>";
+			n["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
+		}
 	|	"HFS_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
+		{
+			auto& mfs = thingByName($3).begin()->second;
+			auto& hfs = thingByName($5).begin()->second;
+
+			mfs["file_trap"] = "mfs";
+			mfs["trap"] = $9;
+			mfs["dispatcher"] = $13;
+			mfs["selector"] = $11;
+			mfs["returnreg"] = "D0";
+			mfs["args"][0]["register"] = "A0";
+			mfs["args"][1]["register"] = "TrapBit<0x400>";
+			mfs["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
+
+			hfs["file_trap"] = "hfs";
+			hfs["trap"] = toInt($9) | 0x200;
+			mfs["dispatcher"] = $13;
+			mfs["selector"] = $11;
+			hfs["returnreg"] = "D0";
+			hfs["args"][0]["register"] = "A0";
+			hfs["args"][1]["register"] = "TrapBit<0x400>";
+			hfs["variants"] = std::vector<std::string>{ $5 + "Sync", $5 + "Async" };
+		}
 	;
 
+%type <std::string> selector_location;
 selector_location:
 		IDENTIFIER
-	|	IDENTIFIER "<" INTLIT ">"
+	|	IDENTIFIER "<" INTLIT ">" { $$ = $1 + "<" + $3 + ">"; }
 	;
 
 %type <RegConv> regcall_conv;

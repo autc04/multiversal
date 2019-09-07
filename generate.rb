@@ -200,6 +200,44 @@ public
             args = args[0..-nbits-1]
         end
 
+        if fun["m68k-inline"] then
+            m68kinlines = fun["m68k-inline"]
+        else
+            m68kinlines = []
+
+            dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
+            if dispatcher then
+                sel = Integer(fun["selector"])
+                case dispatcher["selector-location"]
+                when "D0W", "D0<0xFF>", "D0<0xF>"
+                    if sel >= -128 and sel <= 127 then
+                        m68kinlines << (0x7000 | (sel & 0xFF))
+                    else
+                        m68kinlines << 0x303C << sel
+                    end
+                when "D0L", "D0<0xFFFFFF>"
+                    if sel >= -128 and sel <= 127 then
+                        m68kinlines << (0x7000 | (sel & 0xFF))
+                    else
+                        m68kinlines << 0x203C << (sel >> 16) << (sel & 0xFFFF)
+                    end
+                when "StackW"
+                    m68kinlines << 0x3F3C << sel
+                when "StackL"
+                    m68kinlines << 0x2F3C << (sel >> 16) << (sel & 0xFFFF)
+                when "TrapBits"
+                else
+                    complex = true
+                end
+                m68kinlines << ((fun["trap"] || dispatcher["trap"]) | trapbits)
+            else
+                m68kinlines << (fun["trap"] | trapbits) if fun["trap"]
+            end
+        end
+        
+        m68kinlines = m68kinlines.map {|x| hexlit(x)}
+        
+
         if fun["args"] or fun["returnreg"] then
             regs = []
             regs << fun["returnreg"] if fun["returnreg"]
@@ -220,12 +258,6 @@ public
                 @out << "\n"
             end
         end
-
-        m68kinlines = []
-        m68kinlines << hexlit(fun["trap"] | trapbits) if fun["trap"]
-        m68kinlines = fun["m68k-inline"].map {|x| hexlit(x)} if fun["m68k-inline"]
-
-        complex = true if fun["selector"]
 
         @out << "pascal "
         @out << (fun["return"] or "void") << " "
@@ -343,6 +375,7 @@ public
 
                 @out << "typedef #{name}ProcPtr #{name}UPP;\n"
                 @out << "#define New#{name}Proc(proc) (proc)\n"
+                @out << "#define New#{name}UPP(proc) (proc)\n"
             end
         
             @out << "\n\n"
@@ -426,7 +459,7 @@ else
             typedef void (*ProcPtr)();
             #define nil NULL
 
-
+            #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
         PREAMBLE
 
         visited = Set.new
