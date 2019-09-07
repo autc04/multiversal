@@ -98,8 +98,12 @@ private
     end
 
     def decl(type, thing)
-        type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
-        return "#{$1}#{$2} #{$3}#{thing}#{$5}"
+        if thing then
+            type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
+            return "#{$1}#{$2} #{$3}#{thing}#{$5}"
+        else
+            return type
+        end
     end
 
     def collect_dep(str)
@@ -268,18 +272,7 @@ public
         @out << "pascal "
         @out << (fun["return"] or "void") << " "
         @out << name << "("
-        
-        first = true
-        args.each do |arg|
-            @out << ", " unless first
-            first = false
-
-            if arg["name"] then
-                @out << decl(arg["type"], arg["name"])
-            else
-                @out << arg["type"]
-            end
-        end
+        @out << args.map {|arg| decl(arg["type"], arg["name"])}.join(", ")
         @out << ")"
 
         @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
@@ -331,7 +324,7 @@ public
                 
             when "dispatcher"
                 declare_trapnum(value["name"], value["trap"]) unless value["selector-location"] == "TrapBits"
-                
+
             when "typedef"
                 @out << "typedef "
                 @out << decl(value["type"], value["name"])
