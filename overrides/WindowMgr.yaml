@@ -1,3 +1,27 @@
 - typedef:
     name: WindowRef
     type: WindowPtr
+
+- function:
+    name: GetWindowKind
+    return: INTEGER
+    args:
+        - type: WindowRef
+          name: win
+    inline: ((WindowPeek)(win))->windowKind
+
+- function:
+    name: SetPortWindowPort
+    args:
+        - type: WindowRef
+          name: win
+    inline: SetPort(win)
+
+- function:
+    name: GetWindowPortBounds
+    args:
+        - type: WindowRef
+          name: window
+        - type: Rect*
+          name: bounds
+    inline: "*(bounds) = (window)->portRect"

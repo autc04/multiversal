@@ -1,3 +1,14 @@
 - typedef:
     name: MenuRef
     type: MenuHandle
+
+- function:
+    name: CheckMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: cflag
+        type: BOOLEAN
+    inline: CheckItem(mh, item, cflag)

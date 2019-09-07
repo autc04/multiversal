@@ -179,6 +179,10 @@ public
         @out << "enum { _#{name} = #{hexlit(trapno)} };\n"
     end
 
+    def declare_inline(name, rettype, args, expr)
+        @out << "#define #{name}(#{args.map {|x|x["name"]}.join(", ")}) (#{expr})\n"
+    end
+
     def declare_function(fun, variant_index:nil)
         complex = false
 
@@ -269,16 +273,19 @@ public
             end
         end
 
-        @out << "pascal "
-        @out << (fun["return"] or "void") << " "
-        @out << name << "("
-        @out << args.map {|arg| decl(arg["type"], arg["name"])}.join(", ")
-        @out << ")"
+        if fun["inline"] then
+            declare_inline(name, (fun["return"] or "void"), args, fun["inline"])
+        else
+            @out << "pascal "
+            @out << (fun["return"] or "void") << " "
+            @out << name << "("
+            @out << args.map {|arg| decl(arg["type"], arg["name"])}.join(", ")
+            @out << ")"
 
-        @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
+            @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
 
-        @out << ";\n"
-
+            @out << ";\n"
+        end
     end
 
     def generate_header(add_includes:true)
@@ -339,10 +346,12 @@ public
 
             when "lowmem"
                 if value["type"] =~ /^(.*)\[[^\[\]]*\]$/ then
-                    @out << "#define LMGet#{value["name"]}() ((#{$1}*)#{hexlit(value["address"])})\n"
+                    declare_inline("LMGet" + value["name"], $1 + "*", [], "(#{$1}*)" + hexlit(value["address"]))
                 else
-                    @out << "#define LMGet#{value["name"]}() (*(#{value["type"]}*)#{hexlit(value["address"])})\n"
-                    @out << "#define LMSet#{value["name"]}(val) ((*(#{value["type"]}*)#{hexlit(value["address"])}) = (val))\n"
+                    expr = "*(#{value["type"]}*)" + hexlit(value["address"])
+                    declare_inline("LMGet" + value["name"], value["type"], [], expr)
+                    declare_inline("LMSet" + value["name"], "void",
+                        [{"type" => value["type"], "name" => "val"}], expr + " = val")
                 end
 
             when "funptr"
@@ -474,7 +483,7 @@ else
      "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
      "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-     "Traps", "Windows", "ConditionalMacros", "Gestalt"].each do |name|
+     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents"].each do |name|
         File.open("out/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
