@@ -87,8 +87,6 @@ bool preambleRequested = true;
 "GUEST_STRUCT"      return token::GUEST_STRUCT;
 "UPP"               return token::UPP;
 "LowMemGlobal"      return token::LOWMEMGLOBAL;
-"FOURCC"            return token::FOURCC;
-"TICK"              return token::TICK;
 
 "DISPATCHER_TRAP"       return token::DISPATCHER_TRAP;
 "EXTERN_DISPATCHER_TRAP"    return token::EXTERN_DISPATCHER_TRAP;
@@ -118,6 +116,12 @@ bool preambleRequested = true;
 0x[[:xdigit:]]+L    return hp::make_INTLIT(std::string(yytext,yytext+yyleng-1));
 
 \'.\'               return hp::make_CHARLIT(yytext);
+\".+\"_4            {
+    std::string s = std::string(yytext, yytext+yyleng-2);
+    s[0] = s[yyleng-3] = '\'';
+    return hp::make_CHARLIT(s);
+}
+
 \".+\"              return hp::make_STRINGLIT(yytext);
 
 [[:alpha:]_][[:alnum:]_]*   return hp::make_IDENTIFIER(yytext);

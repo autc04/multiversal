@@ -402,15 +402,6 @@ enum_value:
 expression:
 		INTLIT
 	|	CHARLIT
-	|	"FOURCC" "(" CHARLIT "," CHARLIT "," CHARLIT "," CHARLIT ")"
-		{ 
-			auto q = [](const std::string& a) { return a.substr(1, a.size()-2); };
-			$$ = "'" + q($3) + q($5) + q($7) + q($9) + "'";
-		}
-	|	"TICK" "(" STRINGLIT ")"
-		{
-			$$ = "'" + $3 + "'";
-		}
 	|	IDENTIFIER
 	|	"-" expression { $$ = "-" + $2; }
 	|	"(" expression ")" { $$ = $2; }
