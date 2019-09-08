@@ -13,10 +13,11 @@ BUILTIN_NAMES=Set.new [
     "sizeof"
 ]
 
-def hexlit(thing)
+def hexlit(thing, sz:16)
     case thing
     when Integer
-        return "0x" + thing.to_s(16).upcase
+        digits = thing.to_s(16).upcase
+        return "0x" + "0" * [sz/4 - digits.length, 0].max + digits
     else
         return thing.to_s
     end
@@ -60,7 +61,7 @@ private
         item.each { |key, value| return key, value }
     end
 
-    def starredtext(str, align)
+    def starredtext(str, align, lchar:'*', rchar:'*')
         maxlinelen = str.lines.map{|s| s.rstrip.length}.max
         
         str.each_line do |s|
@@ -74,7 +75,7 @@ private
             a = c - b
             a = 0 if a < 0
             b = 0 if b < 0
-            @out << " *#{' '*a}#{s}#{' '*b}*\n"
+            @out << " #{lchar}#{' '*a}#{s}#{' '*b}#{rchar}\n"
         end
 
     end
@@ -83,7 +84,7 @@ private
         @out << "/#{'*'*77}/\n"
     end
 
-    def box(title, comment=nil)
+    def box(title, comment=nil, order:1)
         if title or comment then
             @out << "/#{'*'*77}\n"
             #print " *#{' '*75}*\n"
@@ -290,6 +291,10 @@ public
 
     def generate_header(add_includes:true)
         @out = ""
+
+        box("\n" + name + ".h\n" + "="*(name.length+2) + "\n\n")
+        @out << "\n\n"
+
         if add_includes then
             @out << "#pragma once\n"
             @out << "#include <stdint.h>\n"
@@ -477,6 +482,8 @@ else
             #define nil NULL
 
             #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
+        
+        
         PREAMBLE
 
         visited = Set.new
