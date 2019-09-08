@@ -53,6 +53,7 @@ class HeaderFile
         collect_dependencies
 
         @included = nil
+        @included_why = nil
     end
 
 private
@@ -155,10 +156,17 @@ private
 public
     def collect_includes(all_declared_names)
         @included = Set.new
-        @required_names.each { |n|
-            included << all_declared_names[n] if all_declared_names[n]
-            print "??????????????? Where is #{n}\n" unless all_declared_names[n]
-        }
+        @included_why = {}
+        @required_names.each do |n|
+            where = all_declared_names[n]
+            if where then
+                @included << where
+                @included_why[where] = Set.new unless @included_why[where]
+                @included_why[where] << n
+            else
+                print "??????????????? Where is #{n}\n"
+            end
+        end
     end
 
     def declare_members(members)
@@ -181,7 +189,7 @@ public
     end
 
     def declare_inline(name, rettype, args, expr)
-        @out << "#define #{name}(#{args.map {|x|x["name"]}.join(", ")}) (#{expr})\n"
+        @out << "#define #{name}(#{args.map {|x|x["name"]}.compact.join(", ")}) (#{expr})\n"
     end
 
     def declare_function(fun, variant_index:nil)
@@ -289,10 +297,48 @@ public
         end
     end
 
+    def document_dependencies
+        out = ""
+        if @included.size > 0 then
+            out << "Needs:\n"
+            
+            colwidth = @included.map(&:size).max + 4 + 2 + 4
+            maxlinelen = 70
+
+            @included.each do |inc|
+                line = " " * 4 + inc + ".h"
+                line << " " * (colwidth - line.length)
+                indent = line.length
+                whys = @included_why[inc].to_a
+                whys.each_index do |idx|
+                    why = whys[idx]
+                    last = (idx == whys.size - 1)
+                    if line.length + why.size + (last ? 0 : 1) > maxlinelen
+                        out << line << "\n"
+                        line = " " * indent
+                    end
+                    line << why
+                    line << ", " unless last
+                end
+                out << line << "\n"
+            end
+        end
+        return out
+    end
+
     def generate_header(add_includes:true)
         @out = ""
 
-        box("\n" + name + ".h\n" + "="*(name.length+2) + "\n\n")
+        title = "\n" + name + ".h\n" + "="*(name.length+2) + "\n"
+        titlecomment = nil
+        if not add_includes and @included.size > 0 then
+            titlecomment = document_dependencies
+            titlecomment << "\n\n"
+        else
+            title << "\n"
+        end
+        box(title, titlecomment)
+
         @out << "\n\n"
 
         if add_includes then
@@ -498,7 +544,8 @@ else
      "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
      "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", "StandardFile"].each do |name|
+     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
+     "StandardFile", "Serial"].each do |name|
         File.open("out/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
