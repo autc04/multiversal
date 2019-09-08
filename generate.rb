@@ -521,9 +521,15 @@ else
             #include <stdbool.h>
             #include <stddef.h>
             
+            #if #cpu(powerpc)
+            #define TARGET_CPU_68K 0
+            #define TARGET_CPU_PPC 1
+            #define TARGET_RT_MAC_CFM 1
+            #else
             #define TARGET_CPU_68K 1
             #define TARGET_CPU_PPC 0
             #define TARGET_RT_MAC_CFM 0
+            #endif
             #define TARGET_API_CARBON 0
 
             //typedef void (*ProcPtr)();
