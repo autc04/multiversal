@@ -15,7 +15,7 @@
 
 - function:
     name: GetOSEvent
-    return: BOOLEAN
+    return: Boolean
     args:
       - name: evmask
         type: INTEGER
@@ -31,7 +31,7 @@
 
 - function:
     name: OSEventAvail
-    return: BOOLEAN
+    return: Boolean
     args:
       - name: evmask
         type: INTEGER
