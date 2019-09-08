@@ -37,14 +37,14 @@
     args:
       - name: runLength
       - type: uint16_t
-    inline: 0x4000 | (uint16_t)(runLength) - 1
+    inline: 0x4000 | ((uint16_t)(runLength) - 1)
 - function:
     name: PEFRelocComposeBySectD
     return: uint16_t
     args:
       - name: runLength
       - type: uint16_t
-    inline: 0x4200 | (uint16_t)(runLength) - 1
+    inline: 0x4200 | ((uint16_t)(runLength) - 1)
 
 - function:
     name: PEFRelocComposeSetPosition_1st
@@ -55,7 +55,7 @@
     inline: 0xA000 | (uint16_t)((uint32_t)(fullOffset) >> 16)
 
 - function:
-    name: PEFRelocComposeSetPosition_2st
+    name: PEFRelocComposeSetPosition_2nd
     return: uint16_t
     args:
       - name: fullOffset
