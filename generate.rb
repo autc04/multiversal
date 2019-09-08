@@ -349,6 +349,8 @@ public
             end
             @out << "\n\n"
         end
+        @out << "#pragma pack(push, 2)\n"
+        @out << "\n\n"
 
         @data.each do |item|
             key, value = first_elem(item)
@@ -442,6 +444,7 @@ public
         
             @out << "\n\n"
         end
+        @out << "#pragma pack(pop)\n\n\n"              
         
         return @out
     end
