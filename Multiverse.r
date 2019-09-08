@@ -276,6 +276,7 @@ type 'MENU'
     integer = 0;
     integer = 0;
     integer textMenuProc = 0;
+    fill word;
     hex bitstring[31] allEnabled=0x7FFFFFFF;
     boolean disabled, enabled;
     pstring apple = "\0x14";
