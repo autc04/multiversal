@@ -1,6 +1,6 @@
 require 'yaml'
 require 'set'
-
+require 'fileutils'
 
 BUILTIN_NAMES=Set.new [
     "uint8_t", "uint16_t", "uint32_t", "uint64_t",
@@ -498,23 +498,24 @@ def write_ordered(file, header, headers, visited)
     file << header.generate_header(add_includes: false)
 end
 
+FileUtils.mkdir_p "CIncludes"
 if false then
     headers.each do |name, header|
         print "Processing #{name}...\n"
 
         out = header.generate_header
 
-        IO.popen("clang-format > out/#{header.name}.h", "w") do |f|
+        IO.popen("clang-format > CIncludes/#{header.name}.h", "w") do |f|
             f << out
         end
 
     end
 
-    File.open("out/Multiverse.h", "w") do |file|
+    File.open("CIncludes/Multiverse.h", "w") do |file|
         headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
     end
 else
-    IO.popen("clang-format > out/Multiverse.h", "w") do |f|
+    IO.popen("clang-format > CIncludes/Multiverse.h", "w") do |f|
         f << <<~PREAMBLE
             #pragma once
             #include <stdint.h>
@@ -555,9 +556,18 @@ else
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
      "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
      "StandardFile", "Serial"].each do |name|
-        File.open("out/#{name}.h", "w") do |f|
+        File.open("CIncludes/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
         end
+    end
+end
+
+FileUtils.mkdir_p("RIncludes")
+FileUtils.cp("Multiverse.r", "RIncludes/")
+["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
+ "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
+    File.open("RIncludes/#{name}.r", "w") do |f|
+        f << "#include \"Multiverse.r\"\n"
     end
 end
