@@ -7,23 +7,22 @@ type 'SIZE'
     boolean ignoreSuspendResumeEvents, acceptSuspendResumeEvents;
     boolean reserved;
     boolean cannotBackground, canBackground;
-    boolean needsActivateOnFGSwitch, doesActivateOnFGSwitch;
+    boolean needsActivateOnFGSwitch, doesActivateOnFGSwitch, multiFinderAware = true;
     boolean backgroundAndForeground, onlyBackground;
     boolean dontGetFrontClicks, getFrontClicks;
     boolean ignoreChildDiedEvents, acceptChildDiedEvents;
     boolean not32BitCompatible, is32BitCompatible;
-    boolean notHighLevelEventAware, isHighLevelEventAware;
-    boolean onlyLocalHLEvents, localAndRemoteHLEvents;
-    boolean notStationeryAware, isStationeryAware;
-    boolean dontUseTextEditServices, useTextEditServices;
-    boolean reserved;
+    boolean notHighLevelEventAware, isHighLevelEventAware, reserved = false;
+    boolean onlyLocalHLEvents, localAndRemoteHLEvents, reserved = false;
+    boolean notStationeryAware, isStationeryAware, reserved = false;
+    boolean dontUseTextEditServices, useTextEditServices, reserved = false;
+    boolean notDisplayManagerAware, displayManagerAware, reserved = false;
     boolean reserved;
     boolean reserved;
 
     unsigned longint;   // preferred 
     unsigned longint;   // minimum
 };
-
 
 type 'cfrg'
 {
@@ -220,8 +219,7 @@ type 'DITL'
             case Control:
                 boolean enabled, disabled;
                 key bitstring[7] = 7;
-                pstring;
-                fill byte;
+                byte = 2;
                 integer;
             case StaticText:
                 boolean enabled, disabled;
@@ -234,14 +232,12 @@ type 'DITL'
             case Icon:
                 boolean enabled, disabled;
                 key bitstring[7] = 32;
-                pstring;
-                fill byte;
+                byte = 2;
                 integer;
             case Picture:
                 boolean enabled, disabled;
                 key bitstring[7] = 64;
-                pstring;
-                fill byte;
+                byte = 2;
                 integer;
             case HelpItem:
                 longint = 0;
