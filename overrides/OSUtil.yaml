@@ -36,3 +36,23 @@
         type: LONGINT
         register: D0
     m68k-inline: [ 0xC18D ]
+
+
+- function:
+    name: GetToolboxTrapAddress
+    return: ProcPtr
+    args:
+      - name: n
+        type: INTEGER
+    inline: GetToolTrapAddress(n)
+# ####
+
+- function:
+    name: SetToolboxTrapAddress
+    args:
+      - name: addr
+        type: ProcPtr
+      - name: n
+        type: INTEGER
+    inline: SetToolTrapAddress(addr,n)
+  
