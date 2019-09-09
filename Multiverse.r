@@ -36,8 +36,9 @@ type 'cfrg'
     longint = $$CountOf(fragments);
     array fragments
     {
+    start:
         literal longint kPowerPC = 'pwpc', kPowerPCCFragArch = 'pwpc';
-        int kFullLib = 0, kIsCompleteCFrag = 0, kUpdateLib = 1;
+        longint kFullLib = 0, kIsCompleteCFrag = 0, kUpdateLib = 1;
         hex longint kNoVersionNum = 0;
         hex longint kNoVersionNum = 0;
         longint kDefaultStackSize = 0;
@@ -48,8 +49,10 @@ type 'cfrg'
         longint kWholeFork = 0, kCFragGoesToEOF = 0;
         longint = 0;
         longint = 0;
+        integer = (end[$$ArrayIndex(fragments)] - start[$$ArrayIndex(fragments)]) / 8;
         pstring;
         align long;
+    end:
     };
 };
 
