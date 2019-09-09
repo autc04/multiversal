@@ -440,7 +440,6 @@ public
 
                 name = value["name"]
                 if name=~/^([A-Za-z_][A-Za-z0-9]*)(ProcPtr|UPP)$/ then
-                    print "ProcPtr: #{name} -> #{$1}\n"
                     name = $1 
                 else
                     print "WARNING: strange function pointer #{name}\n"
@@ -466,6 +465,7 @@ public
                 
                 if args.any? {|arg| arg["register"]} then
                     procinfo = 42;
+                    print "WARNING UNSUPPORTED register funptr: #{name}\n"
                 else
                     procinfo = 0;
                     procinfo |= encode_size(value["return"]) << 4
