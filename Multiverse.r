@@ -61,6 +61,7 @@ type 'rdes'
     hex string = $"AAFE 0700 0000 0000 0000 0000";
     binary longint; // proc info
     hex string = $"0001 0007 0000 0020 0000 0000 0000 0000";
+    hex string;
 };
 
 type 'STR '
