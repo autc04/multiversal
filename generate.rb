@@ -274,11 +274,13 @@ public
             
 
             if simpleregs.length > 0 and not complex then
+                @out << "#if TARGET_CPU_69K\n"
                 @out << "#pragma parameter "
                 @out << simpleregs.shift if fun["returnreg"]
                 @out << " " << name
                 @out << "(" << simpleregs.join(", ") << ")" if simpleregs.length > 0
                 @out << "\n"
+                @out << "#endif\n"
             end
         end
 
@@ -290,9 +292,7 @@ public
             @out << name << "("
             @out << args.map {|arg| decl(arg["type"], arg["name"])}.join(", ")
             @out << ")"
-
-            @out << " = { " << m68kinlines.join(", ") << " }" if m68kinlines.length > 0 and not complex
-
+            @out << " M68K_INLINE(" << m68kinlines.join(", ") << ")" if m68kinlines.length > 0 and not complex
             @out << ";\n"
         end
     end
@@ -526,10 +526,12 @@ else
             #define TARGET_CPU_68K 0
             #define TARGET_CPU_PPC 1
             #define TARGET_RT_MAC_CFM 1
+            #define M68K_INLINE(...)
             #else
             #define TARGET_CPU_68K 1
             #define TARGET_CPU_PPC 0
             #define TARGET_RT_MAC_CFM 0
+            #define M68K_INLINE(...) = { __VA_ARGS__ }
             #endif
             #define TARGET_API_CARBON 0
 
