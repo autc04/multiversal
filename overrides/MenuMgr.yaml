@@ -10,5 +10,5 @@
       - name: item
         type: INTEGER
       - name: cflag
-        type: BOOLEAN
+        type: Boolean
     inline: CheckItem(mh, item, cflag)
