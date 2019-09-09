@@ -1,0 +1,9 @@
+- function:
+    name: CallUniversalProc
+    return: LONGINT
+    args:
+      - name: theProcPtr
+        type: UniversalProcPtr
+      - name: procInfo
+        type: ProcInfoType
+      - type: ...
