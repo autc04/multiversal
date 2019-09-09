@@ -13,7 +13,7 @@ BUILTIN_NAMES=Set.new [
     "sizeof"
 ]
 
-def hexlit(thing, sz:16)
+def hexlit(thing, sz=16)
     case thing
     when Integer
         digits = thing.to_s(16).upcase
@@ -24,6 +24,31 @@ def hexlit(thing, sz:16)
 end
 
 $global_name_map = {}
+$type_size_map = {
+    "uint8_t" => 1,
+    "uint16_t" => 2,
+    "uint32_t" => 4,
+    "uint64_t" => 8,
+    "int8_t" => 1,
+    "int16_t" => 2,
+    "int32_t" => 4,
+    "int64_t" => 8,
+    "char" => 1,
+    "Point" => 4,
+    "ProcPtr" => 8,
+    "void" => 0
+}
+def size_of_type(type)
+    return nil if not type
+    return $type_size_map[type] if $type_size_map[type]
+    return 4 if type =~ /[*\[\]]/
+    return nil
+end
+def encode_size(type)
+    sz = size_of_type(type)
+    return 4 unless sz
+    return sz >= 4 ? 3 : sz
+end
 
 class HeaderFile
     attr_reader :file, :name, :declared_names, :required_names, :included
@@ -389,6 +414,9 @@ public
                 @out << "typedef "
                 @out << decl(value["type"], value["name"])
                 @out << ";"
+
+                sz = size_of_type(value["type"])
+                $type_size_map[value["name"]] = sz if sz
         
             when "function"
                 if value["variants"] then
@@ -423,7 +451,8 @@ public
                 @out << "(*" << name << "ProcPtr" << ")("
 
                 first = true
-                value["args"] and value["args"].each do |arg|
+                args = (value["args"] or [])
+                args.each do |arg|
                     @out << "," unless first
                     first = false
         
@@ -434,12 +463,41 @@ public
                     end
                 end
                 @out << ");\n"
+                
+                if args.any? {|arg| arg["register"]} then
+                    procinfo = 42;
+                else
+                    procinfo = 0;
+                    procinfo |= encode_size(value["return"]) << 4
+                    shift = 6
+                    args.each do |arg|
+                        procinfo |= encode_size(arg["type"]) << shift
+                        shift += 2
+                    end
+                end
+                
+                @out << <<~UPPDECL
+                    #if TARGET_RT_MAC_CFM
+                    typedef UniversalProcPtr #{name}UPP;
+                    enum { upp#{name}ProcInfo = #{hexlit(procinfo,32)} };
+                UPPDECL
+                declare_inline("New#{name}UPP", "#{name}UPP", [{"name"=>"proc", "type"=>"#{name}ProcPtr"}],
+                    "(#{name}UPP)NewRoutineDescriptor((ProcPtr)(proc), upp#{name}ProcInfo, GetCurrentArchitecture())")
+                declare_inline("Dispose#{name}UPP", nil, [{"name"=>"upp", "type"=>"#{name}UPP"}],
+                    "DisposeRoutineDescriptor((UniversalProcPtr)(upp))")
+                @out << <<~UPPDECL
+                    #else
 
-                @out << "typedef #{name}ProcPtr #{name}UPP;\n"
-                @out << "#define New#{name}Proc(proc) (proc)\n"
-                @out << "#define New#{name}UPP(proc) (proc)\n"
-                @out << "#define Dispose#{name}Proc(proc) do { } while(false)\n"
-                @out << "#define Dispose#{name}UPP(proc) do { } while(false)\n"
+                    typedef #{name}ProcPtr #{name}UPP;
+                    #define New#{name}UPP(proc) (proc)
+                    #define Dispose#{name}UPP(proc) do { } while(false)
+
+                    #endif
+
+                    #define New#{name}Proc(proc) New#{name}UPP(proc)
+                    #define Dispose#{name}Proc(proc) Dispose#{name}UPP(proc)
+
+                UPPDECL
             end
         
             @out << "\n\n"
@@ -527,13 +585,15 @@ else
             #define TARGET_CPU_PPC 1
             #define TARGET_RT_MAC_CFM 1
             #define M68K_INLINE(...)
+            #define GetCurrentArchitecture() ((int8_t)1)
             #else
             #define TARGET_CPU_68K 1
             #define TARGET_CPU_PPC 0
             #define TARGET_RT_MAC_CFM 0
             #define M68K_INLINE(...) = { __VA_ARGS__ }
+            #define GetCurrentArchitecture() ((int8_t)0)
             #endif
-            #define TARGET_API_CARBON 0
+            #define TARGET_API_MAC_CARBON 0
 
             //typedef void (*ProcPtr)();
             typedef struct RoutineDescriptor *ProcPtr;
@@ -549,7 +609,11 @@ else
             write_ordered(f, header, headers, visited)
         end
 
-        f << "\n\nextern QDGlobals qd;\n"
+        f << <<~POSTAMBLE
+
+            extern QDGlobals qd;
+            #define UnloadSeg(x) do {} while(false)
+        POSTAMBLE
     end
 
     ["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
