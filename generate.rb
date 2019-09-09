@@ -23,6 +23,7 @@ def hexlit(thing, sz=16)
     end
 end
 
+$functions_needing_glue = []
 $global_name_map = {}
 $type_size_map = {
     "uint8_t" => 1,
@@ -319,6 +320,10 @@ public
             @out << ")"
             @out << " M68K_INLINE(" << m68kinlines.join(", ") << ")" if m68kinlines.length > 0 and not complex
             @out << ";\n"
+        end
+
+        if not fun["inline"] and (m68kinlines.length == 0 or complex) then
+            $functions_needing_glue << name
         end
     end
 
@@ -637,3 +642,8 @@ FileUtils.cp("Multiverse.r", "RIncludes/")
         f << "#include \"Multiverse.r\"\n"
     end
 end
+
+File.open("CIncludes/needs-glue.txt", "w") do |f|
+    $functions_needing_glue.each {|name| f << name + "\n"}
+end
+
