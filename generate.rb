@@ -385,6 +385,8 @@ public
         @data.each do |item|
             key, value = first_elem(item)
         
+            next if value["name"] =~ /ROMlib/
+
             box(value["name"], value["comment"]) unless key == "executor_only"
         
             case key
