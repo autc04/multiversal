@@ -218,6 +218,59 @@ public
         @out << "#define #{name}(#{args.map {|x|x["name"]}.compact.join(", ")}) (#{expr})\n"
     end
 
+    def generate_function_definition(out:, fun:, name:, args:, trap:)
+        return if not trap
+        writeback = ""
+        out << "pascal " << (fun["return"] or "void") << " " << name <<
+            "(" << args.map {|x| decl(x["type"],x["name"])}.join(", ") << ")"
+        out << "{"
+
+        clobbers = Set.new(["%d0","%d1","%d2","%a0","%a1"])
+        inputs = []
+        outputs = []
+        if fun["returnreg"] then
+            register = "%" + fun["returnreg"].downcase
+            out << "register #{fun["return"]} _retval __asm__(\"#{register}\");"
+            
+            clobbers.delete?(register)
+            outputs << "\"=r\"(_retval)"
+        end
+
+        args.each do |arg|
+            if arg["register"] =~ /(Out|InOut)<([AD][0-7])>/ then
+                io = $1
+                register = "%" + $2.downcase
+                if arg["type"] =~ /(.*)\*/ then
+                    type = $1
+                    out << "register #{type} _#{arg["name"]} __asm__(\"#{register}\");"
+                    out << "_#{arg["name"]} = *#{arg["name"]};" if io == "InOut"
+                    writeback << "*#{arg["name"]} = _#{arg["name"]};"
+
+                    clobbers.delete?(register)
+                    outputs << "\"=r\"(_#{arg["name"]})"
+                    inputs << "\"r\"(_#{arg["name"]})" if io == "InOut"
+                end
+            elsif arg["register"] =~ /[AD][0-7]/ then
+                register = "%" + arg["register"].downcase
+                out << "register #{arg["type"]} _#{arg["name"]} __asm__(\"#{register}\");"
+                out << "_#{arg["name"]} = #{arg["name"]};"
+
+                clobbers.delete?(register)
+                inputs << "\"r\"(_#{arg["name"]})"
+            end
+        end
+        
+        out << "\n// clang-format off\n"
+        out << "    __asm__ volatile(\".short #{hexlit(trap)}\"\n"
+        out << " " * 8 << ": #{outputs.join(", ")}\n"
+        out << " " * 8 << ": #{inputs.join(", ")}\n"
+        out << " " * 8 << ": #{clobbers.map{|x| '"'+x+'"'}.join(", ")});"
+        out << "\n// clang-format on\n"
+        out << writeback
+        out << "return _retval;" if fun["returnreg"]
+        out << "}"
+    end
+
     def declare_function(fun, variant_index:nil)
         complex = false
 
@@ -320,6 +373,10 @@ public
             @out << ")"
             @out << " M68K_INLINE(" << m68kinlines.join(", ") << ")" if m68kinlines.length > 0 and not complex
             @out << ";\n"
+
+            if complex then
+                generate_function_definition(out:@impl_out, fun:fun, name:name, args:args, trap:(fun["trap"] | trapbits))
+            end
         end
 
         if not fun["inline"] and (m68kinlines.length == 0 or complex) then
@@ -358,6 +415,7 @@ public
 
     def generate_header(add_includes:true)
         @out = ""
+        @impl_out = ""
 
         title = "\n" + name + ".h\n" + "="*(name.length+2) + "\n"
         titlecomment = nil
@@ -385,8 +443,6 @@ public
         @data.each do |item|
             key, value = first_elem(item)
         
-            next if value["name"] =~ /ROMlib/
-
             box(value["name"], value["comment"]) unless key == "executor_only"
         
             case key
@@ -426,6 +482,8 @@ public
                 $type_size_map[value["name"]] = sz if sz
         
             when "function"
+                next if value["name"] =~ /ROMlib/
+
                 if value["variants"] then
                     value["variants"].each_index { |i| declare_function(value, variant_index:i) }
                 else
@@ -511,7 +569,7 @@ public
         end
         @out << "#pragma pack(pop)\n\n\n"              
         
-        return @out
+        return @out, @impl_out
     end
 
 end
@@ -560,7 +618,16 @@ def write_ordered(file, header, headers, visited)
         write_ordered(file, headers[incname], headers, visited)
     end
 
-    file << header.generate_header(add_includes: false)
+    inc, src = header.generate_header(add_includes: false)
+
+    file << inc
+
+    if src and src.length > 0 then
+        IO.popen("clang-format | grep -v \"// clang-format o\" > Interface/#{header.name}.c", "w") do |f|
+            f << "#include \"Multiverse.h\"\n"
+            f << src
+        end
+    end
 end
 
 FileUtils.mkdir_p "CIncludes"
@@ -580,7 +647,7 @@ if false then
         headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
     end
 else
-    IO.popen("clang-format > CIncludes/Multiverse.h", "w") do |f|
+    IO.popen("clang-format | grep -v \"// clang-format o\" > CIncludes/Multiverse.h", "w") do |f|
         f << <<~PREAMBLE
             #pragma once
             #include <stdint.h>

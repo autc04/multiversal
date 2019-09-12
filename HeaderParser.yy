@@ -803,8 +803,17 @@ regcall_args1:
 regcall_arg:
 		IDENTIFIER
 	|	IDENTIFIER "<" IDENTIFIER ">" { $$ = $1 + "<" + $3 + ">"; }
-	|	IDENTIFIER "<" INTLIT ">" { $$ = $1 + "<" + $3 + ">"; }
-	|	IDENTIFIER "<" IDENTIFIER "," IDENTIFIER ">" { $$ = $1 + "<" + $3 + ", " + $5 + ">"; }
+	|	IDENTIFIER "<" INTLIT ">"
+		{
+			$$ = $1 + "<" + $3 + ">";
+		}
+	|	IDENTIFIER "<" IDENTIFIER "," IDENTIFIER ">" 
+		{
+			if($1 == "Out" || $1 == "InOut")
+				$$ = $1 + "<" + $5 + ">";
+			else
+				$$ = $1 + "<" + $3 + ", " + $5 + ">";
+		}
 	;
 
 regcall_extras:
