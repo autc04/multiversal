@@ -218,8 +218,8 @@ public
         @out << "#define #{name}(#{args.map {|x|x["name"]}.compact.join(", ")}) (#{expr})\n"
     end
 
-    def generate_function_definition(out:, fun:, name:, args:, trap:)
-        return if not trap
+    def generate_function_definition(out:, fun:, name:, args:, m68kinlines:)
+        return if not m68kinlines
         writeback = ""
         out << "pascal " << (fun["return"] or "void") << " " << name <<
             "(" << args.map {|x| decl(x["type"],x["name"])}.join(", ") << ")"
@@ -261,7 +261,7 @@ public
         end
         
         out << "\n// clang-format off\n"
-        out << "    __asm__ volatile(\".short #{hexlit(trap)}\"\n"
+        out << "    __asm__ volatile(\".short #{m68kinlines.join(", ")}\"\n"
         out << " " * 8 << ": #{outputs.join(", ")}\n"
         out << " " * 8 << ": #{inputs.join(", ")}\n"
         out << " " * 8 << ": #{clobbers.map{|x| '"'+x+'"'}.join(", ")});"
@@ -374,8 +374,8 @@ public
             @out << " M68K_INLINE(" << m68kinlines.join(", ") << ")" if m68kinlines.length > 0 and not complex
             @out << ";\n"
 
-            if complex then
-                generate_function_definition(out:@impl_out, fun:fun, name:name, args:args, trap:(fun["trap"] | trapbits))
+            if complex and m68kinlines then
+                generate_function_definition(out:@impl_out, fun:fun, name:name, args:args, m68kinlines:m68kinlines)
             end
         end
 
