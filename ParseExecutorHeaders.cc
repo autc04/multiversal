@@ -110,10 +110,12 @@ int main(int argc, char *argv[])
     YAML::Emitter yamlout;
 
 
-    std::unordered_set<std::string> overriddenNames;
+    std::unordered_map<std::string, int> overrideMap;
+    std::unordered_set<int> usedOverrides;
 
     if(haveOverride)
     {
+        int index = 0;
         for(const auto& thing : override)
         {
             std::string name;
@@ -123,7 +125,9 @@ int main(int argc, char *argv[])
                     name = n.second["name"].as<std::string>();
             }
             if(!name.empty())
-                overriddenNames.insert(name);
+                overrideMap[name] = index;
+            
+            index++;
         }
     }
 
@@ -137,20 +141,30 @@ int main(int argc, char *argv[])
             if(n.second.IsMap() && n.second["name"])
                 name = n.second["name"].as<std::string>();
         }
-
-        if(!name.empty() && overriddenNames.find(name) != overriddenNames.end())
-            continue;
-
         if(!first)
             yamlout << YAML::Newline << YAML::Newline << YAML::Comment("####") << YAML::Newline;
         first = false;
+
+        if(!name.empty())
+        {
+            if(auto p = overrideMap.find(name); p != overrideMap.end())
+            {
+                output(yamlout, override[p->second], "");
+                usedOverrides.insert(p->second);
+                continue;
+            }
+        }
+
         output(yamlout, thing, "");
     }
 
     if(haveOverride)
     {
+        int index = 0;
         for(const auto& thing : override)
         {
+            if(usedOverrides.find(index++) != usedOverrides.end())
+                continue;
             yamlout << YAML::Newline << YAML::Newline << YAML::Comment("####") << YAML::Newline;
             output(yamlout, thing, "");
         }
