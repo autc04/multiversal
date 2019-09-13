@@ -36,3 +36,7 @@
         type: SignedByte
       - name: ioACUser
         type: SignedByte
+
+- typedef:
+    name: IOMiscType
+    type: Ptr
