@@ -40,3 +40,6 @@
 - typedef:
     name: IOMiscType
     type: Ptr
+    comment: |
+      Executor needs ioMisc to be uint32_t instead of the normal
+      Ptr, so this is defined as a separate typedef here.
