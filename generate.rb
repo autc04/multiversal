@@ -577,6 +577,11 @@ end
 headers = {}
 declared_names = {}
 
+FileUtils.mkdir_p "out/CIncludes"
+FileUtils.mkdir_p "out/RIncludes"
+FileUtils.mkdir_p "out/Interface"
+
+
 Dir.glob('defs/*.yaml') do |file|
     print "Reading #{file}...\n"
     
@@ -623,31 +628,30 @@ def write_ordered(file, header, headers, visited)
     file << inc
 
     if src and src.length > 0 then
-        IO.popen("clang-format | grep -v \"// clang-format o\" > Interface/#{header.name}.c", "w") do |f|
+        IO.popen("clang-format | grep -v \"// clang-format o\" > out/Interface/#{header.name}.c", "w") do |f|
             f << "#include \"Multiverse.h\"\n"
             f << src
         end
     end
 end
 
-FileUtils.mkdir_p "CIncludes"
 if false then
     headers.each do |name, header|
         print "Processing #{name}...\n"
 
         out = header.generate_header
 
-        IO.popen("clang-format > CIncludes/#{header.name}.h", "w") do |f|
+        IO.popen("clang-format > out/CIncludes/#{header.name}.h", "w") do |f|
             f << out
         end
 
     end
 
-    File.open("CIncludes/Multiverse.h", "w") do |file|
+    File.open("out/CIncludes/Multiverse.h", "w") do |file|
         headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
     end
 else
-    IO.popen("clang-format | grep -v \"// clang-format o\" > CIncludes/Multiverse.h", "w") do |f|
+    IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multiverse.h", "w") do |f|
         f << <<~PREAMBLE
             #pragma once
             #include <stdint.h>
@@ -701,23 +705,22 @@ else
      "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
      "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
      "StandardFile", "Serial"].each do |name|
-        File.open("CIncludes/#{name}.h", "w") do |f|
+        File.open("out/CIncludes/#{name}.h", "w") do |f|
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
         end
     end
 end
 
-FileUtils.mkdir_p("RIncludes")
-FileUtils.cp("Multiverse.r", "RIncludes/")
+FileUtils.cp("custom/Multiverse.r", "out/RIncludes/")
 ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
  "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
-    File.open("RIncludes/#{name}.r", "w") do |f|
+    File.open("out/RIncludes/#{name}.r", "w") do |f|
         f << "#include \"Multiverse.r\"\n"
     end
 end
 
-File.open("CIncludes/needs-glue.txt", "w") do |f|
+File.open("out/CIncludes/needs-glue.txt", "w") do |f|
     $functions_needing_glue.each {|name| f << name + "\n"}
 end
 

@@ -1,5 +1,4 @@
 build
 defs
-CIncludes
-RIncludes
+out
 .vscode
