@@ -1,4 +1,5 @@
 #include <Multiverse.h>
+#include <string.h>
 
 #ifdef NOTYET
 #pragma parameter __D0 _GetPtrSize(__A0)
@@ -126,7 +127,6 @@ pascal void ClrAppFiles(short index)
 pascal OSErr SetVol(ConstStr63Param volName, short vRefNum)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.volumeParam.ioNamePtr = (StringPtr)volName;
     pb.volumeParam.ioVRefNum = vRefNum;
     return PBSetVolSync(&pb);
@@ -135,7 +135,6 @@ pascal OSErr SetVol(ConstStr63Param volName, short vRefNum)
 pascal OSErr GetVol(StringPtr volName, short *vRefNum)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.volumeParam.ioNamePtr = volName;
     OSErr err = PBGetVolSync(&pb);
     *vRefNum = pb.volumeParam.ioVRefNum;
@@ -146,16 +145,14 @@ pascal OSErr GetVol(StringPtr volName, short *vRefNum)
 pascal OSErr UnmountVol(ConstStr63Param volName, short vRefNum)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.volumeParam.ioNamePtr = (StringPtr)volName;
     pb.volumeParam.ioVRefNum = vRefNum;
-    return PBUnmountVolImmed(&pb);
+    return PBUnmountVol(&pb);
 }
 
 pascal OSErr Eject(ConstStr63Param volName, short vRefNum)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.volumeParam.ioNamePtr = (StringPtr)volName;
     pb.volumeParam.ioVRefNum = vRefNum;
     return PBEject(&pb);
@@ -165,9 +162,9 @@ pascal OSErr FSOpen(ConstStr255Param fileName, short vRefNum, short *refNum)
 {
     OSErr err;
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioNamePtr = (StringPtr)fileName;
     pb.ioParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioFVersNum = 0; 
 
     // Try newer OpenDF first, because it does not open drivers
     err = PBOpenDFSync(&pb);
@@ -189,7 +186,6 @@ pascal OSErr OpenDF(ConstStr255Param fileName, short vRefNum, short *refNum)
 pascal OSErr FSClose(short refNum)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     return PBCloseSync(&pb);
 }
@@ -198,7 +194,6 @@ pascal OSErr FSRead(short refNum, long *count, void *buffPtr)
 {
     OSErr err;
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioBuffer = buffPtr;
     pb.ioParam.ioReqCount = *count;
@@ -212,7 +207,6 @@ pascal OSErr FSWrite(short refNum, long *count, const void *buffPtr)
 {
     OSErr err;
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioBuffer = (void *)buffPtr;
     pb.ioParam.ioReqCount = *count;
@@ -226,7 +220,6 @@ pascal OSErr GetEOF(short refNum, long *logEOF)
 {
     OSErr err;
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     err = PBGetEOFSync(&pb);
     *logEOF = (long)pb.ioParam.ioMisc;
@@ -237,7 +230,6 @@ pascal OSErr SetEOF(short refNum, long logEOF)
 {
     OSErr err;
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioMisc = (Ptr)logEOF;
     return PBGetEOFSync(&pb);
@@ -256,7 +248,6 @@ pascal OSErr GetFPos(short refNum, long *filePos)
 pascal OSErr SetFPos(short refNum, short posMode, long posOff)
 {
     ParamBlockRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioPosMode = posMode;
     pb.ioParam.ioPosOffset = posOff;
@@ -268,9 +259,9 @@ pascal OSErr Create(ConstStr255Param fileName, short vRefNum, OSType creator,
 {
     ParamBlockRec pb;
     OSErr err;
-    memset(&pb, 0, sizeof(pb));
     pb.fileParam.ioVRefNum = vRefNum;
     pb.fileParam.ioNamePtr = (StringPtr)fileName;
+    pb.fileParam.ioFVersNum = 0; 
     // create the file
     err = PBCreateSync(&pb);
     if(err != noErr)
@@ -293,9 +284,8 @@ pascal OSErr GetWDInfo(short wdRefNum, short *vRefNum, long *dirID,
 {
     OSErr err;
     WDPBRec pb;
-    memset(&pb, 0, sizeof(pb));
     pb.ioVRefNum = wdRefNum;
-    err = PBGetWDInfo(&pb, false);
+    err = PBGetWDInfoSync(&pb);
     *vRefNum = pb.ioWDVRefNum;
     *dirID = pb.ioWDDirID;
     *procID = pb.ioWDProcID;
@@ -307,7 +297,6 @@ pascal OSErr GetFInfo(ConstStr255Param fileName, short vRefNum,
 {
     ParamBlockRec pb;
     OSErr err;
-    memset(&pb, 0, sizeof(pb));
     pb.fileParam.ioVRefNum = vRefNum;
     pb.fileParam.ioNamePtr = (StringPtr)fileName;
     err = PBGetFInfoSync(&pb);
@@ -358,9 +347,10 @@ pascal OSErr OpenDriver(ConstStr255Param name, short *drvrRefNum)
 {
     ParamBlockRec pb;
     OSErr err;
-    memset(&pb, 0, sizeof(pb));
 
     pb.ioParam.ioNamePtr = (StringPtr)name;
+    pb.fileParam.ioFVersNum = 0;
+    pb.ioParam.ioVRefNum = 0;
 
     err = PBOpenSync(&pb);
     *drvrRefNum = pb.ioParam.ioRefNum;
