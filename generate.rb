@@ -353,7 +353,7 @@ public
             
 
             if simpleregs.length > 0 and not complex then
-                @out << "#if TARGET_CPU_69K\n"
+                @out << "#if TARGET_CPU_68K\n"
                 @out << "#pragma parameter "
                 @out << simpleregs.shift if fun["returnreg"]
                 @out << " " << name
@@ -654,19 +654,24 @@ else
             #include <stdbool.h>
             #include <stddef.h>
             
-            #if #cpu(powerpc)
-            #define TARGET_CPU_68K 0
-            #define TARGET_CPU_PPC 1
-            #define TARGET_RT_MAC_CFM 1
-            #define M68K_INLINE(...)
-            #define GetCurrentArchitecture() ((int8_t)1)
+            #ifdef __m68k__
+                #define TARGET_CPU_68K 1
+                #define TARGET_CPU_PPC 0
+                #define TARGET_RT_MAC_CFM 0
+                #define M68K_INLINE(...) = { __VA_ARGS__ }
+                #define GetCurrentArchitecture() ((int8_t)0)
             #else
-            #define TARGET_CPU_68K 1
-            #define TARGET_CPU_PPC 0
-            #define TARGET_RT_MAC_CFM 0
-            #define M68K_INLINE(...) = { __VA_ARGS__ }
-            #define GetCurrentArchitecture() ((int8_t)0)
+                #define TARGET_CPU_68K 0
+                #define TARGET_CPU_PPC 1
+                #define TARGET_RT_MAC_CFM 1
+                #define M68K_INLINE(...)
+                #define GetCurrentArchitecture() ((int8_t)1)
+
+                #ifndef pascal
+                    #define pascal
+                #endif
             #endif
+
             #define TARGET_API_MAC_CARBON 0
 
             //typedef void (*ProcPtr)();
