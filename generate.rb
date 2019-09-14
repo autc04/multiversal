@@ -53,13 +53,12 @@ def encode_size(type)
 end
 
 class HeaderFile
-    attr_reader :file, :name, :declared_names, :required_names, :included
+    attr_reader :file, :name, :declared_names, :required_names, :included, :included_why, :data
     def initialize(file, filter_key:nil)
         @file = file
         @name = File.basename(@file, ".yaml")
 
         @data = YAML::load(File.read(@file))
-        @out = ""
 
         @data.reject! do |item|
             onlyfor = item["only-for"]
@@ -87,52 +86,6 @@ private
 
     def first_elem(item)
         item.each { |key, value| return key, value }
-    end
-
-    def starredtext(str, align, lchar:'*', rchar:'*')
-        maxlinelen = str.lines.map{|s| s.rstrip.length}.max
-        
-        str.each_line do |s|
-            s.rstrip!
-            c = (75 - s.length)
-            b = case align
-                when "center" then c/2
-                when "left" then c - 1
-                when "right" then 1
-            end
-            a = c - b
-            a = 0 if a < 0
-            b = 0 if b < 0
-            @out << " #{lchar}#{' '*a}#{s}#{' '*b}#{rchar}\n"
-        end
-
-    end
-
-    def starline
-        @out << "/#{'*'*77}/\n"
-    end
-
-    def box(title, comment=nil, order:1)
-        if title or comment then
-            @out << "/#{'*'*77}\n"
-            #print " *#{' '*75}*\n"
-            starredtext(title, 'center') if title
-            @out << " *#{' '*75}*\n" if title and comment
-            starredtext(comment, 'left') if comment
-
-            @out << " #{'*'*77}/\n"
-        else
-            starline
-        end
-    end
-
-    def decl(type, thing)
-        if thing then
-            type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
-            return "#{$1}#{$2} #{$3}#{thing}#{$5}"
-        else
-            return type
-        end
     end
 
     def collect_dep(str)
@@ -193,6 +146,104 @@ public
             else
                 print "??????????????? Where is #{n}\n"
             end
+        end
+    end
+
+end
+
+class Defs
+    attr_reader :headers, :declared_names, :topsort
+    def initialize(filter_key:nil)
+        @headers = {}
+        @declared_names = {}        
+
+        Dir.glob('defs/*.yaml') do |file|
+            print "Reading #{file}...\n"
+            
+            header = HeaderFile.new(file, filter_key: filter_key)
+            @headers[header.name] = header
+        
+            header.declared_names.each { |n| @declared_names[n] = header.name }
+        end
+        
+        print "Linking things up...\n"
+        headers.each do |name, header|
+            header.collect_includes(declared_names)
+        end
+        
+        @topsort = []
+        done = Set.new
+        headers.each do |name, header|
+            do_topsort(name, done)
+        end
+    end
+
+private
+
+    def do_topsort(name, done, active=Set.new, stack=[])
+        print "INCLUDE CYCLE #{stack.join('=>')} => #{name}\n" if active.include?(name)
+        return if done.include?(name)
+        active << name
+        done << name
+        stack << name
+
+        @headers[name].included.each do |incname|
+            do_topsort(incname, done, active, stack)
+        end
+        @topsort << name
+        active.delete?(name)
+        stack.pop
+    end
+end
+
+class Generator
+    def first_elem(item)
+        item.each { |key, value| return key, value }
+    end
+
+    def starredtext(str, align, lchar:'*', rchar:'*')
+        maxlinelen = str.lines.map{|s| s.rstrip.length}.max
+        
+        str.each_line do |s|
+            s.rstrip!
+            c = (75 - s.length)
+            b = case align
+                when "center" then c/2
+                when "left" then c - 1
+                when "right" then 1
+            end
+            a = c - b
+            a = 0 if a < 0
+            b = 0 if b < 0
+            @out << " #{lchar}#{' '*a}#{s}#{' '*b}#{rchar}\n"
+        end
+
+    end
+
+    def starline
+        @out << "/#{'*'*77}/\n"
+    end
+
+    def box(title, comment=nil, order:1)
+        if title or comment then
+            @out << "/#{'*'*77}\n"
+            #print " *#{' '*75}*\n"
+            starredtext(title, 'center') if title
+            @out << " *#{' '*75}*\n" if title and comment
+            starredtext(comment, 'left') if comment
+
+            @out << " #{'*'*77}/\n"
+        else
+            starline
+        end
+    end
+
+    def decl(type, thing)
+        if thing then
+            type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
+            return "#{$1}#{$2} #{$3}#{thing}#{$5}"
+        else
+            return type
         end
     end
 
@@ -385,19 +436,19 @@ public
         end
     end
 
-    def document_dependencies
+    def document_dependencies(header)
         out = ""
-        if @included.size > 0 then
+        if header.included.size > 0 then
             out << "Needs:\n"
             
-            colwidth = @included.map(&:size).max + 4 + 2 + 4
+            colwidth = header.included.map(&:size).max + 4 + 2 + 4
             maxlinelen = 70
 
-            @included.each do |inc|
+            header.included.each do |inc|
                 line = " " * 4 + inc + ".h"
                 line << " " * (colwidth - line.length)
                 indent = line.length
-                whys = @included_why[inc].to_a
+                whys = header.included_why[inc].to_a
                 whys.each_index do |idx|
                     why = whys[idx]
                     last = (idx == whys.size - 1)
@@ -414,14 +465,14 @@ public
         return out
     end
 
-    def generate_header(add_includes:true)
+    def generate_header(header, add_includes:true)
         @out = ""
         @impl_out = ""
 
-        title = "\n" + name + ".h\n" + "="*(name.length+2) + "\n"
+        title = "\n" + header.name + ".h\n" + "="*(header.name.length+2) + "\n"
         titlecomment = nil
-        if not add_includes and @included.size > 0 then
-            titlecomment = document_dependencies
+        if not add_includes and header.included.size > 0 then
+            titlecomment = document_dependencies(header)
             titlecomment << "\n\n"
         else
             title << "\n"
@@ -433,7 +484,7 @@ public
         if add_includes then
             @out << "#pragma once\n"
             @out << "#include <stdint.h>\n"
-            @included.each do |file|
+            header.included.each do |file|
                 @out << "#include \"#{file}.h\"\n"
             end
             @out << "\n\n"
@@ -441,7 +492,7 @@ public
         @out << "#pragma pack(push, 2)\n"
         @out << "\n\n"
 
-        @data.each do |item|
+        header.data.each do |item|
             key, value = first_elem(item)
         
             box(value["name"], value["comment"]) unless key == "executor_only"
@@ -573,53 +624,8 @@ public
         return @out, @impl_out
     end
 
+
 end
-
-class Defs
-    attr_reader :headers, :declared_names, :topsort
-    def initialize(filter_key:nil)
-        @headers = {}
-        @declared_names = {}        
-
-        Dir.glob('defs/*.yaml') do |file|
-            print "Reading #{file}...\n"
-            
-            header = HeaderFile.new(file, filter_key: filter_key)
-            @headers[header.name] = header
-        
-            header.declared_names.each { |n| @declared_names[n] = header.name }
-        end
-        
-        print "Linking things up...\n"
-        headers.each do |name, header|
-            header.collect_includes(declared_names)
-        end
-        
-        @topsort = []
-        done = Set.new
-        headers.each do |name, header|
-            do_topsort(name, done)
-        end
-    end
-
-private
-
-    def do_topsort(name, done, active=Set.new, stack=[])
-        print "INCLUDE CYCLE #{stack.join('=>')} => #{name}\n" if active.include?(name)
-        return if done.include?(name)
-        active << name
-        done << name
-        stack << name
-
-        @headers[name].included.each do |incname|
-            do_topsort(incname, done, active, stack)
-        end
-        @topsort << name
-        active.delete?(name)
-        stack.pop
-    end
-end
-
 
 FileUtils.mkdir_p "out/CIncludes"
 FileUtils.mkdir_p "out/RIncludes"
@@ -629,27 +635,7 @@ FileUtils.mkdir_p "out/lib"
 
 defs = Defs.new(filter_key: "CIncludes")
 
-def write_ordered(file, header, headers, visited)
-    return if visited.member?(header.name)
-    visited << header.name
-    print "Generating #{header.name}\n"
-    
-    header.included.each do |incname|
-        write_ordered(file, headers[incname], headers, visited)
-    end
-
-    inc, src = header.generate_header(add_includes: false)
-
-    file << inc
-
-    if src and src.length > 0 then
-        IO.popen("clang-format | grep -v \"// clang-format o\" > out/src/#{header.name}.c", "w") do |f|
-            f << "#include \"Multiverse.h\"\n"
-            f << src
-        end
-    end
-end
-
+gen = Generator.new
 
 IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multiverse.h", "w") do |f|
     f << <<~PREAMBLE
@@ -689,7 +675,7 @@ IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multivers
 
     defs.topsort.each do |name|
         header = defs.headers[name]
-        inc, src = header.generate_header(add_includes: false)
+        inc, src = gen.generate_header(header, add_includes: false)
 
         f << inc
 
