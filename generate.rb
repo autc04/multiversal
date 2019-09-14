@@ -574,8 +574,51 @@ public
 
 end
 
-headers = {}
-declared_names = {}
+class Defs
+    attr_reader :headers, :declared_names, :topsort
+    def initialize(filter_key:nil)
+        @headers = {}
+        @declared_names = {}        
+
+        Dir.glob('defs/*.yaml') do |file|
+            print "Reading #{file}...\n"
+            
+            header = HeaderFile.new(file, filter_key: filter_key)
+            @headers[header.name] = header
+        
+            header.declared_names.each { |n| @declared_names[n] = header.name }
+        end
+        
+        print "Linking things up...\n"
+        headers.each do |name, header|
+            header.collect_includes(declared_names)
+        end
+        
+        @topsort = []
+        done = Set.new
+        headers.each do |name, header|
+            do_topsort(name, done)
+        end
+    end
+
+private
+
+    def do_topsort(name, done, active=Set.new, stack=[])
+        print "INCLUDE CYCLE #{stack.join('=>')} => #{name}\n" if active.include?(name)
+        return if done.include?(name)
+        active << name
+        done << name
+        stack << name
+
+        @headers[name].included.each do |incname|
+            do_topsort(incname, done, active, stack)
+        end
+        @topsort << name
+        active.delete?(name)
+        stack.pop
+    end
+end
+
 
 FileUtils.mkdir_p "out/CIncludes"
 FileUtils.mkdir_p "out/RIncludes"
@@ -583,38 +626,7 @@ FileUtils.mkdir_p "out/src"
 FileUtils.mkdir_p "out/obj"
 FileUtils.mkdir_p "out/lib"
 
-
-Dir.glob('defs/*.yaml') do |file|
-    print "Reading #{file}...\n"
-    
-    header = HeaderFile.new(file, filter_key: "CIncludes")
-    headers[header.name] = header
-
-    header.declared_names.each { |n| declared_names[n] = header.name }
-end
-
-print "Linking things up...\n"
-headers.each do |name, header|
-    header.collect_includes(declared_names)
-end
-
-def check_cycle(visited, headers, name, stack="")
-    visited << name
-
-    headers[name].included.each do |inc|
-        if visited.member?(inc) then
-            print "INCLUDE CYCLE #{stack} -> #{name} --> #{inc}\n"
-        end
-        check_cycle(visited, headers, inc, stack + " -> " + name)
-    end
-
-    visited.delete(name)
-end
-headers.each do |name, header|
-    #print "Checking #{name}...\n"
-
-    check_cycle(Set.new, headers, name)
-end
+defs = Defs.new(filter_key: "CIncludes")
 
 def write_ordered(file, header, headers, visited)
     return if visited.member?(header.name)
@@ -637,82 +649,75 @@ def write_ordered(file, header, headers, visited)
     end
 end
 
-if false then
-    headers.each do |name, header|
-        print "Processing #{name}...\n"
 
-        out = header.generate_header
+IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multiverse.h", "w") do |f|
+    f << <<~PREAMBLE
+        #pragma once
+        #include <stdint.h>
+        #include <stdbool.h>
+        #include <stddef.h>
+        
+        #ifdef __m68k__
+            #define TARGET_CPU_68K 1
+            #define TARGET_CPU_PPC 0
+            #define TARGET_RT_MAC_CFM 0
+            #define M68K_INLINE(...) = { __VA_ARGS__ }
+            #define GetCurrentArchitecture() ((int8_t)0)
+        #else
+            #define TARGET_CPU_68K 0
+            #define TARGET_CPU_PPC 1
+            #define TARGET_RT_MAC_CFM 1
+            #define M68K_INLINE(...)
+            #define GetCurrentArchitecture() ((int8_t)1)
 
-        IO.popen("clang-format > out/CIncludes/#{header.name}.h", "w") do |f|
-            f << out
-        end
-
-    end
-
-    File.open("out/CIncludes/Multiverse.h", "w") do |file|
-        headers.each { |name,_| file.write "#include \"#{name}.h\"\n" }
-    end
-else
-    IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multiverse.h", "w") do |f|
-        f << <<~PREAMBLE
-            #pragma once
-            #include <stdint.h>
-            #include <stdbool.h>
-            #include <stddef.h>
-            
-            #ifdef __m68k__
-                #define TARGET_CPU_68K 1
-                #define TARGET_CPU_PPC 0
-                #define TARGET_RT_MAC_CFM 0
-                #define M68K_INLINE(...) = { __VA_ARGS__ }
-                #define GetCurrentArchitecture() ((int8_t)0)
-            #else
-                #define TARGET_CPU_68K 0
-                #define TARGET_CPU_PPC 1
-                #define TARGET_RT_MAC_CFM 1
-                #define M68K_INLINE(...)
-                #define GetCurrentArchitecture() ((int8_t)1)
-
-                #ifndef pascal
-                    #define pascal
-                #endif
+            #ifndef pascal
+                #define pascal
             #endif
+        #endif
 
-            #define TARGET_API_MAC_CARBON 0
+        #define TARGET_API_MAC_CARBON 0
 
-            //typedef void (*ProcPtr)();
-            typedef struct RoutineDescriptor *ProcPtr;
-            #define nil NULL
+        //typedef void (*ProcPtr)();
+        typedef struct RoutineDescriptor *ProcPtr;
+        #define nil NULL
 
-            #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
-        
-        
-        PREAMBLE
+        #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
+    
+    
+    PREAMBLE
 
-        visited = Set.new
-        headers.each do |name, header|
-            write_ordered(f, header, headers, visited)
+    defs.topsort.each do |name|
+        header = defs.headers[name]
+        inc, src = header.generate_header(add_includes: false)
+
+        f << inc
+
+        if src and src.length > 0 then
+            IO.popen("clang-format | grep -v \"// clang-format o\" > out/src/#{header.name}.c", "w") do |f|
+                f << "#include \"Multiverse.h\"\n"
+                f << src
+            end
         end
-
-        f << <<~POSTAMBLE
-
-            extern QDGlobals qd;
-            #define UnloadSeg(x) do {} while(false)
-        POSTAMBLE
     end
 
-    ["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
-     "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
-     "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
-     "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-     "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
-     "StandardFile", "Serial"].each do |name|
-        File.open("out/CIncludes/#{name}.h", "w") do |f|
-            f << "#pragma once\n"
-            f << "#include \"Multiverse.h\"\n"
-        end
-    end 
+    f << <<~POSTAMBLE
+
+        extern QDGlobals qd;
+        #define UnloadSeg(x) do {} while(false)
+    POSTAMBLE
 end
+
+["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
+    "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
+    "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
+    "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
+    "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
+    "StandardFile", "Serial"].each do |name|
+    File.open("out/CIncludes/#{name}.h", "w") do |f|
+        f << "#pragma once\n"
+        f << "#include \"Multiverse.h\"\n"
+    end
+end 
 
 Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "out/RIncludes/")}
 Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "out/src/")}
