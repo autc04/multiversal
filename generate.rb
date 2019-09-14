@@ -10,7 +10,8 @@ BUILTIN_NAMES=Set.new [
     "void",
     "const",
     "bool",
-    "sizeof"
+    "sizeof",
+    "double"
 ]
 
 def hexlit(thing, sz=16)
