@@ -579,7 +579,9 @@ declared_names = {}
 
 FileUtils.mkdir_p "out/CIncludes"
 FileUtils.mkdir_p "out/RIncludes"
-FileUtils.mkdir_p "out/Interface"
+FileUtils.mkdir_p "out/src"
+FileUtils.mkdir_p "out/obj"
+FileUtils.mkdir_p "out/lib"
 
 
 Dir.glob('defs/*.yaml') do |file|
@@ -628,7 +630,7 @@ def write_ordered(file, header, headers, visited)
     file << inc
 
     if src and src.length > 0 then
-        IO.popen("clang-format | grep -v \"// clang-format o\" > out/Interface/#{header.name}.c", "w") do |f|
+        IO.popen("clang-format | grep -v \"// clang-format o\" > out/src/#{header.name}.c", "w") do |f|
             f << "#include \"Multiverse.h\"\n"
             f << src
         end
@@ -709,10 +711,11 @@ else
             f << "#pragma once\n"
             f << "#include \"Multiverse.h\"\n"
         end
-    end
+    end 
 end
 
-FileUtils.cp("custom/Multiverse.r", "out/RIncludes/")
+Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "out/RIncludes/")}
+Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "out/src/")}
 ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
  "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
     File.open("out/RIncludes/#{name}.r", "w") do |f|
@@ -724,3 +727,8 @@ File.open("out/CIncludes/needs-glue.txt", "w") do |f|
     $functions_needing_glue.each {|name| f << name + "\n"}
 end
 
+Dir.glob('out/src/*.c') do |file|
+    name = File.basename(file, '.c')
+    system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
+end
+system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
