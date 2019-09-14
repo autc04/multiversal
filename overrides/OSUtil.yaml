@@ -56,3 +56,10 @@
         type: INTEGER
     inline: SetToolTrapAddress(addr,n)
   
+- function:
+    name: GetDateTime
+    args:
+      - name: mactimepointer
+        type: "ULONGINT*"
+    inline: "*(ULONGINT*)0x020C = (mactimepointer)"
+  

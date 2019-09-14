@@ -180,7 +180,78 @@ pascal OSErr FSOpen(ConstStr255Param fileName, short vRefNum, short *refNum)
 
 pascal OSErr OpenDF(ConstStr255Param fileName, short vRefNum, short *refNum)
 {
-    return FSOpen(fileName, vRefNum, refNum);
+    OSErr err;
+    ParamBlockRec pb;
+    pb.ioParam.ioNamePtr = (StringPtr)fileName;
+    pb.ioParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioFVersNum = 0; 
+
+    err = PBOpenDFSync(&pb);
+
+    *refNum = pb.ioParam.ioRefNum;
+    return err;
+}
+
+pascal OSErr OpenRF(ConstStr255Param fileName, short vRefNum, short *refNum)
+{
+    OSErr err;
+    ParamBlockRec pb;
+    pb.ioParam.ioNamePtr = (StringPtr)fileName;
+    pb.ioParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioFVersNum = 0; 
+
+    err = PBOpenRFSync(&pb);
+
+    *refNum = pb.ioParam.ioRefNum;
+    return err;
+}
+
+pascal OSErr HOpenRF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
+                     SignedByte perm, INTEGER *refp)
+{
+    HParamBlockRec pb;
+    pb.fileParam.ioVRefNum = vref;
+    pb.fileParam.ioDirID = dirid;
+    pb.fileParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioPermssn = perm;
+    OSErr err = PBHOpenRFSync(&pb);
+    *refp = pb.ioParam.ioRefNum;
+    return err;
+}
+pascal OSErr HOpen(INTEGER vref, LONGINT dirid, ConstStringPtr name,
+                   SignedByte perm, INTEGER *refp)
+{
+    HParamBlockRec pb;
+    pb.fileParam.ioVRefNum = vref;
+    pb.fileParam.ioDirID = dirid;
+    pb.fileParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioPermssn = perm;
+    OSErr err = PBHOpenSync(&pb);
+    *refp = pb.ioParam.ioRefNum;
+    return err;
+}
+
+pascal OSErr HOpenDF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
+                     SignedByte perm, INTEGER *refp)
+{
+    HParamBlockRec pb;
+    pb.fileParam.ioVRefNum = vref;
+    pb.fileParam.ioDirID = dirid;
+    pb.fileParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioPermssn = perm;
+    OSErr err = PBHOpenDFSync(&pb);
+    *refp = pb.ioParam.ioRefNum;
+    return err;
+}
+
+pascal OSErr FSDelete(ConstStr255Param fileName, short vRefNum)
+{
+    OSErr err;
+    ParamBlockRec pb;
+    pb.ioParam.ioNamePtr = (StringPtr)fileName;
+    pb.ioParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioFVersNum = 0; 
+    return PBDeleteSync(&pb);
 }
 
 pascal OSErr FSClose(short refNum)
@@ -279,6 +350,33 @@ pascal OSErr Create(ConstStr255Param fileName, short vRefNum, OSType creator,
     return PBSetFInfoSync(&pb);
 }
 
+pascal OSErr HCreate(short vRefNum, long dirID, ConstStr255Param fileName,
+                     OSType creator, OSType fileType)
+{
+    HParamBlockRec pb;
+    OSErr err;
+    pb.fileParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioNamePtr = (StringPtr)fileName;
+    pb.fileParam.ioDirID = dirID;
+    pb.fileParam.ioFVersNum = 0; 
+    // create the file
+    err = PBHCreateSync(&pb);
+    if(err != noErr)
+        return err;
+    // get previous finder info
+    err = PBHGetFInfoSync(&pb);
+    if(err != noErr)
+        return err;
+    // clear directory index
+    pb.fileParam.ioFDirIndex = 0;
+    // copy finder info words
+    pb.fileParam.ioFlFndrInfo.fdType = fileType;
+    pb.fileParam.ioFlFndrInfo.fdCreator = creator;
+    // save finder info
+    return PBHSetFInfoSync(&pb);
+}
+
+
 pascal OSErr GetWDInfo(short wdRefNum, short *vRefNum, long *dirID,
                        long *procID)
 {
@@ -358,3 +456,111 @@ pascal OSErr OpenDriver(ConstStr255Param name, short *drvrRefNum)
 }
 
 pascal OSErr CloseDriver(short refNum) { return FSClose(refNum); }
+
+pascal OSErr Rename(ConstStringPtr filen, INTEGER vrn, ConstStringPtr newf)
+{
+    ParamBlockRec pb;
+
+    pb.ioParam.ioNamePtr = (StringPtr)filen;
+    pb.ioParam.ioVRefNum = vrn;
+    pb.ioParam.ioVersNum = 0;
+    pb.ioParam.ioMisc = (Ptr)newf;
+    return PBRenameSync(&pb);
+}
+
+pascal OSErr HRename(INTEGER vref, LONGINT dirID, ConstStringPtr src,
+                     ConstStringPtr dst)
+{
+    HParamBlockRec pb;
+
+    pb.ioParam.ioNamePtr = (StringPtr)src;
+    pb.ioParam.ioVRefNum = vref;
+    pb.fileParam.ioDirID = dirID;
+    pb.ioParam.ioVersNum = 0;
+    pb.ioParam.ioMisc = (Ptr)dst;
+    return PBHRenameSync(&pb);
+}
+
+pascal OSErr Control(INTEGER rn, INTEGER code, const void *param)
+{
+    ParamBlockRec pb;
+    OSErr err;
+
+    pb.cntrlParam.ioVRefNum = 0;
+    pb.cntrlParam.ioCRefNum = rn;
+    pb.cntrlParam.csCode = code;
+    if(param)
+        memcpy(pb.cntrlParam.csParam, param, sizeof(pb.cntrlParam.csParam));
+    return PBControlSync(&pb);
+}
+
+OSErr Status(INTEGER rn, INTEGER code, Ptr param) /* IMII-179 */
+{
+    ParamBlockRec pb;
+    OSErr retval;
+
+    pb.cntrlParam.ioVRefNum = 0;
+    pb.cntrlParam.ioCRefNum = rn;
+    pb.cntrlParam.csCode = code;
+    retval = PBStatusSync(&pb);
+    if(param)
+        memcpy(param, pb.cntrlParam.csParam, sizeof(pb.cntrlParam.csParam));
+    return retval;
+}
+
+
+pascal OSErr SerReset(INTEGER rn, INTEGER config) /* IMII-250 */
+{
+    return Control(rn, kSERDConfiguration, (Ptr)&config);
+}
+
+struct sersetbuf_t
+{
+    Ptr p;
+    INTEGER i;
+};
+
+pascal OSErr SerSetBuf(INTEGER rn, Ptr p, INTEGER len) /* IMII-251 */
+{
+    struct sersetbuf_t temp;
+
+    temp.p = p;
+    temp.i = len;
+
+    return Control(rn, kSERDInputBuffer, (Ptr)&temp);
+}
+
+pascal OSErr SerHShake(INTEGER rn, const SerShk *flags) /* IMII-251 */
+{
+    return Control(rn, kSERDSerHShake, (Ptr)flags);
+}
+
+pascal OSErr SerSetBrk(INTEGER rn) /* IMII-252 */
+{
+    return Control(rn, kSERDSetBreak, (Ptr)0);
+}
+
+pascal OSErr SerClrBrk(INTEGER rn) /* IMII-253 */
+{
+    return Control(rn, kSERDClearBreak, (Ptr)0);
+}
+
+pascal OSErr SerGetBuf(INTEGER rn, LONGINT *lp) /* IMII-253 */
+{
+    INTEGER status[11];
+    OSErr err;
+
+    if((err = Status(rn, kSERDInputCount, (Ptr)status)) == noErr)
+        *lp = *(LONGINT *)status;
+    return err;
+}
+
+pascal OSErr SerStatus(INTEGER rn, SerStaRec *serstap) /* IMII-253 */
+{
+    INTEGER status[11];
+    OSErr err;
+
+    if((err = Status(rn, kSERDStatus, (Ptr)status)) == noErr)
+        memcpy(serstap, status, sizeof(*serstap));
+    return err;
+}
