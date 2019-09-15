@@ -10,7 +10,7 @@
     return: uint32_t
     args:
       - name: classAndName
-      - type: uint32_t
+        type: uint32_t
     inline: ((classAndName) >> 24) & 0xFF
 
 - function:
@@ -18,7 +18,7 @@
     return: uint32_t
     args:
       - name: classAndName
-      - type: uint32_t
+        type: uint32_t
     inline: (classAndName) & 0xFFFFFF
     
 - function:
@@ -26,9 +26,9 @@
     return: uint32_t
     args:
       - name: cls
-      - type: uint32_t
+        type: uint32_t
       - name: nameOffset
-      - type: uint32_t
+        type: uint32_t
     inline: (((uint32_t)cls) << 24) | (uint32_t)(nameOffset)
 
 - function:
@@ -36,14 +36,14 @@
     return: uint16_t
     args:
       - name: runLength
-      - type: uint16_t
+        type: uint16_t
     inline: 0x4000 | ((uint16_t)(runLength) - 1)
 - function:
     name: PEFRelocComposeBySectD
     return: uint16_t
     args:
       - name: runLength
-      - type: uint16_t
+        type: uint16_t
     inline: 0x4200 | ((uint16_t)(runLength) - 1)
 
 - function:
@@ -51,7 +51,7 @@
     return: uint16_t
     args:
       - name: fullOffset
-      - type: uint32_t
+        type: uint32_t
     inline: 0xA000 | (uint16_t)((uint32_t)(fullOffset) >> 16)
 
 - function:
@@ -59,7 +59,7 @@
     return: uint16_t
     args:
       - name: fullOffset
-      - type: uint32_t
+        type: uint32_t
     inline: (uint16_t) ((uint32_t)(fullOffset))
 
 - function:
@@ -67,7 +67,7 @@
     return: uint16_t
     args:
       - name: fullIndex
-      - type: uint32_t
+        type: uint32_t
     inline: 0xA400 | (uint16_t)((uint32_t)(fullIndex) >> 16)
 
 - function:
@@ -75,5 +75,5 @@
     return: uint16_t
     args:
       - name: fullIndex
-      - type: uint32_t
+        type: uint32_t
     inline: (uint16_t) ((uint32_t)(fullIndex))
