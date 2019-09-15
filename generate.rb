@@ -33,31 +33,6 @@ def first_elem(item)
 end
 
 $global_name_map = {}
-$type_size_map = {
-    "uint8_t" => 1,
-    "uint16_t" => 2,
-    "uint32_t" => 4,
-    "uint64_t" => 8,
-    "int8_t" => 1,
-    "int16_t" => 2,
-    "int32_t" => 4,
-    "int64_t" => 8,
-    "char" => 1,
-    "Point" => 4,
-    "ProcPtr" => 8,
-    "void" => 0
-}
-def size_of_type(type)
-    return nil if not type
-    return $type_size_map[type] if $type_size_map[type]
-    return 4 if type =~ /[*\[\]]/
-    return nil
-end
-def encode_size(type)
-    sz = size_of_type(type)
-    return 4 unless sz
-    return sz >= 4 ? 3 : sz
-end
 
 class HeaderFile
     attr_reader :file, :name, :declared_names, :required_names, :included, :included_why, :data

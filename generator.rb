@@ -1,4 +1,28 @@
 class Generator
+    def initialize
+        @type_size_map = {
+            "uint8_t" => 1,
+            "uint16_t" => 2,
+            "uint32_t" => 4,
+            "uint64_t" => 8,
+            "int8_t" => 1,
+            "int16_t" => 2,
+            "int32_t" => 4,
+            "int64_t" => 8,
+            "char" => 1,
+            "Point" => 4,
+            "ProcPtr" => 8,
+            "void" => 0
+        }
+        
+    end
+    def size_of_type(type)
+        return nil if not type
+        return @type_size_map[type] if @type_size_map[type]
+        return 4 if type =~ /[*\[\]]/
+        return nil
+    end
+
     def starredtext(str, align, lchar:'*', rchar:'*')
         maxlinelen = str.lines.map{|s| s.rstrip.length}.max
         
@@ -81,13 +105,17 @@ class Generator
         end
     end
 
+    def convert_expression(expr)
+        return expr
+    end
+
     def declare_enum(value)
         @out << "typedef " if value["name"]
         @out << "enum {"
         value["values"].each do |val|
             @out << val["name"]
             if val["value"] then
-                @out << "= " << val["value"].to_s << ","
+                @out << "= " << convert_expression(val["value"].to_s) << ","
             else
                 @out << ","
             end
@@ -103,7 +131,7 @@ class Generator
         @out << ";"
 
         sz = size_of_type(value["type"])
-        $type_size_map[value["name"]] = sz if sz
+        @type_size_map[value["name"]] = sz if sz
     end
 
     def generate_preamble(header)
@@ -119,7 +147,6 @@ class Generator
         @out << "\n\n"
     end
     def generate_postamble(header)
-        box(value["name"], value["comment"])
     end
     def generate_comment(key, value)
         box(value["name"], value["comment"]) unless key == "executor_only"
@@ -161,7 +188,7 @@ class Generator
         
             @out << "\n\n"
         end
-        
+        generate_postamble(header)
         return @out
     end
 

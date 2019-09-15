@@ -1,6 +1,12 @@
 require './generator'
 
 class CIncludesGenerator < Generator
+    def encode_size(type)
+        sz = size_of_type(type)
+        return 4 unless sz
+        return sz >= 4 ? 3 : sz
+    end
+    
     def decl(type, thing)
         if thing then
             type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
@@ -219,19 +225,8 @@ class CIncludesGenerator < Generator
 
         @out << (value["return"] or "void") << " "
         @out << "(*" << name << "ProcPtr" << ")("
-
-        first = true
         args = (value["args"] or [])
-        args.each do |arg|
-            @out << "," unless first
-            first = false
-
-            if arg["name"] then
-                @out << decl(arg["type"], arg["name"])
-            else
-                @out << arg["type"]
-            end
-        end
+        @out << args.map {|arg|decl(arg["type"], arg["name"])}.join(", ")
         @out << ");\n"
         
         if args.any? {|arg| arg["register"]} then
