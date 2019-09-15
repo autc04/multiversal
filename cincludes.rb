@@ -1,28 +1,12 @@
 require './generator'
 
 class CIncludesGenerator < Generator
-
     def decl(type, thing)
         if thing then
             type =~ /(const +)?([A-Za-z0-9_]+) *((\* *)*)(.*)/
             return "#{$1}#{$2} #{$3}#{thing}#{$5}"
         else
             return type
-        end
-    end
-
-    def declare_members(members)
-        members.each do |member|
-            sub = (member["struct"] or member["union"])
-            if sub then
-                @out << (if member["struct"] then "struct" else "union" end) << "{"
-                declare_members sub
-                @out << "} " << member["name"] << ";"
-            elsif member["common"]
-                declare_members($global_name_map[member["common"]]["common"]["members"])
-            else
-                @out << decl(member["type"], member["name"]) << ";"
-            end
         end
     end
 
@@ -88,6 +72,13 @@ class CIncludesGenerator < Generator
     end
 
     def declare_function(fun, variant_index:nil)
+        return if fun["name"] =~ /ROMlib/
+        if fun["variants"] and not variant_index
+            
+            fun["variants"].each_index { |i| declare_function(fun, variant_index:i) }
+            return
+        end
+
         complex = false
 
         name = fun["name"]
@@ -200,155 +191,112 @@ class CIncludesGenerator < Generator
         end
     end
 
-
-    def generate_header(header, add_includes:true)
-        @out = ""
-        @impl_out = ""
-
-        make_title(header)
-
-        if add_includes then
-            @out << "#pragma once\n"
-            @out << "#include <stdint.h>\n"
-            header.included.each do |file|
-                @out << "#include \"#{file}.h\"\n"
-            end
-            @out << "\n\n"
+    def declare_struct_union(what, value)
+        @out << "typedef #{what} #{value["name"]} #{value["name"]};"
+                
+        if value["members"] then
+            @out << "#{what} #{value["name"]} {"
+            declare_members(value["members"])
+            @out << "};"
         end
+    end
+
+    def declare_dispatcher(value)
+        declare_trapnum(value["name"], value["trap"]) unless value["selector-location"] == "TrapBits"
+    end
+
+
+    def declare_funptr(value)
+        @out << "typedef pascal "
+
+        name = value["name"]
+        if name=~/^([A-Za-z_][A-Za-z0-9]*)(ProcPtr|UPP)$/ then
+            name = $1 
+        else
+            print "WARNING: strange function pointer #{name}\n"
+        end
+                      
+
+        @out << (value["return"] or "void") << " "
+        @out << "(*" << name << "ProcPtr" << ")("
+
+        first = true
+        args = (value["args"] or [])
+        args.each do |arg|
+            @out << "," unless first
+            first = false
+
+            if arg["name"] then
+                @out << decl(arg["type"], arg["name"])
+            else
+                @out << arg["type"]
+            end
+        end
+        @out << ");\n"
+        
+        if args.any? {|arg| arg["register"]} then
+            procinfo = 42;
+            print "WARNING UNSUPPORTED register funptr: #{name}\n"
+        else
+            procinfo = 0;
+            procinfo |= encode_size(value["return"]) << 4
+            shift = 6
+            args.each do |arg|
+                procinfo |= encode_size(arg["type"]) << shift
+                shift += 2
+            end
+        end
+        
+        @out << <<~UPPDECL
+            #if TARGET_RT_MAC_CFM
+            typedef UniversalProcPtr #{name}UPP;
+            enum { upp#{name}ProcInfo = #{hexlit(procinfo,32)} };
+        UPPDECL
+        declare_inline("New#{name}UPP", "#{name}UPP", [{"name"=>"proc", "type"=>"#{name}ProcPtr"}],
+            "(#{name}UPP)NewRoutineDescriptor((ProcPtr)(proc), upp#{name}ProcInfo, GetCurrentArchitecture())")
+        declare_inline("Dispose#{name}UPP", nil, [{"name"=>"upp", "type"=>"#{name}UPP"}],
+            "DisposeRoutineDescriptor((UniversalProcPtr)(upp))")
+        @out << <<~UPPDECL
+            #else
+
+            typedef #{name}ProcPtr #{name}UPP;
+            #define New#{name}UPP(proc) (proc)
+            #define Dispose#{name}UPP(proc) do { } while(false)
+
+            #endif
+
+            #define New#{name}Proc(proc) New#{name}UPP(proc)
+            #define Dispose#{name}Proc(proc) Dispose#{name}UPP(proc)
+
+        UPPDECL
+    end
+
+    def declare_lowmem(value)
+        if value["type"] =~ /^(.*)\[[^\[\]]*\]$/ then
+            declare_inline("LMGet" + value["name"], $1 + "*", [], "(#{$1}*)" + hexlit(value["address"]))
+        else
+            expr = "*(#{value["type"]}*)" + hexlit(value["address"])
+            declare_inline("LMGet" + value["name"], value["type"], [], expr)
+            declare_inline("LMSet" + value["name"], "void",
+                [{"type" => value["type"], "name" => "val"}], expr + " = val")
+        end
+    end
+
+    def generate_preamble(header)
+        super
         @out << "#pragma pack(push, 2)\n"
         @out << "\n\n"
-
-        header.data.each do |item|
-            key, value = first_elem(item)
-        
-            box(value["name"], value["comment"]) unless key == "executor_only"
-        
-            case key
-            when "enum"
-                @out << "typedef " if value["name"]
-                @out << "enum {"
-                value["values"].each do |val|
-                    @out << val["name"]
-                    if val["value"] then
-                        @out << "= " << val["value"].to_s << ","
-                    else
-                        @out << ","
-                    end
-                end
-                @out << "}"
-                @out << value["name"] if value["name"]
-                @out << ";"
-
-            when "struct", "union"
-                @out << "typedef #{key} #{value["name"]} #{value["name"]};"
-                
-                if value["members"] then
-                    @out << "#{key} #{value["name"]} {"
-                    declare_members(value["members"])
-                    @out << "};"
-                end
-                
-            when "dispatcher"
-                declare_trapnum(value["name"], value["trap"]) unless value["selector-location"] == "TrapBits"
-
-            when "typedef"
-                @out << "typedef "
-                @out << decl(value["type"], value["name"])
-                @out << ";"
-
-                sz = size_of_type(value["type"])
-                $type_size_map[value["name"]] = sz if sz
-        
-            when "function"
-                next if value["name"] =~ /ROMlib/
-
-                if value["variants"] then
-                    value["variants"].each_index { |i| declare_function(value, variant_index:i) }
-                else
-                    declare_function(value)
-                end
-
-            when "lowmem"
-                if value["type"] =~ /^(.*)\[[^\[\]]*\]$/ then
-                    declare_inline("LMGet" + value["name"], $1 + "*", [], "(#{$1}*)" + hexlit(value["address"]))
-                else
-                    expr = "*(#{value["type"]}*)" + hexlit(value["address"])
-                    declare_inline("LMGet" + value["name"], value["type"], [], expr)
-                    declare_inline("LMSet" + value["name"], "void",
-                        [{"type" => value["type"], "name" => "val"}], expr + " = val")
-                end
-
-            when "funptr"
-                @out << "typedef pascal "
-
-                name = value["name"]
-                if name=~/^([A-Za-z_][A-Za-z0-9]*)(ProcPtr|UPP)$/ then
-                    name = $1 
-                else
-                    print "WARNING: strange function pointer #{name}\n"
-                end
-                              
-
-                @out << (value["return"] or "void") << " "
-                @out << "(*" << name << "ProcPtr" << ")("
-
-                first = true
-                args = (value["args"] or [])
-                args.each do |arg|
-                    @out << "," unless first
-                    first = false
-        
-                    if arg["name"] then
-                        @out << decl(arg["type"], arg["name"])
-                    else
-                        @out << arg["type"]
-                    end
-                end
-                @out << ");\n"
-                
-                if args.any? {|arg| arg["register"]} then
-                    procinfo = 42;
-                    print "WARNING UNSUPPORTED register funptr: #{name}\n"
-                else
-                    procinfo = 0;
-                    procinfo |= encode_size(value["return"]) << 4
-                    shift = 6
-                    args.each do |arg|
-                        procinfo |= encode_size(arg["type"]) << shift
-                        shift += 2
-                    end
-                end
-                
-                @out << <<~UPPDECL
-                    #if TARGET_RT_MAC_CFM
-                    typedef UniversalProcPtr #{name}UPP;
-                    enum { upp#{name}ProcInfo = #{hexlit(procinfo,32)} };
-                UPPDECL
-                declare_inline("New#{name}UPP", "#{name}UPP", [{"name"=>"proc", "type"=>"#{name}ProcPtr"}],
-                    "(#{name}UPP)NewRoutineDescriptor((ProcPtr)(proc), upp#{name}ProcInfo, GetCurrentArchitecture())")
-                declare_inline("Dispose#{name}UPP", nil, [{"name"=>"upp", "type"=>"#{name}UPP"}],
-                    "DisposeRoutineDescriptor((UniversalProcPtr)(upp))")
-                @out << <<~UPPDECL
-                    #else
-
-                    typedef #{name}ProcPtr #{name}UPP;
-                    #define New#{name}UPP(proc) (proc)
-                    #define Dispose#{name}UPP(proc) do { } while(false)
-
-                    #endif
-
-                    #define New#{name}Proc(proc) New#{name}UPP(proc)
-                    #define Dispose#{name}Proc(proc) Dispose#{name}UPP(proc)
-
-                UPPDECL
-            end
-        
-            @out << "\n\n"
-        end
-        @out << "#pragma pack(pop)\n\n\n"              
-        
-        return @out, @impl_out
     end
+
+    def generate_postamble(header)
+        @out << "#pragma pack(pop)\n\n\n"              
+        super
+    end
+
+    def generate_comment(key, value)
+        super unless key == "executor_only"
+    end
+    
 
     def generate(defs)
         @functions_needing_glue = []
@@ -397,14 +345,14 @@ class CIncludesGenerator < Generator
         
             defs.topsort.each do |name|
                 header = defs.headers[name]
-                inc, src = generate_header(header, add_includes: false)
+                inc = generate_header(header)
         
                 f << inc
         
-                if src and src.length > 0 then
+                if @impl_out.length > 0 then
                     formatted_file("out/src/#{header.name}.c") do |f|
                         f << "#include \"Multiverse.h\"\n"
-                        f << src
+                        f << @impl_out
                     end
                 end
             end
@@ -446,6 +394,5 @@ class CIncludesGenerator < Generator
             system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
         end
         system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
-        
     end
 end

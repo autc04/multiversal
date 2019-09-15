@@ -4,6 +4,7 @@ require 'fileutils'
 
 require './generator'
 require './cincludes'
+require './executor'
 
 BUILTIN_NAMES=Set.new [
     "uint8_t", "uint16_t", "uint32_t", "uint64_t",
@@ -201,4 +202,12 @@ end
 
 defs = Defs.new(filter_key: "CIncludes")
 
-CIncludesGenerator.new.generate(defs)
+what = ARGV[0] or "--cincludes"
+case what
+when "--cincludes"
+    CIncludesGenerator.new.generate(defs)
+when "--executor"
+    ExecutorGenerator.new.generate(defs)
+else
+    print("what?? '#{what}'\n")
+end
