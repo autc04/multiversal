@@ -24,7 +24,10 @@ def hexlit(thing, sz=16)
     end
 end
 
-$functions_needing_glue = []
+def first_elem(item)
+    item.each { |key, value| return key, value }
+end
+
 $global_name_map = {}
 $type_size_map = {
     "uint8_t" => 1,
@@ -83,10 +86,6 @@ class HeaderFile
     end
 
 private
-
-    def first_elem(item)
-        item.each { |key, value| return key, value }
-    end
 
     def collect_dep(str)
         tmp = str.to_s.dup
@@ -197,10 +196,6 @@ private
 end
 
 class Generator
-    def first_elem(item)
-        item.each { |key, value| return key, value }
-    end
-
     def starredtext(str, align, lchar:'*', rchar:'*')
         maxlinelen = str.lines.map{|s| s.rstrip.length}.max
         
@@ -237,6 +232,56 @@ class Generator
             starline
         end
     end
+
+
+    def document_dependencies(header)
+        out = ""
+        if header.included.size > 0 then
+            out << "Needs:\n"
+            
+            colwidth = header.included.map(&:size).max + 4 + 2 + 4
+            maxlinelen = 70
+
+            header.included.each do |inc|
+                line = " " * 4 + inc + ".h"
+                line << " " * (colwidth - line.length)
+                indent = line.length
+                whys = header.included_why[inc].to_a
+                whys.each_index do |idx|
+                    why = whys[idx]
+                    last = (idx == whys.size - 1)
+                    if line.length + why.size + (last ? 0 : 1) > maxlinelen
+                        out << line << "\n"
+                        line = " " * indent
+                    end
+                    line << why
+                    line << ", " unless last
+                end
+                out << line << "\n"
+            end
+        end
+        return out
+    end
+
+    def make_title(header)
+        title = "\n" + header.name + ".h\n" + "="*(header.name.length+2) + "\n"
+        titlecomment = nil
+        if header.included.size > 0 then
+            titlecomment = document_dependencies(header)
+            titlecomment << "\n\n"
+        else
+            title << "\n"
+        end
+        box(title, titlecomment)
+        @out << "\n\n"
+    end
+
+    def formatted_file(name, &block)
+        IO.popen("clang-format | grep -v \"// clang-format o\" > #{name}", "w", &block)
+    end
+end
+
+class CIncludesGenerator < Generator
 
     def decl(type, thing)
         if thing then
@@ -432,54 +477,16 @@ class Generator
         end
 
         if not fun["inline"] and (m68kinlines.length == 0 or complex) then
-            $functions_needing_glue << name
+            @functions_needing_glue << name
         end
     end
 
-    def document_dependencies(header)
-        out = ""
-        if header.included.size > 0 then
-            out << "Needs:\n"
-            
-            colwidth = header.included.map(&:size).max + 4 + 2 + 4
-            maxlinelen = 70
-
-            header.included.each do |inc|
-                line = " " * 4 + inc + ".h"
-                line << " " * (colwidth - line.length)
-                indent = line.length
-                whys = header.included_why[inc].to_a
-                whys.each_index do |idx|
-                    why = whys[idx]
-                    last = (idx == whys.size - 1)
-                    if line.length + why.size + (last ? 0 : 1) > maxlinelen
-                        out << line << "\n"
-                        line = " " * indent
-                    end
-                    line << why
-                    line << ", " unless last
-                end
-                out << line << "\n"
-            end
-        end
-        return out
-    end
 
     def generate_header(header, add_includes:true)
         @out = ""
         @impl_out = ""
 
-        title = "\n" + header.name + ".h\n" + "="*(header.name.length+2) + "\n"
-        titlecomment = nil
-        if not add_includes and header.included.size > 0 then
-            titlecomment = document_dependencies(header)
-            titlecomment << "\n\n"
-        else
-            title << "\n"
-        end
-        box(title, titlecomment)
-
-        @out << "\n\n"
+        make_title(header)
 
         if add_includes then
             @out << "#pragma once\n"
@@ -624,103 +631,106 @@ class Generator
         return @out, @impl_out
     end
 
-
+    def generate(defs)
+        @functions_needing_glue = []
+        
+        FileUtils.mkdir_p "out/CIncludes"
+        FileUtils.mkdir_p "out/RIncludes"
+        FileUtils.mkdir_p "out/src"
+        FileUtils.mkdir_p "out/obj"
+        FileUtils.mkdir_p "out/lib"
+        
+        formatted_file("out/CIncludes/Multiverse.h") do |f|
+            f << <<~PREAMBLE
+                #pragma once
+                #include <stdint.h>
+                #include <stdbool.h>
+                #include <stddef.h>
+                
+                #ifdef __m68k__
+                    #define TARGET_CPU_68K 1
+                    #define TARGET_CPU_PPC 0
+                    #define TARGET_RT_MAC_CFM 0
+                    #define M68K_INLINE(...) = { __VA_ARGS__ }
+                    #define GetCurrentArchitecture() ((int8_t)0)
+                #else
+                    #define TARGET_CPU_68K 0
+                    #define TARGET_CPU_PPC 1
+                    #define TARGET_RT_MAC_CFM 1
+                    #define M68K_INLINE(...)
+                    #define GetCurrentArchitecture() ((int8_t)1)
+        
+                    #ifndef pascal
+                        #define pascal
+                    #endif
+                #endif
+        
+                #define TARGET_API_MAC_CARBON 0
+        
+                //typedef void (*ProcPtr)();
+                typedef struct RoutineDescriptor *ProcPtr;
+                #define nil NULL
+        
+                #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
+            
+            
+            PREAMBLE
+        
+            defs.topsort.each do |name|
+                header = defs.headers[name]
+                inc, src = generate_header(header, add_includes: false)
+        
+                f << inc
+        
+                if src and src.length > 0 then
+                    formatted_file("out/src/#{header.name}.c") do |f|
+                        f << "#include \"Multiverse.h\"\n"
+                        f << src
+                    end
+                end
+            end
+        
+            f << <<~POSTAMBLE
+        
+                extern QDGlobals qd;
+                #define UnloadSeg(x) do {} while(false)
+            POSTAMBLE
+        end
+        
+        ["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
+            "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
+            "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
+            "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
+            "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
+            "StandardFile", "Serial"].each do |name|
+            File.open("out/CIncludes/#{name}.h", "w") do |f|
+                f << "#pragma once\n"
+                f << "#include \"Multiverse.h\"\n"
+            end
+        end 
+        
+        Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "out/RIncludes/")}
+        Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "out/src/")}
+        ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
+         "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
+            File.open("out/RIncludes/#{name}.r", "w") do |f|
+                f << "#include \"Multiverse.r\"\n"
+            end
+        end
+        
+        File.open("out/CIncludes/needs-glue.txt", "w") do |f|
+            @functions_needing_glue.each {|name| f << name + "\n"}
+        end
+        
+        Dir.glob('out/src/*.c') do |file|
+            name = File.basename(file, '.c')
+            system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
+        end
+        system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
+        
+    end
 end
-
-FileUtils.mkdir_p "out/CIncludes"
-FileUtils.mkdir_p "out/RIncludes"
-FileUtils.mkdir_p "out/src"
-FileUtils.mkdir_p "out/obj"
-FileUtils.mkdir_p "out/lib"
 
 defs = Defs.new(filter_key: "CIncludes")
 
-gen = Generator.new
-
-IO.popen("clang-format | grep -v \"// clang-format o\" > out/CIncludes/Multiverse.h", "w") do |f|
-    f << <<~PREAMBLE
-        #pragma once
-        #include <stdint.h>
-        #include <stdbool.h>
-        #include <stddef.h>
-        
-        #ifdef __m68k__
-            #define TARGET_CPU_68K 1
-            #define TARGET_CPU_PPC 0
-            #define TARGET_RT_MAC_CFM 0
-            #define M68K_INLINE(...) = { __VA_ARGS__ }
-            #define GetCurrentArchitecture() ((int8_t)0)
-        #else
-            #define TARGET_CPU_68K 0
-            #define TARGET_CPU_PPC 1
-            #define TARGET_RT_MAC_CFM 1
-            #define M68K_INLINE(...)
-            #define GetCurrentArchitecture() ((int8_t)1)
-
-            #ifndef pascal
-                #define pascal
-            #endif
-        #endif
-
-        #define TARGET_API_MAC_CARBON 0
-
-        //typedef void (*ProcPtr)();
-        typedef struct RoutineDescriptor *ProcPtr;
-        #define nil NULL
-
-        #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
-    
-    
-    PREAMBLE
-
-    defs.topsort.each do |name|
-        header = defs.headers[name]
-        inc, src = gen.generate_header(header, add_includes: false)
-
-        f << inc
-
-        if src and src.length > 0 then
-            IO.popen("clang-format | grep -v \"// clang-format o\" > out/src/#{header.name}.c", "w") do |f|
-                f << "#include \"Multiverse.h\"\n"
-                f << src
-            end
-        end
-    end
-
-    f << <<~POSTAMBLE
-
-        extern QDGlobals qd;
-        #define UnloadSeg(x) do {} while(false)
-    POSTAMBLE
-end
-
-["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
-    "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
-    "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
-    "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-    "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
-    "StandardFile", "Serial"].each do |name|
-    File.open("out/CIncludes/#{name}.h", "w") do |f|
-        f << "#pragma once\n"
-        f << "#include \"Multiverse.h\"\n"
-    end
-end 
-
-Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "out/RIncludes/")}
-Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "out/src/")}
-["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
- "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
-    File.open("out/RIncludes/#{name}.r", "w") do |f|
-        f << "#include \"Multiverse.r\"\n"
-    end
-end
-
-File.open("out/CIncludes/needs-glue.txt", "w") do |f|
-    $functions_needing_glue.each {|name| f << name + "\n"}
-end
-
-Dir.glob('out/src/*.c') do |file|
-    name = File.basename(file, '.c')
-    system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
-end
-system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
+CIncludesGenerator.new.generate(defs)
