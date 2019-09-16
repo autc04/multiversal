@@ -76,18 +76,35 @@ class ExecutorGenerator < Generator
         @out << ";"
     end
     def declare_dispatcher(value)
+        @out << "DISPATCHER_TRAP(#{value["name"]}, "
+        @out << "#{hexlit(value["trap"])}, #{value["selector-location"]});\n"
     end
     def declare_lowmem(value)
         @out << "const LowMemGlobal<#{decl(value["type"])}> #{value["name"]}"
         @out << "{ #{hexlit(value["address"],12)} };"
     end
 
-    def declare_function(value)
-        @out << (value["return"] or "void") << " " << value["name"]
-        if value["args"] then
-            @out << "(" << (value["args"].map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
+    def declare_function(fun)
+        renamed = true
+
+        name = fun["name"]
+        dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
+        trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
+
+        cname = renamed ? "C_"+name : name
+        @out << (fun["return"] or "void") << " " << cname
+
+        args = (fun["args"] or [])
+
+        @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
+
+        if fun["returnreg"] or args.any? {|arg| arg["register"]} then
+        elsif fun["selector"] then
+            @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
+            @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
+        elsif trap then
+            @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
         else
-            @out << "();"
         end
     end
 
