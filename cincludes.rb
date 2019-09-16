@@ -355,7 +355,9 @@ class CIncludesGenerator < Generator
             f << <<~POSTAMBLE
         
                 extern QDGlobals qd;
+                #if TARGET_RT_MAC_CFM
                 #define UnloadSeg(x) do {} while(false)
+                #endif
             POSTAMBLE
         end
         
