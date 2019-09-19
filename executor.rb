@@ -92,14 +92,31 @@ class ExecutorGenerator < Generator
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
         cname = renamed ? "C_"+name : name
+        cname = fun["executor_impl"] if fun["executor_impl"]
+
         @out << (fun["return"] or "void") << " " << cname
 
         args = (fun["args"] or [])
 
         @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
 
-        if trap and (fun["returnreg"] or args.any? {|arg| arg["register"]}) then
-            if fun["selector"] then
+        if fun["file_trap"] == "mfs" then
+        elsif fun["file_trap"] == "hfs" then
+            @out << "HFS_TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
+            @out << "#{fun["args"][0]["type"]}, #{hexlit(trap)});"
+        elsif fun["file_trap"] then
+            @out << "FILE_TRAP(#{name}, #{fun["args"][0]["type"]}, #{hexlit(trap)});"
+        elsif trap and (fun["returnreg"] or args.any? {|arg| arg["register"]}) then
+            if fun["variants"] then
+                variants = fun["variants"]
+                nflagstr = variants.size >= 3 ? "2" : ""
+                @out << "REGISTER_#{nflagstr}FLAG_TRAP(#{cname}, #{variants.join(", ")}, "
+                @out << "#{hexlit(trap)}, "
+                @out << (fun["return"] or "void")
+                args1 = variants.size >= 3 ? fun["args"][0..-3] : fun["args"][0..-2]
+                @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
+                @out << ", "
+            elsif fun["selector"] then
                 @out << "REGISTER_SUBTRAP(#{name}, #{hexlit(trap)}, "
                 @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}, "
             else

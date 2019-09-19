@@ -678,6 +678,8 @@ trap:
 			setRegisterArgs(n, $17);
 			
 			n["variants"] = std::vector<std::string>{ $5, $7 };
+			if($3 != $5)
+				n["executor_impl"] = $3;
 		}
 	|	"REGISTER_2FLAG_TRAP" "("
 			IDENTIFIER "," 
@@ -692,6 +694,8 @@ trap:
 			setRegisterArgs(n, $21);
 
 			n["variants"] = std::vector<std::string>{ $5, $7, $9, $11 };
+			if($3 != $5)
+				n["executor_impl"] = $3;
 		}
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
