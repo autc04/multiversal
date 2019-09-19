@@ -98,13 +98,34 @@ class ExecutorGenerator < Generator
 
         @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
 
-        if fun["returnreg"] or args.any? {|arg| arg["register"]} then
+        if trap and (fun["returnreg"] or args.any? {|arg| arg["register"]}) then
+            if fun["selector"] then
+                @out << "REGISTER_SUBTRAP(#{name}, #{hexlit(trap)}, "
+                @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}, "
+            else
+                @out << "REGISTER_TRAP(#{name}, #{hexlit(trap)}, "
+            end
+            @out << (fun["returnreg"] or "void")
+            argregs = args.map do |arg|
+                basetype = $1 if arg["type"] =~ /^(.*)\* *$/
+                if arg["register"] =~ /^Out<(.*)>$/ then
+                    "Out<#{basetype}, #{$1}>"
+                elsif arg["register"] =~ /^InOut<(.*)>$/ then
+                    "InOut<#{basetype}, #{$1}>"
+                else
+                    arg["register"]
+                end
+            end
+            @out << "(" << argregs.join(", ") << ")"
+
+            @out << ");\n"
         elsif fun["selector"] then
             @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
             @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
         elsif trap then
             @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
         else
+            @out << "NOTRAP_FUNCTION(#{name});\n"
         end
     end
 
