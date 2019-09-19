@@ -85,14 +85,16 @@ class ExecutorGenerator < Generator
     end
 
     def declare_function(fun)
-        renamed = true
 
         name = fun["name"]
         dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
-        cname = renamed ? "C_"+name : name
-        cname = fun["executor_impl"] if fun["executor_impl"]
+        if fun["executor_impl"] then
+            cname = fun["executor_impl"]
+        else
+            cname = (fun["executor_prefix"] or "") + name
+        end
 
         @out << (fun["return"] or "void") << " " << cname
 
@@ -100,12 +102,20 @@ class ExecutorGenerator < Generator
 
         @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
 
+        trap_sel_disp = hexlit(trap)
+        if fun["selector"] then
+            sub = "SUB"
+            trap_sel_disp += ", #{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}"
+        else
+            sub = ""
+        end
+
         if fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
-            @out << "HFS_TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
-            @out << "#{fun["args"][0]["type"]}, #{hexlit(trap)});"
+            @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
+            @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
         elsif fun["file_trap"] then
-            @out << "FILE_TRAP(#{name}, #{fun["args"][0]["type"]}, #{hexlit(trap)});"
+            @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
         elsif trap and (fun["returnreg"] or args.any? {|arg| arg["register"]}) then
             if fun["variants"] then
                 variants = fun["variants"]
@@ -116,11 +126,9 @@ class ExecutorGenerator < Generator
                 args1 = variants.size >= 3 ? fun["args"][0..-3] : fun["args"][0..-2]
                 @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
                 @out << ", "
-            elsif fun["selector"] then
-                @out << "REGISTER_SUBTRAP(#{name}, #{hexlit(trap)}, "
-                @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}, "
             else
-                @out << "REGISTER_TRAP(#{name}, #{hexlit(trap)}, "
+                two = name == cname ? "2" : ""
+                @out << "REGISTER_#{sub}TRAP#{two}(#{name}, #{trap_sel_disp}, "
             end
             @out << (fun["returnreg"] or "void")
             argregs = args.map do |arg|

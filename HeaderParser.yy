@@ -647,18 +647,24 @@ trap:
 	|	"PASCAL_TRAP" "(" IDENTIFIER "," INTLIT ")" ";"
 		{
 			renameThing("C_"+$3, $3);
-			thingByName($3).begin()->second["trap"] = $5;
+			auto& n = thingByName($3).begin()->second;
+			n["trap"] = $5;
+			n["executor_prefix"] = "C_";
 		}
-	|	"PASCAL_FUNCTION" "(" IDENTIFIER ")" ";"
 	|	"NOTRAP_FUNCTION" "(" IDENTIFIER ")" ";"
-		{ renameThing("C_"+$3, $3); }
+		{
+			renameThing("C_"+$3, $3);
+			auto& n = thingByName($3).begin()->second;
+			n["executor_prefix"] = "C_";
+		}
 	|	"NOTRAP_FUNCTION2" "(" IDENTIFIER ")" ";"
 	|	"PASCAL_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 		{
 			renameThing("C_"+$3, $3);
-			auto& fun = thingByName($3);
-			fun.begin()->second["dispatcher"] = $9;
-			fun.begin()->second["selector"] = $7;
+			auto& n = thingByName($3).begin()->second;
+			n["dispatcher"] = $9;
+			n["selector"] = $7;
+			n["executor_prefix"] = "C_";
 		}
 	|	"REGISTER_TRAP2" "(" IDENTIFIER "," INTLIT "," regcall_conv regcall_extras ")" ";"
 		{
@@ -704,6 +710,7 @@ trap:
 			n["dispatcher"] = $9;
 			n["selector"] = $7;
 			setRegisterArgs(n, $11);
+			n["executor_prefix"] = "C_";
 		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
