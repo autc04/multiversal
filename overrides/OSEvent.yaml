@@ -1,7 +1,8 @@
 
 # ####
 
-- function:
+- not-for: executor
+  function:
     name: FlushEvents
     args:
       - name: evmask
@@ -13,7 +14,8 @@
 
 # ####
 
-- function:
+- not-for: executor
+  function:
     name: GetOSEvent
     return: Boolean
     args:
@@ -29,7 +31,8 @@
 
 # ####
 
-- function:
+- not-for: executor
+  function:
     name: OSEventAvail
     return: Boolean
     args:
@@ -42,3 +45,47 @@
     trap: 0xA030
     m68k-inline: [0xA030, 0x5240]
     returnreg: D0
+
+
+- only-for: executor
+  function:
+    name: FlushEvents
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0LowWord
+      - name: stopmask
+        type: INTEGER
+        register: D0HighWord
+    trap: 0xA032
+    executor_extras: ClearD0
+
+- only-for: executor
+  function:
+    name: GetOSEvent
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA031
+    returnreg: D0Minus1Boolean
+
+# ####
+
+- only-for: executor
+  function:
+    name: OSEventAvail
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA030
+    returnreg: D0Minus1Boolean

@@ -175,13 +175,14 @@ private
 end
 
 
-defs = Defs.new(filter_key: "CIncludes")
 
 what = ARGV[0] or "--cincludes"
 case what
 when "--cincludes"
+    defs = Defs.new(filter_key: "CIncludes")
     CIncludesGenerator.new.generate(defs)
 when "--executor"
+    defs = Defs.new(filter_key: "executor")
     ExecutorGenerator.new.generate(defs)
 else
     print("what?? '#{what}'\n")

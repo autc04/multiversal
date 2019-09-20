@@ -4,7 +4,7 @@ class ExecutorGenerator < Generator
     def initialize
         super
         @need_guest = false
-        @noguest_types = Set.new(["void"])
+        @noguest_types = Set.new(["void", "Point"])
     end
 
     def need_guest
@@ -19,7 +19,7 @@ class ExecutorGenerator < Generator
     end
 
     def type_needs_guest?(type)
-        size_of_type(type) != 1 and not @noguest_types.include?(type)
+        size_of_type(type) != 1 && ! @noguest_types.include?(type)
     end
 
     def guestify_type(type, guest)
@@ -29,11 +29,11 @@ class ExecutorGenerator < Generator
             post = $2
             type1, _, _ = guestify_type($1, true)
             
-            if guest then
-                return "GUEST<#{type1}#{post}>", "", ""
-            else
+            #if guest then
+            #    return "GUEST<#{type1}#{post}>", "", ""
+            #else
                 return type1, "", post
-            end
+            #end
         elsif type =~ /^(.*)\*$/ then
             type1, _, _ = guestify_type($1, true)
 
@@ -92,8 +92,12 @@ class ExecutorGenerator < Generator
 
         if fun["executor_impl"] then
             cname = fun["executor_impl"]
+        elsif fun["executor_prefix"] then
+            cname = fun["executor_prefix"] + name
+        elsif not trap then
+            cname = "C_" + name
         else
-            cname = (fun["executor_prefix"] or "") + name
+            cname = name
         end
 
         @out << (fun["return"] or "void") << " " << cname
@@ -110,13 +114,15 @@ class ExecutorGenerator < Generator
             sub = ""
         end
 
+        print fun if name == "FlushEvents"
+
         if fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
             @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
             @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
         elsif fun["file_trap"] then
             @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
-        elsif trap and (fun["returnreg"] or args.any? {|arg| arg["register"]}) then
+        elsif trap and (fun["returnreg"] || args.any? {|arg| arg["register"]}) then
             if fun["variants"] then
                 variants = fun["variants"]
                 nflagstr = variants.size >= 3 ? "2" : ""
@@ -142,7 +148,7 @@ class ExecutorGenerator < Generator
                 end
             end
             @out << "(" << argregs.join(", ") << ")"
-
+            @out << ", " << fun["executor_extras"] if fun["executor_extras"]
             @out << ");\n"
         elsif fun["selector"] then
             @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
@@ -170,12 +176,29 @@ class ExecutorGenerator < Generator
         end
     end
 
+    def declare_executor_only(value)
+        @out << "BEGIN_EXECUTOR_ONLY\n"
+        @out << value["code"].strip << "\n"
+        @out << "END_EXECUTOR_ONLY\n"
+    end
+
+    def remap_name(name)
+        name == "MacTypes" ? "ExMacTypes" : name
+    end
+     
     def generate_preamble(header)
         super
         @out << "#pragma once\n"
+        if header.name == "MacTypes" then
+            @out << "#include \"base/mactype.h\"\n"
+            @out << "#include <cassert>\n"
+        else
+                # FIXME
+            @out << "#include <base/lowglobals.h>\n"
+        end
 
         header.included.each do |file|
-            @out << "#include \"#{file}.h\"\n"
+            @out << "#include \"#{remap_name(file)}.h\"\n"
         end
         @out << "\n"
 
@@ -194,7 +217,7 @@ class ExecutorGenerator < Generator
     def generate(defs)
         FileUtils.mkdir_p "out/executor"
         defs.topsort.each do |name|
-            formatted_file "out/executor/#{name}.h" do |f|
+            formatted_file "out/executor/#{remap_name(name)}.h" do |f|
                 f << generate_header(defs.headers[name])
             end
         end

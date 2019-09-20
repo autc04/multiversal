@@ -297,6 +297,14 @@
 	{
 		return strtol(str.c_str(), nullptr, 0);
 	}
+
+	std::string mbcomma(std::string str)
+	{
+		if(str.empty())
+			return "";
+		else
+			return str + ", ";
+	}
 }
 
 %%
@@ -671,6 +679,8 @@ trap:
 			auto& n = thingByName($3).begin()->second;
 			n["trap"] = $5;
 			setRegisterArgs(n, $7);
+			if(!$8.empty())
+				n["executor_extras"] = $8;
 		}
 	|	"REGISTER_FLAG_TRAP" "("
 			IDENTIFIER "," IDENTIFIER "," IDENTIFIER "," 
@@ -686,6 +696,8 @@ trap:
 			n["variants"] = std::vector<std::string>{ $5, $7 };
 			if($3 != $5)
 				n["executor_impl"] = $3;
+			if(!$18.empty())
+				n["executor_extras"] = $18;
 		}
 	|	"REGISTER_2FLAG_TRAP" "("
 			IDENTIFIER "," 
@@ -702,6 +714,8 @@ trap:
 			n["variants"] = std::vector<std::string>{ $5, $7, $9, $11 };
 			if($3 != $5)
 				n["executor_impl"] = $3;
+			if(!$22.empty())
+				n["executor_extras"] = $22;
 		}
 	|	"REGISTER_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
@@ -711,6 +725,8 @@ trap:
 			n["selector"] = $7;
 			setRegisterArgs(n, $11);
 			n["executor_prefix"] = "C_";
+			if(!$12.empty())
+				n["executor_extras"] = $12;
 		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
@@ -718,6 +734,8 @@ trap:
 			n["dispatcher"] = $9;
 			n["selector"] = $7;
 			setRegisterArgs(n, $11);
+			if(!$12.empty())
+				n["executor_extras"] = $12;
 		}
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
 		{
@@ -827,11 +845,14 @@ regcall_arg:
 		}
 	;
 
+%type <std::string> regcall_extras;
 regcall_extras:
-		%empty
-	|	regcall_extras "," IDENTIFIER
+		%empty { $$ = ""; }
+	|	regcall_extras "," IDENTIFIER { $$ = mbcomma($1) + $3; }
 	|	regcall_extras "," IDENTIFIER "<" IDENTIFIER ">"
+		{ $$ = mbcomma($1) + $3 + "<" + $5 + ">"; }
 	|	regcall_extras "," IDENTIFIER "::" IDENTIFIER "<" IDENTIFIER ">"
+		{ $$ = mbcomma($1) + $3 + "::" + $5 + "<" + $7 + ">"; }
 	;
 
 function:
@@ -867,12 +888,12 @@ executor_only:
 			{				
 				things.back().begin()->second["code"]
 					= things.back().begin()->second["code"].as<std::string>() + "\n"
-					+ ($1.empty() ? $2 : "// " + $1 + "\n" + $2);
+					+ ($1.empty() ? $2 : "/* " + $1 + " */\n" + $2);
 			}
 			else
 			{
 				YAML::Node node;
-				node["code"] = $1.empty() ? $2 : "// " + $1 + "\n" + $2;
+				node["code"] = $1.empty() ? $2 : "/* " + $1 + " */\n" + $2;
 				declare(wrap("executor_only", node));
 			}
 		}

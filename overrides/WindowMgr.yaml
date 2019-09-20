@@ -2,7 +2,8 @@
     name: WindowRef
     type: WindowPtr
 
-- function:
+- not-for: executor
+  function:
     name: GetWindowKind
     return: INTEGER
     args:
@@ -10,14 +11,16 @@
           name: win
     inline: ((WindowPeek)(win))->windowKind
 
-- function:
+- not-for: executor
+  function:
     name: SetPortWindowPort
     args:
         - type: WindowRef
           name: win
     inline: SetPort(win)
 
-- function:
+- not-for: executor
+  function:
     name: GetWindowPortBounds
     args:
         - type: WindowRef

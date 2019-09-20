@@ -152,6 +152,8 @@ class Generator
         box(value["name"], value["comment"]) unless key == "executor_only"
     end
 
+    def declare_executor_only(value)
+    end
 
     def generate_header(header)
         @out = ""
@@ -184,6 +186,9 @@ class Generator
 
             when "funptr"
                 declare_funptr(value)
+
+            when "executor_only"
+                declare_executor_only(value)
             end
         
             @out << "\n\n"
