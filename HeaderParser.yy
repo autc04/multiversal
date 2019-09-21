@@ -321,7 +321,7 @@
 %start header;
 
 header: 
-		"{" declarations "}" postamble
+		"{" declarations "}" rcomment postamble
     ;
 
 postamble:
