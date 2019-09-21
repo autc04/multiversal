@@ -217,10 +217,6 @@ class ExecutorGenerator < Generator
         if header.name == "MacTypes" then
             @out << "#include \"base/mactype.h\"\n"
             @out << "#include <cassert>\n"
-        else
-                # FIXME:
-                # basic declarations needed everywhere,
-                # variables declared in lowglobals.h require MacTypes
             @out << "#include <base/lowglobals.h>\n"
         end
 
