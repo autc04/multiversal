@@ -74,6 +74,9 @@ class ExecutorGenerator < Generator
             @out << "}"
         end
         @out << ";"
+        if value["size"] then
+            @out << "static_assert(sizeof(#{value["name"]}) == #{value["size"]});"
+        end
     end
     def declare_dispatcher(value, extern:false)
         @available_dispatchers << value["name"]
