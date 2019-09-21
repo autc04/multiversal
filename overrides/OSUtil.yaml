@@ -1,4 +1,4 @@
-- only-for: Executor
+- only-for: executor
   function:
     name: StripAddress
     return: uint32_t
@@ -9,7 +9,7 @@
     trap: 0xA055
     returnreg: D0
 
-- not-for: Executor
+- not-for: executor
   function:
     name: StripAddress
     return: Ptr
@@ -43,8 +43,10 @@
     return: ProcPtr
     args:
       - name: n
-        type: INTEGER
+        type: uint16_t
     inline: GetToolTrapAddress(n)
+    executor: C_
+
 # ####
 
 - function:
@@ -53,8 +55,9 @@
       - name: addr
         type: ProcPtr
       - name: n
-        type: INTEGER
+        type: uint16_t
     inline: SetToolTrapAddress(addr,n)
+    executor: C_
   
 - function:
     name: GetDateTime

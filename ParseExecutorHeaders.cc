@@ -73,6 +73,11 @@ void output(YAML::Emitter& yamlout, const YAML::Node& node, std::string path)
         for(const auto& s : specialStyles)
             s.apply(yamlout, path);
         
+        std::string scalar = n.Scalar();
+
+        if(scalar == "on" || scalar == "off")
+            yamlout << YAML::DoubleQuoted;
+
         /*char *endptr;
         std::string scalar = n.Scalar();
         long long parsed = std::strtoll(scalar.c_str(), &endptr, 0);
@@ -110,7 +115,7 @@ int main(int argc, char *argv[])
     YAML::Emitter yamlout;
 
 
-    std::unordered_map<std::string, int> overrideMap;
+    std::unordered_map<std::string, std::vector<int>> overrideMap;
     std::unordered_set<int> usedOverrides;
 
     if(haveOverride)
@@ -125,8 +130,8 @@ int main(int argc, char *argv[])
                     name = n.second["name"].as<std::string>();
             }
             if(!name.empty())
-                overrideMap[name] = index;
-            
+                overrideMap[name].push_back(index);
+                        
             index++;
         }
     }
@@ -149,8 +154,11 @@ int main(int argc, char *argv[])
         {
             if(auto p = overrideMap.find(name); p != overrideMap.end())
             {
-                output(yamlout, override[p->second], "");
-                usedOverrides.insert(p->second);
+                for(int idx : p->second)
+                {
+                    output(yamlout, override[idx], "");
+                    usedOverrides.insert(idx);
+                }
                 continue;
             }
         }

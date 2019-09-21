@@ -37,7 +37,17 @@
       - name: ioACUser
         type: SignedByte
 
-- typedef:
+
+- only-for: executor
+  typedef:
+    name: IOMiscType
+    type: uint32_t
+    comment: |
+      Executor needs ioMisc to be uint32_t instead of the normal
+      Ptr, so this is defined as a separate typedef here.
+
+- not-for: executor
+  typedef:
     name: IOMiscType
     type: Ptr
     comment: |

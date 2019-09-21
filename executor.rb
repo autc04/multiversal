@@ -4,7 +4,7 @@ class ExecutorGenerator < Generator
     def initialize
         super
         @need_guest = false
-        @noguest_types = Set.new(["void", "Point"])
+        @noguest_types = Set.new(["void"])
     end
 
     def need_guest
@@ -84,21 +84,40 @@ class ExecutorGenerator < Generator
         @out << "{ #{hexlit(value["address"],12)} };"
     end
 
+    def handle_regcall_conv(fun)
+        args = (fun["args"] or [])
+        @out << (fun["returnreg"] or "void")
+        argregs = args.map do |arg|
+            basetype = $1 if arg["type"] =~ /^(.*)\* *$/
+            if arg["register"] =~ /^Out<(.*)>$/ then
+                "Out<#{basetype}, #{$1}>"
+            elsif arg["register"] =~ /^InOut<(.*)>$/ then
+                "InOut<#{basetype}, #{$1}>"
+            else
+                arg["register"]
+            end
+        end
+        @out << "(" << argregs.join(", ") << ")"
+        @out << ", " << fun["executor_extras"] if fun["executor_extras"]
+    end
+
     def declare_function(fun)
 
         name = fun["name"]
         dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
-        if fun["executor_impl"] then
-            cname = fun["executor_impl"]
-        elsif fun["executor_prefix"] then
-            cname = fun["executor_prefix"] + name
-        elsif not trap then
-            cname = "C_" + name
-        else
-            cname = name
+        cname = name
+        if fun["executor"] then
+            if fun["executor"].is_a?(String) then
+                if fun["executor"] =~ /_$/ then
+                    cname = fun["executor"] + name
+                else
+                    cname = fun["executor"]
+                end
+            end    
         end
+        two = name == cname ? "2" : ""
 
         @out << (fun["return"] or "void") << " " << cname
 
@@ -114,15 +133,14 @@ class ExecutorGenerator < Generator
             sub = ""
         end
 
-        print fun if name == "FlushEvents"
-
-        if fun["file_trap"] == "mfs" then
+        if not fun["executor"] then
+        elsif fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
             @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
             @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
         elsif fun["file_trap"] then
             @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
-        elsif trap and (fun["returnreg"] || args.any? {|arg| arg["register"]}) then
+        elsif trap && (fun["executor_extras"] || fun["returnreg"] || args.any? {|arg| arg["register"]}) then
             if fun["variants"] then
                 variants = fun["variants"]
                 nflagstr = variants.size >= 3 ? "2" : ""
@@ -133,30 +151,24 @@ class ExecutorGenerator < Generator
                 @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
                 @out << ", "
             else
-                two = name == cname ? "2" : ""
                 @out << "REGISTER_#{sub}TRAP#{two}(#{name}, #{trap_sel_disp}, "
             end
-            @out << (fun["returnreg"] or "void")
-            argregs = args.map do |arg|
-                basetype = $1 if arg["type"] =~ /^(.*)\* *$/
-                if arg["register"] =~ /^Out<(.*)>$/ then
-                    "Out<#{basetype}, #{$1}>"
-                elsif arg["register"] =~ /^InOut<(.*)>$/ then
-                    "InOut<#{basetype}, #{$1}>"
-                else
-                    arg["register"]
-                end
-            end
-            @out << "(" << argregs.join(", ") << ")"
-            @out << ", " << fun["executor_extras"] if fun["executor_extras"]
+            handle_regcall_conv(fun)
             @out << ");\n"
         elsif fun["selector"] then
             @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
             @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
         elsif trap then
-            @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
+            if name == cname then
+                if args.size == 0 && !fun["return"] then
+                    @out << "REGISTER_TRAP2(#{name}, #{hexlit(trap)}, void());\n"
+                else
+                end
+            else
+                @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
+            end
         else
-            @out << "NOTRAP_FUNCTION(#{name});\n"
+            @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
         end
     end
 
@@ -168,12 +180,13 @@ class ExecutorGenerator < Generator
         @out << (value["return"] or "void") << "("
         args = (value["args"] or [])
         @out << args.map {|arg|decl(arg["type"], arg["name"])}.join(", ")
-        @out << ")>;\n"
-
-        if args.any? {|arg| arg["register"]} then
-            procinfo = 42;
-            print "WARNING UNSUPPORTED register funptr: #{name}\n"
+        @out << ")"
+        if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]} then
+            @out << ", Register<"
+            handle_regcall_conv(value)
+            @out << ">"
         end
+        @out << ">;\n"
     end
 
     def declare_executor_only(value)
@@ -193,7 +206,9 @@ class ExecutorGenerator < Generator
             @out << "#include \"base/mactype.h\"\n"
             @out << "#include <cassert>\n"
         else
-                # FIXME
+                # FIXME:
+                # basic declarations needed everywhere,
+                # variables declared in lowglobals.h require MacTypes
             @out << "#include <base/lowglobals.h>\n"
         end
 

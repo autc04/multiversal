@@ -12,7 +12,8 @@ class Generator
             "char" => 1,
             "Point" => 4,
             "ProcPtr" => 8,
-            "void" => 0
+            "void" => 0,
+            "double" => 8
         }
         
     end

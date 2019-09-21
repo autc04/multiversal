@@ -103,8 +103,18 @@
 	{
 		std::string ret;
 		std::vector<std::string> args;
+
+		explicit operator bool() const
+		{
+			return !ret.empty() || !args.empty();
+		}
 	};
 
+	struct RegConvAndExtras
+	{
+		RegConv conv;
+		std::string extras;
+	};
 }
 %code provides {
 	yy::HeaderParser::symbol_type yylex();
@@ -559,14 +569,20 @@ funptr:
 				node["return"] = $3;
 			if($5 && $5.size() > 0)
 				node["args"] = $5;
-			
+			if($7.conv)
+				setRegisterArgs(node, $7.conv);
+			if(!$7.extras.empty())
+				node["executor_extras"] = $7.extras;
+
 			$$ = wrap("funptr", node);
 		}
 	;
 
+%type <RegConvAndExtras> funptr_callconv;
 funptr_callconv:
-		%empty
+		%empty { $$ = {}; }
 	|	"," IDENTIFIER "<" regcall_conv regcall_extras ">"
+		{ $$ = { $4, $5 }; }
 	;
 
 typedef:
@@ -657,26 +673,31 @@ trap:
 			renameThing("C_"+$3, $3);
 			auto& n = thingByName($3).begin()->second;
 			n["trap"] = $5;
-			n["executor_prefix"] = "C_";
+			n["executor"] = "C_";
 		}
 	|	"NOTRAP_FUNCTION" "(" IDENTIFIER ")" ";"
 		{
 			renameThing("C_"+$3, $3);
 			auto& n = thingByName($3).begin()->second;
-			n["executor_prefix"] = "C_";
+			n["executor"] = "C_";
 		}
 	|	"NOTRAP_FUNCTION2" "(" IDENTIFIER ")" ";"
+		{
+			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
+		}
 	|	"PASCAL_SUBTRAP" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 		{
 			renameThing("C_"+$3, $3);
 			auto& n = thingByName($3).begin()->second;
 			n["dispatcher"] = $9;
 			n["selector"] = $7;
-			n["executor_prefix"] = "C_";
+			n["executor"] = "C_";
 		}
 	|	"REGISTER_TRAP2" "(" IDENTIFIER "," INTLIT "," regcall_conv regcall_extras ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["trap"] = $5;
 			setRegisterArgs(n, $7);
 			if(!$8.empty())
@@ -689,13 +710,14 @@ trap:
 			regcall_conv regcall_extras ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["trap"] = $9;
 			renameThing($3, $5);
 			setRegisterArgs(n, $17);
 			
 			n["variants"] = std::vector<std::string>{ $5, $7 };
 			if($3 != $5)
-				n["executor_impl"] = $3;
+				n["executor"] = $3;
 			if(!$18.empty())
 				n["executor_extras"] = $18;
 		}
@@ -707,13 +729,14 @@ trap:
 			regcall_conv regcall_extras ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["trap"] = $13;
 			renameThing($3, $5);
 			setRegisterArgs(n, $21);
 
 			n["variants"] = std::vector<std::string>{ $5, $7, $9, $11 };
 			if($3 != $5)
-				n["executor_impl"] = $3;
+				n["executor"] = $3;
 			if(!$22.empty())
 				n["executor_extras"] = $22;
 		}
@@ -721,16 +744,18 @@ trap:
 		{
 			renameThing("C_"+$3, $3);
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["dispatcher"] = $9;
 			n["selector"] = $7;
 			setRegisterArgs(n, $11);
-			n["executor_prefix"] = "C_";
+			n["executor"] = "C_";
 			if(!$12.empty())
 				n["executor_extras"] = $12;
 		}
 	|	"REGISTER_SUBTRAP2" "(" IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER "," regcall_conv regcall_extras ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["dispatcher"] = $9;
 			n["selector"] = $7;
 			setRegisterArgs(n, $11);
@@ -740,6 +765,7 @@ trap:
 	|	"FILE_TRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["file_trap"] = true;
 			n["trap"] = $7;
 			n["returnreg"] = "D0";
@@ -752,13 +778,15 @@ trap:
 			auto& mfs = thingByName($3).begin()->second;
 			auto& hfs = thingByName($5).begin()->second;
 
+			mfs["executor"] = true;
 			mfs["file_trap"] = "mfs";
 			mfs["trap"] = $9;
 			mfs["returnreg"] = "D0";
 			mfs["args"][0]["register"] = "A0";
 			mfs["args"][1]["register"] = "TrapBit<0x400>";
 			mfs["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
-
+			
+			hfs["executor"] = true;
 			hfs["file_trap"] = "hfs";
 			hfs["trap"] = toInt($9) | 0x200;
 			hfs["returnreg"] = "D0";
@@ -769,6 +797,7 @@ trap:
 	|	"FILE_SUBTRAP" "(" IDENTIFIER "," IDENTIFIER "," INTLIT "," INTLIT "," IDENTIFIER ")" ";"
 		{
 			auto& n = thingByName($3).begin()->second;
+			n["executor"] = true;
 			n["file_trap"] = true;
 			n["trap"] = $7;
 			n["dispatcher"] = $11;
@@ -783,6 +812,7 @@ trap:
 			auto& mfs = thingByName($3).begin()->second;
 			auto& hfs = thingByName($5).begin()->second;
 
+			mfs["executor"] = true;
 			mfs["file_trap"] = "mfs";
 			mfs["trap"] = $9;
 			mfs["dispatcher"] = $13;
@@ -792,6 +822,7 @@ trap:
 			mfs["args"][1]["register"] = "TrapBit<0x400>";
 			mfs["variants"] = std::vector<std::string>{ $3 + "Sync", $3 + "Async" };
 
+			hfs["executor"] = true;
 			hfs["file_trap"] = "hfs";
 			hfs["trap"] = toInt($9) | 0x200;
 			mfs["dispatcher"] = $13;

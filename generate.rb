@@ -41,6 +41,8 @@ class HeaderFile
         @name = File.basename(@file, ".yaml")
 
         @data = YAML::load(File.read(@file))
+    
+        @filter_key = filter_key
 
         @data.reject! do |item|
             onlyfor = item["only-for"]
@@ -121,6 +123,7 @@ public
                 @included << where
                 @included_why[where] = Set.new unless @included_why[where]
                 @included_why[where] << n
+            elsif @filter_key == "executor" and n == "Point" then
             else
                 print "??????????????? Where is #{n}\n"
             end
