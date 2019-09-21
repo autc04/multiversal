@@ -15,7 +15,7 @@ class Generator
             "void" => 0,
             "double" => 8
         }
-        
+        @fancy_comments = false
     end
     def size_of_type(type)
         return nil if not type
@@ -102,6 +102,7 @@ class Generator
                 declare_members($global_name_map[member["common"]]["common"]["members"])
             else
                 @out << decl(member["type"], member["name"]) << ";"
+                @out << " // " << member["comment"].rstrip << "\n" if member["comment"]
             end
         end
     end
@@ -120,6 +121,7 @@ class Generator
             else
                 @out << ","
             end
+            @out << " // " << val["comment"].rstrip << "\n" if val["comment"]
         end
         @out << "}"
         @out << value["name"] if value["name"]
@@ -150,7 +152,14 @@ class Generator
     def generate_postamble(header)
     end
     def generate_comment(key, value)
-        box(value["name"], value["comment"]) unless key == "executor_only"
+        if @fancy_comments then
+            box(value["name"], value["comment"])
+        else
+            return unless value["comment"]
+            value["comment"].each_line do |l|
+                @out << "// " << l.rstrip << "\n"
+            end
+        end
     end
 
     def declare_executor_only(value)
