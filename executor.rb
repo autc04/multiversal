@@ -75,7 +75,9 @@ class ExecutorGenerator < Generator
         end
         @out << ";"
     end
-    def declare_dispatcher(value)
+    def declare_dispatcher(value, extern:false)
+        @available_dispatchers << value["name"]
+        @out << "EXTERN_" if extern
         @out << "DISPATCHER_TRAP(#{value["name"]}, "
         @out << "#{hexlit(value["trap"])}, #{value["selector-location"]});\n"
     end
@@ -102,9 +104,15 @@ class ExecutorGenerator < Generator
     end
 
     def declare_function(fun)
+        if fun["dispatcher"] && ! @available_dispatchers.include?(fun["dispatcher"]) then
+            disp = $global_name_map[fun["dispatcher"]]
+            if disp and disp["dispatcher"] then
+                declare_dispatcher(disp["dispatcher"], extern:true)
+            end
+        end
 
         name = fun["name"]
-        dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
+        dispatcher = (fun["dispatcher"] && $global_name_map[fun["dispatcher"]]["dispatcher"])
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
         cname = name
@@ -125,7 +133,11 @@ class ExecutorGenerator < Generator
 
         @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
 
-        trap_sel_disp = hexlit(trap)
+        if fun["file_trap"] == "hfs" then
+            trap_sel_disp = hexlit(Integer(trap) & 0xA0FF)
+        else
+            trap_sel_disp = hexlit(trap)
+        end
         if fun["selector"] then
             sub = "SUB"
             trap_sel_disp += ", #{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}"
@@ -227,6 +239,12 @@ class ExecutorGenerator < Generator
 
     def generate_postamble(header)
         @out << "} /* namespace Executor */"
+    end
+
+    def generate_header(header)
+        @current_header = header
+        @available_dispatchers = Set.new
+        super
     end
 
     def generate(defs)

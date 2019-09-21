@@ -8,3 +8,4 @@
     name: MemError
     return: OSErr
     inline: "*(INTEGER *)0x0220"
+    executor: C_

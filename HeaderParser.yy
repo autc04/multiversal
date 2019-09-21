@@ -825,8 +825,8 @@ trap:
 			hfs["executor"] = true;
 			hfs["file_trap"] = "hfs";
 			hfs["trap"] = toInt($9) | 0x200;
-			mfs["dispatcher"] = $13;
-			mfs["selector"] = $11;
+			hfs["dispatcher"] = $13;
+			hfs["selector"] = $11;
 			hfs["returnreg"] = "D0";
 			hfs["args"][0]["register"] = "A0";
 			hfs["args"][1]["register"] = "TrapBit<0x400>";

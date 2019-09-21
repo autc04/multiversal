@@ -59,6 +59,7 @@
         register: D0HighWord
     trap: 0xA032
     executor_extras: ClearD0
+    executor: true
 
 - only-for: executor
   function:
@@ -73,6 +74,7 @@
         register: A0
     trap: 0xA031
     returnreg: D0Minus1Boolean
+    executor: true
 
 # ####
 
@@ -89,3 +91,4 @@
         register: A0
     trap: 0xA030
     returnreg: D0Minus1Boolean
+    executor: true

@@ -8,6 +8,7 @@
         register: D0
     trap: 0xA055
     returnreg: D0
+    executor: true
 
 - not-for: executor
   function:
