@@ -16,6 +16,7 @@ class Generator
             "double" => 8
         }
         @fancy_comments = false
+        @expand_common = true
     end
     def size_of_type(type)
         return nil if not type
@@ -99,7 +100,11 @@ class Generator
                 declare_members sub
                 @out << "} " << member["name"] << ";"
             elsif member["common"]
-                declare_members($global_name_map[member["common"]]["common"]["members"])
+                if @expand_common then
+                    declare_members($global_name_map[member["common"]]["common"]["members"])
+                else
+                    @out << member["common"] << ";"
+                end
             else
                 @out << decl(member["type"], member["name"]) << ";"
                 @out << " // " << member["comment"].rstrip << "\n" if member["comment"]

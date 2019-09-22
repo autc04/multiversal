@@ -5,6 +5,7 @@ class ExecutorGenerator < Generator
         super
         @need_guest = false
         @noguest_types = Set.new(["void"])
+        @expand_common = false
     end
 
     def need_guest
