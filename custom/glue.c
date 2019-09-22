@@ -268,6 +268,7 @@ pascal OSErr FSRead(short refNum, long *count, void *buffPtr)
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioBuffer = buffPtr;
     pb.ioParam.ioReqCount = *count;
+    pb.ioParam.ioPosMode = fsAtMark;
 
     err = PBReadSync(&pb);
     *count = pb.ioParam.ioActCount;
@@ -281,6 +282,7 @@ pascal OSErr FSWrite(short refNum, long *count, const void *buffPtr)
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioBuffer = (void *)buffPtr;
     pb.ioParam.ioReqCount = *count;
+    pb.ioParam.ioPosMode = fsAtMark;
 
     err = PBWriteSync(&pb);
     *count = pb.ioParam.ioActCount;
