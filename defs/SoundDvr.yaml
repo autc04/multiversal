@@ -1,0 +1,221 @@
+- enum:
+    values:
+      - name: swMode
+        value: -1
+      - name: ftMode
+        value: 1
+      - name: ffMode
+        value: 0
+
+# ####
+
+- typedef:
+    name: FreeWave
+    type: Byte[30001]
+
+# ####
+
+- struct:
+    name: FFSynthRec
+    members:
+      - name: mode
+        type: INTEGER
+      - name: fcount
+        type: Fixed
+      - name: waveBytes
+        type: FreeWave
+    size: 30008
+
+# ####
+
+- typedef:
+    name: FFSynthPtr
+    type: FFSynthRec*
+
+# ####
+
+- struct:
+    name: Tone
+    members:
+      - name: tcount
+        type: INTEGER
+      - name: amplitude
+        type: INTEGER
+      - name: tduration
+        type: INTEGER
+    size: 6
+
+# ####
+
+- typedef:
+    name: Tones
+    type: Tone[5001]
+
+# ####
+
+- struct:
+    name: SWSynthRec
+    members:
+      - name: mode
+        type: INTEGER
+      - name: triplets
+        type: Tones
+    size: 30008
+
+# ####
+
+- typedef:
+    name: SWSynthPtr
+    type: SWSynthRec*
+
+# ####
+
+- typedef:
+    name: Wave
+    type: Byte[256]
+
+# ####
+
+- typedef:
+    name: WavePtr
+    type: Wave*
+
+# ####
+
+- struct:
+    name: FTSoundRec
+    members:
+      - name: fduration
+        type: INTEGER
+      - name: sound1Rate
+        type: Fixed
+      - name: sound1Phase
+        type: LONGINT
+      - name: sound2Rate
+        type: Fixed
+      - name: sound2Phase
+        type: LONGINT
+      - name: sound3Rate
+        type: Fixed
+      - name: sound3Phase
+        type: LONGINT
+      - name: sound4Rate
+        type: Fixed
+      - name: sound4Phase
+        type: LONGINT
+      - name: sound1Wave
+        type: WavePtr
+      - name: sound2Wave
+        type: WavePtr
+      - name: sound3Wave
+        type: WavePtr
+      - name: sound4Wave
+        type: WavePtr
+    size: 50
+
+# ####
+
+- typedef:
+    name: FTSndRecPtr
+    type: FTSoundRec*
+
+# ####
+
+- struct:
+    name: FTSynthRec
+    members:
+      - name: mode
+        type: INTEGER
+      - name: sndRec
+        type: FTSndRecPtr
+    size: 6
+
+# ####
+
+- typedef:
+    name: FTsynthPtr
+    type: FTSynthRec*
+
+# ####
+
+- lowmem:
+    name: SdVolume
+    type: Byte
+    address: 0x260
+    comment: |
+      SoundDvr IMII-232 (true-b);
+
+# ####
+
+- lowmem:
+    name: SoundPtr
+    type: FTSndRecPtr
+    address: 0x262
+    comment: |
+      SoundDvr IMII-227 (false);
+
+# ####
+
+- lowmem:
+    name: SoundBase
+    type: Ptr
+    address: 0x266
+    comment: |
+      SoundDvr IMIII-21 (true-b);
+
+# ####
+
+- lowmem:
+    name: SoundLevel
+    type: Byte
+    address: 0x27F
+    comment: |
+      SoundDvr IMII-234 (false);
+
+# ####
+
+- lowmem:
+    name: CurPitch
+    type: INTEGER
+    address: 0x280
+    comment: |
+      SoundDvr IMII-226 (true-b);
+
+# ####
+
+- function:
+    name: StartSound
+    args:
+      - name: srec
+        type: Ptr
+      - name: nb
+        type: LONGINT
+      - name: comp
+        type: ProcPtr
+
+# ####
+
+- function:
+    name: StopSound
+
+# ####
+
+- function:
+    name: SoundDone
+    return: Boolean
+
+# ####
+
+- function:
+    name: GetSoundVol
+    args:
+      - name: volp
+        type: INTEGER*
+
+# ####
+
+- function:
+    name: SetSoundVol
+    args:
+      - name: vol
+        type: INTEGER

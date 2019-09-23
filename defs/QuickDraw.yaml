@@ -1,0 +1,3183 @@
+- enum:
+    values:
+      - name: grafSize
+        value: 206
+    comment: |
+      number of bytes InitGraf needs
+
+# ####
+
+- enum:
+    values:
+      - name: srcCopy
+        value: 0
+      - name: srcOr
+        value: 1
+      - name: srcXor
+        value: 2
+      - name: srcBic
+        value: 3
+      - name: notSrcCopy
+        value: 4
+      - name: notSrcOr
+        value: 5
+      - name: notSrcXor
+        value: 6
+      - name: notSrcBic
+        value: 7
+
+# ####
+
+- enum:
+    values:
+      - name: patCopy
+        value: 8
+      - name: patOr
+        value: 9
+      - name: patXor
+        value: 10
+      - name: patBic
+        value: 11
+      - name: notPatCopy
+        value: 12
+      - name: notPatOr
+        value: 13
+      - name: notPatXor
+        value: 14
+      - name: notPatBic
+        value: 15
+
+# ####
+
+- enum:
+    values:
+      - name: grayishTextOr
+        value: 49
+
+# ####
+
+- enum:
+    values:
+      - name: hilite
+        value: 50
+
+# ####
+
+- enum:
+    values:
+      - name: blackColor
+        value: 33
+      - name: whiteColor
+        value: 30
+      - name: redColor
+        value: 205
+      - name: greenColor
+        value: 341
+      - name: blueColor
+        value: 409
+      - name: cyanColor
+        value: 273
+      - name: magentaColor
+        value: 137
+      - name: yellowColor
+        value: 69
+
+# ####
+
+- enum:
+    values:
+      - name: picLParen
+        value: 0
+      - name: picRParen
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: normal
+        value: 0
+      - name: bold
+        value: 1
+      - name: italic
+        value: 2
+      - name: underline
+        value: 4
+      - name: outline
+        value: 8
+      - name: shadow
+        value: 16
+      - name: condense
+        value: 32
+      - name: extend
+        value: 64
+    name: StyleItem
+
+# ####
+
+- typedef:
+    name: Style
+    type: SignedByte
+
+# ####
+
+- struct:
+    name: Region
+    members:
+      - name: rgnSize
+        type: INTEGER
+      - name: rgnBBox
+        type: Rect
+    size: 10
+
+# ####
+
+- typedef:
+    name: RgnPtr
+    type: Region*
+
+# ####
+
+- typedef:
+    name: RgnHandle
+    type: RgnPtr*
+
+# ####
+
+- struct:
+    name: BitMap
+    members:
+      - name: baseAddr
+        type: Ptr
+      - name: rowBytes
+        type: INTEGER
+      - name: bounds
+        type: Rect
+    size: 14
+
+# ####
+
+- struct:
+    name: Pattern
+    members:
+      - name: pat
+        type: Byte[8]
+
+# ####
+
+- typedef:
+    name: Bits16
+    type: INTEGER[16]
+
+# ####
+
+- struct:
+    name: Cursor
+    members:
+      - name: data
+        type: Bits16
+      - name: mask
+        type: Bits16
+      - name: hotSpot
+        type: Point
+    size: 68
+
+# ####
+
+- typedef:
+    name: CursPtr
+    type: Cursor*
+
+# ####
+
+- typedef:
+    name: CursHandle
+    type: CursPtr*
+
+# ####
+
+- typedef:
+    name: GrafVerb
+    type: SignedByte
+
+# ####
+
+- enum:
+    values:
+      - name: frame
+        value: 0
+      - name: paint
+        value: 1
+      - name: erase
+        value: 2
+      - name: invert
+        value: 3
+      - name: fill
+        value: 4
+
+# ####
+
+- struct:
+    name: Polygon
+    members:
+      - name: polySize
+        type: INTEGER
+      - name: polyBBox
+        type: Rect
+      - name: polyPoints
+        type: Point[1]
+    size: 14
+
+# ####
+
+- typedef:
+    name: PolyPtr
+    type: Polygon*
+
+# ####
+
+- typedef:
+    name: PolyHandle
+    type: PolyPtr*
+
+# ####
+
+- struct:
+    name: FontInfo
+    members:
+      - name: ascent
+        type: INTEGER
+      - name: descent
+        type: INTEGER
+      - name: widMax
+        type: INTEGER
+      - name: leading
+        type: INTEGER
+    size: 8
+
+# ####
+
+- funptr:
+    args:
+      - name: bc
+        type: INTEGER
+      - name: textb
+        type: Ptr
+      - name: num
+        type: Point
+      - name: den
+        type: Point
+    name: QDTextUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: drawto
+        type: Point
+    name: QDLineUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+    name: QDRectUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+    name: QDRRectUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+    name: QDOvalUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+      - name: ang
+        type: INTEGER
+      - name: arc
+        type: INTEGER
+    name: QDArcUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: poly
+        type: PolyHandle
+    name: QDPolyUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rgn
+        type: RgnHandle
+    name: QDRgnUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: srcb
+        type: const BitMap*
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+      - name: mod
+        type: INTEGER
+      - name: mask
+        type: RgnHandle
+    name: QDBitsUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: kind
+        type: INTEGER
+      - name: size
+        type: INTEGER
+      - name: data
+        type: Handle
+    name: QDCommentUPP
+
+# ####
+
+- funptr:
+    return: INTEGER
+    args:
+      - name: bc
+        type: INTEGER
+      - name: texta
+        type: Ptr
+      - name: numer
+        type: Point*
+      - name: denom
+        type: Point*
+      - name: info
+        type: FontInfo*
+    name: QDTexMeasUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: data
+        type: void*
+      - name: bc
+        type: INTEGER
+    name: QDGetPicUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: data
+        type: const void*
+      - name: bc
+        type: INTEGER
+    name: QDPutPicUPP
+
+# ####
+
+- struct:
+    name: QDProcs
+    members:
+      - name: textProc
+        type: QDTextUPP
+      - name: lineProc
+        type: QDLineUPP
+      - name: rectProc
+        type: QDRectUPP
+      - name: rRectProc
+        type: QDRRectUPP
+      - name: ovalProc
+        type: QDOvalUPP
+      - name: arcProc
+        type: QDArcUPP
+      - name: polyProc
+        type: QDPolyUPP
+      - name: rgnProc
+        type: QDRgnUPP
+      - name: bitsProc
+        type: QDBitsUPP
+      - name: commentProc
+        type: QDCommentUPP
+      - name: txMeasProc
+        type: QDTexMeasUPP
+      - name: getPicProc
+        type: QDGetPicUPP
+      - name: putPicProc
+        type: QDPutPicUPP
+    size: 52
+
+# ####
+
+- typedef:
+    name: QDProcsPtr
+    type: QDProcs*
+
+# ####
+
+- struct:
+    name: GrafPort
+    members:
+      - name: device
+        type: INTEGER
+      - name: portBits
+        type: BitMap
+      - name: portRect
+        type: Rect
+      - name: visRgn
+        type: RgnHandle
+      - name: clipRgn
+        type: RgnHandle
+      - name: bkPat
+        type: Pattern
+      - name: fillPat
+        type: Pattern
+      - name: pnLoc
+        type: Point
+      - name: pnSize
+        type: Point
+      - name: pnMode
+        type: INTEGER
+      - name: pnPat
+        type: Pattern
+      - name: pnVis
+        type: INTEGER
+      - name: txFont
+        type: INTEGER
+      - name: txFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: txMode
+        type: INTEGER
+      - name: txSize
+        type: INTEGER
+      - name: spExtra
+        type: Fixed
+      - name: fgColor
+        type: LONGINT
+      - name: bkColor
+        type: LONGINT
+      - name: colrBit
+        type: INTEGER
+      - name: patStretch
+        type: INTEGER
+      - name: picSave
+        type: Handle
+      - name: rgnSave
+        type: Handle
+      - name: polySave
+        type: Handle
+      - name: grafProcs
+        type: QDProcsPtr
+    size: 108
+
+# ####
+
+- typedef:
+    name: GrafPtr
+    type: GrafPort*
+
+# ####
+
+- struct:
+    name: Picture
+    members:
+      - name: picSize
+        type: INTEGER
+      - name: picFrame
+        type: Rect
+    size: 10
+
+# ####
+
+- typedef:
+    name: PicPtr
+    type: Picture*
+
+# ####
+
+- typedef:
+    name: PicHandle
+    type: PicPtr*
+
+# ####
+
+- struct:
+    name: PenState
+    members:
+      - name: pnLoc
+        type: Point
+      - name: pnSize
+        type: Point
+      - name: pnMode
+        type: INTEGER
+      - name: pnPat
+        type: Pattern
+    size: 18
+
+# ####
+
+- enum:
+    values:
+      - name: blend
+        value: 32
+      - name: addPin
+      - name: addOver
+      - name: subPin
+      - name: transparent
+      - name: adMax
+      - name: subOver
+      - name: adMin
+      - name: mask
+        value: 64
+    comment: |
+      IMV stuff is used when we parse Version 2 pictures, but the IMV calls
+         are not supported in V1.0
+
+# ####
+
+- enum:
+    values:
+      - name: pHiliteBit
+        value: 0
+      - name: hiliteBit
+        value: 7
+
+# ####
+
+- enum:
+    values:
+      - name: defQDColors
+        value: 127
+
+# ####
+
+- struct:
+    name: RGBColor
+    members:
+      - name: red
+        type: uint16_t
+      - name: green
+        type: uint16_t
+      - name: blue
+        type: uint16_t
+    size: 6
+
+# ####
+
+- struct:
+    name: HSVColor
+    members:
+      - name: hue
+        type: SmallFract
+      - name: saturation
+        type: SmallFract
+      - name: value
+        type: SmallFract
+    size: 6
+
+# ####
+
+- struct:
+    name: HSLColor
+    members:
+      - name: hue
+        type: SmallFract
+      - name: saturation
+        type: SmallFract
+      - name: lightness
+        type: SmallFract
+    size: 6
+
+# ####
+
+- struct:
+    name: CMYColor
+    members:
+      - name: cyan
+        type: SmallFract
+      - name: magenta
+        type: SmallFract
+      - name: yellow
+        type: SmallFract
+    size: 6
+
+# ####
+
+- struct:
+    name: ColorSpec
+    members:
+      - name: value
+        type: INTEGER
+      - name: rgb
+        type: RGBColor
+    size: 8
+
+# ####
+
+- typedef:
+    name: cSpecArray
+    type: ColorSpec[1]
+    comment: |
+      can't use 0
+
+# ####
+
+- struct:
+    name: ColorTable
+    members:
+      - name: ctSeed
+        type: LONGINT
+      - name: ctFlags
+        type: uint16_t
+      - name: ctSize
+        type: INTEGER
+      - name: ctTable
+        type: cSpecArray
+    size: 16
+
+# ####
+
+- typedef:
+    name: CTabPtr
+    type: ColorTable*
+
+# ####
+
+- typedef:
+    name: CTabHandle
+    type: CTabPtr*
+
+# ####
+
+- struct:
+    name: CQDProcs
+    members:
+      - name: textProc
+        type: QDTextUPP
+      - name: lineProc
+        type: QDLineUPP
+      - name: rectProc
+        type: QDRectUPP
+      - name: rRectProc
+        type: QDRRectUPP
+      - name: ovalProc
+        type: QDOvalUPP
+      - name: arcProc
+        type: QDArcUPP
+      - name: polyProc
+        type: QDPolyUPP
+      - name: rgnProc
+        type: QDRgnUPP
+      - name: bitsProc
+        type: QDBitsUPP
+      - name: commentProc
+        type: QDCommentUPP
+      - name: txMeasProc
+        type: QDTexMeasUPP
+      - name: getPicProc
+        type: QDGetPicUPP
+      - name: putPicProc
+        type: QDPutPicUPP
+      - name: opcodeProc
+        type: Ptr
+      - name: newProc1Proc
+        type: Ptr
+      - name: newProc2Proc
+        type: Ptr
+      - name: newProc3Proc
+        type: Ptr
+      - name: newProc4Proc
+        type: Ptr
+      - name: newProc5Proc
+        type: Ptr
+      - name: newProc6Proc
+        type: Ptr
+    size: 80
+
+# ####
+
+- typedef:
+    name: CQDProcsPtr
+    type: CQDProcs*
+
+# ####
+
+- struct:
+    name: PixMap
+    members:
+      - name: baseAddr
+        type: Ptr
+      - name: rowBytes
+        type: INTEGER
+      - name: bounds
+        type: Rect
+      - name: pmVersion
+        type: INTEGER
+      - name: packType
+        type: INTEGER
+      - name: packSize
+        type: LONGINT
+      - name: hRes
+        type: Fixed
+      - name: vRes
+        type: Fixed
+      - name: pixelType
+        type: INTEGER
+      - name: pixelSize
+        type: INTEGER
+      - name: cmpCount
+        type: INTEGER
+      - name: cmpSize
+        type: INTEGER
+      - name: planeBytes
+        type: LONGINT
+      - name: pmTable
+        type: CTabHandle
+      - name: pmReserved
+        type: LONGINT
+    size: 50
+
+# ####
+
+- typedef:
+    name: PixMapPtr
+    type: PixMap*
+
+# ####
+
+- typedef:
+    name: PixMapHandle
+    type: PixMapPtr*
+
+# ####
+
+- enum:
+    values:
+      - name: ROWMASK
+        value: 0x1FFF
+
+# ####
+
+- struct:
+    name: PixPat
+    members:
+      - name: patType
+        type: INTEGER
+      - name: patMap
+        type: PixMapHandle
+      - name: patData
+        type: Handle
+      - name: patXData
+        type: Handle
+      - name: patXValid
+        type: INTEGER
+      - name: patXMap
+        type: Handle
+      - name: pat1Data
+        type: Pattern
+    size: 28
+
+# ####
+
+- typedef:
+    name: PixPatPtr
+    type: PixPat*
+
+# ####
+
+- typedef:
+    name: PixPatHandle
+    type: PixPatPtr*
+
+# ####
+
+- struct:
+    name: CGrafPort
+    members:
+      - name: device
+        type: INTEGER
+      - name: portPixMap
+        type: PixMapHandle
+      - name: portVersion
+        type: INTEGER
+      - name: grafVars
+        type: Handle
+      - name: chExtra
+        type: INTEGER
+      - name: pnLocHFrac
+        type: INTEGER
+      - name: portRect
+        type: Rect
+      - name: visRgn
+        type: RgnHandle
+      - name: clipRgn
+        type: RgnHandle
+      - name: bkPixPat
+        type: PixPatHandle
+      - name: rgbFgColor
+        type: RGBColor
+      - name: rgbBkColor
+        type: RGBColor
+      - name: pnLoc
+        type: Point
+      - name: pnSize
+        type: Point
+      - name: pnMode
+        type: INTEGER
+      - name: pnPixPat
+        type: PixPatHandle
+      - name: fillPixPat
+        type: PixPatHandle
+      - name: pnVis
+        type: INTEGER
+      - name: txFont
+        type: INTEGER
+      - name: txFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: txMode
+        type: INTEGER
+      - name: txSize
+        type: INTEGER
+      - name: spExtra
+        type: Fixed
+      - name: fgColor
+        type: LONGINT
+      - name: bkColor
+        type: LONGINT
+      - name: colrBit
+        type: INTEGER
+      - name: patStretch
+        type: INTEGER
+      - name: picSave
+        type: Handle
+      - name: rgnSave
+        type: Handle
+      - name: polySave
+        type: Handle
+      - name: grafProcs
+        type: CQDProcsPtr
+    size: 108
+
+# ####
+
+- typedef:
+    name: CGrafPtr
+    type: CGrafPort*
+
+# ####
+
+- struct:
+    name: CCrsr
+    members:
+      - name: crsrType
+        type: INTEGER
+      - name: crsrMap
+        type: PixMapHandle
+      - name: crsrData
+        type: Handle
+      - name: crsrXData
+        type: Handle
+      - name: crsrXValid
+        type: INTEGER
+      - name: crsrXHandle
+        type: Handle
+      - name: crsr1Data
+        type: Bits16
+      - name: crsrMask
+        type: Bits16
+      - name: crsrHotSpot
+        type: Point
+      - name: crsrXTable
+        type: LONGINT
+      - name: crsrID
+        type: LONGINT
+    size: 96
+
+# ####
+
+- typedef:
+    name: CCrsrPtr
+    type: CCrsr*
+
+# ####
+
+- typedef:
+    name: CCrsrHandle
+    type: CCrsrPtr*
+
+# ####
+
+- struct:
+    name: MatchRec
+    members:
+      - name: red
+        type: uint16_t
+      - name: green
+        type: uint16_t
+      - name: blue
+        type: uint16_t
+      - name: matchData
+        type: int32_t
+    size: 10
+
+# ####
+
+- typedef:
+    name: BytePtr
+    type: Byte*
+
+# ####
+
+- struct:
+    name: QDGlobals
+    members:
+      - name: privates
+        type: char[76]
+      - name: randSeed
+        type: int32_t
+      - name: screenBits
+        type: BitMap
+      - name: arrow
+        type: Cursor
+      - name: dkGray
+        type: Pattern
+      - name: ltGray
+        type: Pattern
+      - name: gray
+        type: Pattern
+      - name: black
+        type: Pattern
+      - name: white
+        type: Pattern
+      - name: thePort
+        type: GrafPtr
+
+# ####
+
+- typedef:
+    name: QDGlobalsPtr
+    type: QDGlobals*
+
+# ####
+
+- lowmem:
+    name: ScrVRes
+    type: INTEGER
+    address: 0x102
+    comment: |
+      QuickDraw IMI-473 (true);
+
+# ####
+
+- lowmem:
+    name: ScrHRes
+    type: INTEGER
+    address: 0x104
+    comment: |
+      QuickDraw IMI-473 (true);
+
+# ####
+
+- lowmem:
+    name: ScreenRow
+    type: INTEGER
+    address: 0x106
+    comment: |
+      QuickDraw ThinkC (true);
+
+# ####
+
+- lowmem:
+    name: RndSeed
+    type: LONGINT
+    address: 0x156
+    comment: |
+      QuickDraw IMI-195 (true);
+
+# ####
+
+- lowmem:
+    name: ScreenVars
+    type: Byte[8]
+    address: 0x292
+    comment: |
+      QuickDraw MPW (false);
+
+# ####
+
+- lowmem:
+    name: Key1Trans
+    type: Ptr
+    address: 0x29E
+    comment: |
+      * NOTE: Key1Trans in the keyboard translator procedure, and Key2Trans in the
+       * numeric keypad translator procedure (MPW).
+      QuickDraw MPW (false);
+
+# ####
+
+- lowmem:
+    name: Key2Trans
+    type: Ptr
+    address: 0x2A2
+    comment: |
+      QuickDraw MPW (false);
+
+# ####
+
+- lowmem:
+    name: JUnknown574
+    type: ProcPtr
+    address: 0x574
+    comment: |
+      QuickDraw IMV (true-b);
+
+# ####
+
+- lowmem:
+    name: JADBProc
+    type: ProcPtr
+    address: 0x6B8
+    comment: |
+      QuickDraw IMV (false);
+
+# ####
+
+- lowmem:
+    name: JHideCursor
+    type: ProcPtr
+    address: 0x800
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JShowCursor
+    type: ProcPtr
+    address: 0x804
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JShieldCursor
+    type: ProcPtr
+    address: 0x808
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JScrnAddr
+    type: ProcPtr
+    address: 0x80C
+    comment: |
+      QuickDraw Private.a (false);
+
+# ####
+
+- lowmem:
+    name: JScrnSize
+    type: ProcPtr
+    address: 0x810
+    comment: |
+      QuickDraw Private.a (false);
+
+# ####
+
+- lowmem:
+    name: JInitCrsr
+    type: ProcPtr
+    address: 0x814
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JSetCrsr
+    type: ProcPtr
+    address: 0x818
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JCrsrObscure
+    type: ProcPtr
+    address: 0x81C
+    comment: |
+      QuickDraw Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JUpdateProc
+    type: ProcPtr
+    address: 0x820
+    comment: |
+      QuickDraw Private.a (false);
+
+# ####
+
+- lowmem:
+    name: ScrnBase
+    type: Ptr
+    address: 0x824
+    comment: |
+      QuickDraw IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: CrsrPin
+    type: Rect
+    address: 0x834
+    comment: |
+      * MouseLocation used to be 0x830, but that doesn't jibe with what I've
+       * seen of Crystal Quest --ctm
+      QuickDraw ThinkC (false);
+
+# ####
+
+- lowmem:
+    name: QDColors
+    type: Byte
+    address: 0x8B0
+    comment: |
+      QuickDraw IMV (false);
+
+# ####
+
+- lowmem:
+    name: CrsrVis
+    type: Boolean
+    address: 0x8CC
+    comment: |
+      QuickDraw SysEqu.a (true);
+
+# ####
+
+- lowmem:
+    name: CrsrBusy
+    type: Byte
+    address: 0x8CD
+    comment: |
+      QuickDraw SysEqu.a (true);
+
+# ####
+
+- lowmem:
+    name: CrsrState
+    type: INTEGER
+    address: 0x8D0
+    comment: |
+      QuickDraw SysEqu.a (true);
+
+# ####
+
+- lowmem:
+    name: mousemask
+    type: LONGINT
+    address: 0x8D6
+    comment: |
+      QuickDraw .a (true-b);
+
+# ####
+
+- lowmem:
+    name: mouseoffset
+    type: LONGINT
+    address: 0x8DA
+    comment: |
+      QuickDraw SysEqu.a (true-b);
+
+# ####
+
+- lowmem:
+    name: JCrsrTask
+    type: ProcPtr
+    address: 0x8EE
+    comment: |
+      (true);
+
+# ####
+
+- lowmem:
+    name: HiliteMode
+    type: Byte
+    address: 0x938
+    comment: |
+      QuickDraw IMV (true-b);
+
+# ####
+
+- executor_only:
+    code: |
+      extern void C_unknown574();
+      PASCAL_FUNCTION(unknown574);
+
+# ####
+
+- function:
+    name: CopyBits
+    args:
+      - name: src_bitmap
+        type: BitMap*
+      - name: dst_bitmap
+        type: BitMap*
+      - name: src_rect
+        type: const Rect*
+      - name: dst_rect
+        type: const Rect*
+      - name: mode
+        type: INTEGER
+      - name: mask
+        type: RgnHandle
+    trap: 0xA8EC
+    executor: C_
+
+# ####
+
+- function:
+    name: ScrollRect
+    args:
+      - name: rp
+        type: Rect*
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+      - name: updatergn
+        type: RgnHandle
+    trap: 0xA8EF
+    executor: C_
+
+# ####
+
+- function:
+    name: ForeColor
+    args:
+      - name: c
+        type: LONGINT
+    trap: 0xA862
+    executor: C_
+
+# ####
+
+- function:
+    name: BackColor
+    args:
+      - name: c
+        type: LONGINT
+    trap: 0xA863
+    executor: C_
+
+# ####
+
+- function:
+    name: ColorBit
+    args:
+      - name: b
+        type: INTEGER
+    trap: 0xA864
+    executor: C_
+
+# ####
+
+- function:
+    name: SetCursor
+    args:
+      - name: cp
+        type: Cursor*
+    trap: 0xA851
+    executor: C_
+
+# ####
+
+- function:
+    name: InitCursor
+    trap: 0xA850
+    executor: C_
+
+# ####
+
+- function:
+    name: HideCursor
+    trap: 0xA852
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowCursor
+    trap: 0xA853
+    executor: C_
+
+# ####
+
+- function:
+    name: ObscureCursor
+    trap: 0xA856
+    executor: C_
+
+# ####
+
+- function:
+    name: ShieldCursor
+    args:
+      - name: rp
+        type: Rect*
+      - name: p
+        type: Point
+    trap: 0xA855
+    executor: C_
+
+# ####
+
+- function:
+    name: InitGraf
+    args:
+      - name: gp
+        type: GrafPtr*
+    trap: 0xA86E
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPort
+    args:
+      - name: p
+        type: GrafPtr
+    trap: 0xA873
+    executor: C_
+
+# ####
+
+- function:
+    name: InitPort
+    args:
+      - name: p
+        type: GrafPtr
+    trap: 0xA86D
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenPort
+    args:
+      - name: p
+        type: GrafPtr
+    trap: 0xA86F
+    executor: C_
+
+# ####
+
+- function:
+    name: ClosePort
+    args:
+      - name: p
+        type: GrafPtr
+    trap: 0xA87D
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPort
+    args:
+      - name: pp
+        type: GrafPtr*
+    trap: 0xA874
+    executor: C_
+
+# ####
+
+- function:
+    name: GrafDevice
+    args:
+      - name: d
+        type: INTEGER
+    trap: 0xA872
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPortBits
+    args:
+      - name: bm
+        type: BitMap*
+    trap: 0xA875
+    executor: C_
+
+# ####
+
+- function:
+    name: PortSize
+    args:
+      - name: w
+        type: INTEGER
+      - name: h
+        type: INTEGER
+    trap: 0xA876
+    executor: C_
+
+# ####
+
+- function:
+    name: MovePortTo
+    args:
+      - name: lg
+        type: INTEGER
+      - name: tg
+        type: INTEGER
+    trap: 0xA877
+    executor: C_
+
+# ####
+
+- function:
+    name: SetOrigin
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA878
+    executor: C_
+
+# ####
+
+- function:
+    name: SetClip
+    args:
+      - name: r
+        type: RgnHandle
+    trap: 0xA879
+    executor: C_
+
+# ####
+
+- function:
+    name: GetClip
+    args:
+      - name: r
+        type: RgnHandle
+    trap: 0xA87A
+    executor: C_
+
+# ####
+
+- function:
+    name: ClipRect
+    args:
+      - name: r
+        type: Rect*
+    trap: 0xA87B
+    executor: C_
+
+# ####
+
+- function:
+    name: BackPat
+    args:
+      - name: pp
+        type: const Pattern*
+    trap: 0xA87C
+    executor: C_
+
+# ####
+
+- function:
+    name: SeedFill
+    args:
+      - name: srcp
+        type: Ptr
+      - name: dstp
+        type: Ptr
+      - name: srcr
+        type: INTEGER
+      - name: dstr
+        type: INTEGER
+      - name: height
+        type: INTEGER
+      - name: width
+        type: INTEGER
+      - name: seedh
+        type: INTEGER
+      - name: seedv
+        type: INTEGER
+    trap: 0xA839
+    executor: C_
+
+# ####
+
+- function:
+    name: CalcMask
+    args:
+      - name: srcp
+        type: Ptr
+      - name: dstp
+        type: Ptr
+      - name: srcr
+        type: INTEGER
+      - name: dstr
+        type: INTEGER
+      - name: height
+        type: INTEGER
+      - name: width
+        type: INTEGER
+    trap: 0xA838
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyMask
+    args:
+      - name: srcbp
+        type: BitMap*
+      - name: mskbp
+        type: BitMap*
+      - name: dstbp
+        type: BitMap*
+      - name: srcrp
+        type: const Rect*
+      - name: mskrp
+        type: const Rect*
+      - name: dstrp
+        type: const Rect*
+    trap: 0xA817
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMaskTable
+    return: INTEGER*
+    trap: 0xA836
+    executor: C_
+
+# ####
+
+- function:
+    name: CharExtra
+    args:
+      - name: Extra
+        type: Fixed
+    trap: 0xAA23
+    executor: C_
+
+# ####
+
+- function:
+    name: MakeRGBPat
+    args:
+      - name: ph
+        type: PixPatHandle
+      - name: colorp
+        type: RGBColor*
+    trap: 0xAA0D
+    executor: C_
+
+# ####
+
+- function:
+    name: Random
+    return: INTEGER
+    trap: 0xA861
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPixel
+    return: Boolean
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA865
+    executor: C_
+
+# ####
+
+- function:
+    name: StuffHex
+    args:
+      - name: p
+        type: Ptr
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA866
+    executor: C_
+
+# ####
+
+- function:
+    name: ScalePt
+    args:
+      - name: pt
+        type: Point*
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+    trap: 0xA8F8
+    executor: C_
+
+# ####
+
+- function:
+    name: MapPt
+    args:
+      - name: pt
+        type: Point*
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+    trap: 0xA8F9
+    executor: C_
+
+# ####
+
+- function:
+    name: MapRect
+    args:
+      - name: r
+        type: Rect*
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+    trap: 0xA8FA
+    executor: C_
+
+# ####
+
+- function:
+    name: MapRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+    trap: 0xA8FB
+    executor: C_
+
+# ####
+
+- function:
+    name: MapPoly
+    args:
+      - name: poly
+        type: PolyHandle
+      - name: srcr
+        type: const Rect*
+      - name: dstr
+        type: const Rect*
+    trap: 0xA8FC
+    executor: C_
+
+# ####
+
+- function:
+    name: HidePen
+    trap: 0xA896
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowPen
+    trap: 0xA897
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPen
+    args:
+      - name: ptp
+        type: Point*
+    trap: 0xA89A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPenState
+    args:
+      - name: ps
+        type: PenState*
+    trap: 0xA898
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPenState
+    args:
+      - name: ps
+        type: PenState*
+    trap: 0xA899
+    executor: C_
+
+# ####
+
+- function:
+    name: PenSize
+    args:
+      - name: w
+        type: INTEGER
+      - name: h
+        type: INTEGER
+    trap: 0xA89B
+    executor: C_
+
+# ####
+
+- function:
+    name: PenMode
+    args:
+      - name: m
+        type: INTEGER
+    trap: 0xA89C
+    executor: C_
+
+# ####
+
+- function:
+    name: PenPat
+    args:
+      - name: pp
+        type: const Pattern*
+    trap: 0xA89D
+    executor: C_
+
+# ####
+
+- function:
+    name: PenNormal
+    trap: 0xA89E
+    executor: C_
+
+# ####
+
+- function:
+    name: MoveTo
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA893
+    executor: C_
+
+# ####
+
+- function:
+    name: Move
+    args:
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA894
+    executor: C_
+
+# ####
+
+- function:
+    name: LineTo
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA891
+    executor: C_
+
+# ####
+
+- function:
+    name: Line
+    args:
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA892
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawPicture
+    args:
+      - name: pic
+        type: PicHandle
+      - name: destrp
+        type: const Rect*
+    trap: 0xA8F6
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenPicture
+    return: PicHandle
+    args:
+      - name: pf
+        type: const Rect*
+    trap: 0xA8F3
+    executor: C_
+
+# ####
+
+- function:
+    name: ClosePicture
+    trap: 0xA8F4
+    executor: C_
+
+# ####
+
+- function:
+    name: PicComment
+    args:
+      - name: kind
+        type: INTEGER
+      - name: size
+        type: INTEGER
+      - name: hand
+        type: Handle
+    trap: 0xA8F2
+    executor: C_
+
+# ####
+
+- function:
+    name: KillPicture
+    args:
+      - name: pic
+        type: PicHandle
+    trap: 0xA8F5
+    executor: C_
+
+# ####
+
+- function:
+    name: AddPt
+    args:
+      - name: src
+        type: Point
+      - name: dst
+        type: Point*
+    trap: 0xA87E
+    executor: C_
+
+# ####
+
+- function:
+    name: SubPt
+    args:
+      - name: src
+        type: Point
+      - name: dst
+        type: Point*
+    trap: 0xA87F
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPt
+    args:
+      - name: pt
+        type: Point*
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA880
+    executor: C_
+
+# ####
+
+- function:
+    name: EqualPt
+    return: Boolean
+    args:
+      - name: p1
+        type: Point
+      - name: p2
+        type: Point
+    trap: 0xA881
+    executor: C_
+
+# ####
+
+- function:
+    name: LocalToGlobal
+    args:
+      - name: pt
+        type: Point*
+    trap: 0xA870
+    executor: C_
+
+# ####
+
+- function:
+    name: GlobalToLocal
+    args:
+      - name: pt
+        type: Point*
+    trap: 0xA871
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenPoly
+    return: PolyHandle
+    trap: 0xA8CB
+    executor: C_
+
+# ####
+
+- function:
+    name: ClosePoly
+    trap: 0xA8CC
+    executor: C_
+
+# ####
+
+- function:
+    name: KillPoly
+    args:
+      - name: poly
+        type: PolyHandle
+    trap: 0xA8CD
+    executor: C_
+
+# ####
+
+- function:
+    name: OffsetPoly
+    args:
+      - name: poly
+        type: PolyHandle
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA8CE
+    executor: C_
+
+# ####
+
+- function:
+    name: SetRect
+    args:
+      - name: r
+        type: Rect*
+      - name: left
+        type: INTEGER
+      - name: top
+        type: INTEGER
+      - name: right
+        type: INTEGER
+      - name: bottom
+        type: INTEGER
+    trap: 0xA8A7
+    executor: C_
+
+# ####
+
+- function:
+    name: OffsetRect
+    args:
+      - name: r
+        type: Rect*
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA8A8
+    executor: C_
+
+# ####
+
+- function:
+    name: InsetRect
+    args:
+      - name: r
+        type: Rect*
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA8A9
+    executor: C_
+
+# ####
+
+- function:
+    name: EmptyRect
+    return: Boolean
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8AE
+    executor: C_
+
+# ####
+
+- function:
+    name: SectRect
+    return: Boolean
+    args:
+      - name: s1
+        type: const Rect*
+      - name: s2
+        type: const Rect*
+      - name: dest
+        type: Rect*
+    trap: 0xA8AA
+    executor: C_
+
+# ####
+
+- function:
+    name: UnionRect
+    args:
+      - name: s1
+        type: const Rect*
+      - name: s2
+        type: const Rect*
+      - name: dest
+        type: Rect*
+    trap: 0xA8AB
+    executor: C_
+
+# ####
+
+- function:
+    name: PtInRect
+    return: Boolean
+    args:
+      - name: p
+        type: Point
+      - name: r
+        type: const Rect*
+    trap: 0xA8AD
+    executor: C_
+
+# ####
+
+- function:
+    name: Pt2Rect
+    args:
+      - name: p1
+        type: Point
+      - name: p2
+        type: Point
+      - name: dest
+        type: Rect*
+    trap: 0xA8AC
+    executor: C_
+
+# ####
+
+- function:
+    name: PtToAngle
+    args:
+      - name: rp
+        type: const Rect*
+      - name: p
+        type: Point
+      - name: angle
+        type: INTEGER*
+    trap: 0xA8C3
+    executor: C_
+
+# ####
+
+- function:
+    name: EqualRect
+    return: Boolean
+    args:
+      - name: r1
+        type: const Rect*
+      - name: r2
+        type: const Rect*
+    trap: 0xA8A6
+    executor: C_
+
+# ####
+
+- function:
+    name: NewRgn
+    return: RgnHandle
+    trap: 0xA8D8
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenRgn
+    trap: 0xA8DA
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyRgn
+    args:
+      - name: s
+        type: RgnHandle
+      - name: d
+        type: RgnHandle
+    trap: 0xA8DC
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8DB
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8D9
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEmptyRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8DD
+    executor: C_
+
+# ####
+
+- function:
+    name: SetRectRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: left
+        type: INTEGER
+      - name: top
+        type: INTEGER
+      - name: right
+        type: INTEGER
+      - name: bottom
+        type: INTEGER
+    trap: 0xA8DE
+    executor: C_
+
+# ####
+
+- function:
+    name: RectRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: rect
+        type: const Rect*
+    trap: 0xA8DF
+    executor: C_
+
+# ####
+
+- function:
+    name: OffsetRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA8E0
+    executor: C_
+
+# ####
+
+- function:
+    name: PtInRgn
+    return: Boolean
+    args:
+      - name: p
+        type: Point
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8E8
+    executor: C_
+
+# ####
+
+- function:
+    name: InsetRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+    trap: 0xA8E1
+    executor: C_
+
+# ####
+
+- function:
+    name: SectRgn
+    args:
+      - name: s1
+        type: RgnHandle
+      - name: s2
+        type: RgnHandle
+      - name: dest
+        type: RgnHandle
+    trap: 0xA8E4
+    executor: C_
+
+# ####
+
+- function:
+    name: UnionRgn
+    args:
+      - name: s1
+        type: RgnHandle
+      - name: s2
+        type: RgnHandle
+      - name: dest
+        type: RgnHandle
+    trap: 0xA8E5
+    executor: C_
+
+# ####
+
+- function:
+    name: DiffRgn
+    args:
+      - name: s1
+        type: RgnHandle
+      - name: s2
+        type: RgnHandle
+      - name: dest
+        type: RgnHandle
+    trap: 0xA8E6
+    executor: C_
+
+# ####
+
+- function:
+    name: XorRgn
+    args:
+      - name: s1
+        type: RgnHandle
+      - name: s2
+        type: RgnHandle
+      - name: dest
+        type: RgnHandle
+    trap: 0xA8E7
+    executor: C_
+
+# ####
+
+- function:
+    name: RectInRgn
+    return: Boolean
+    args:
+      - name: rp
+        type: const Rect*
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8E9
+    executor: C_
+
+# ####
+
+- function:
+    name: EqualRgn
+    return: Boolean
+    args:
+      - name: r1
+        type: RgnHandle
+      - name: r2
+        type: RgnHandle
+    trap: 0xA8E3
+    executor: C_
+
+# ####
+
+- function:
+    name: EmptyRgn
+    return: Boolean
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8E2
+    executor: C_
+
+# ####
+
+- function:
+    name: FrameRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8A1
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8A2
+    executor: C_
+
+# ####
+
+- function:
+    name: EraseRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8A3
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8A4
+    executor: C_
+
+# ####
+
+- function:
+    name: FillRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8A5
+    executor: C_
+
+# ####
+
+- function:
+    name: FrameOval
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8B7
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintOval
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8B8
+    executor: C_
+
+# ####
+
+- function:
+    name: EraseOval
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8B9
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertOval
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA8BA
+    executor: C_
+
+# ####
+
+- function:
+    name: FillOval
+    args:
+      - name: r
+        type: const Rect*
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8BB
+    executor: C_
+
+# ####
+
+- function:
+    name: FrameRoundRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+    trap: 0xA8B0
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintRoundRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+    trap: 0xA8B1
+    executor: C_
+
+# ####
+
+- function:
+    name: EraseRoundRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+    trap: 0xA8B2
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertRoundRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+    trap: 0xA8B3
+    executor: C_
+
+# ####
+
+- function:
+    name: FillRoundRect
+    args:
+      - name: r
+        type: const Rect*
+      - name: ow
+        type: INTEGER
+      - name: oh
+        type: INTEGER
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8B4
+    executor: C_
+
+# ####
+
+- function:
+    name: FrameArc
+    args:
+      - name: r
+        type: const Rect*
+      - name: start
+        type: INTEGER
+      - name: angle
+        type: INTEGER
+    trap: 0xA8BE
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintArc
+    args:
+      - name: r
+        type: const Rect*
+      - name: start
+        type: INTEGER
+      - name: angle
+        type: INTEGER
+    trap: 0xA8BF
+    executor: C_
+
+# ####
+
+- function:
+    name: EraseArc
+    args:
+      - name: r
+        type: const Rect*
+      - name: start
+        type: INTEGER
+      - name: angle
+        type: INTEGER
+    trap: 0xA8C0
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertArc
+    args:
+      - name: r
+        type: const Rect*
+      - name: start
+        type: INTEGER
+      - name: angle
+        type: INTEGER
+    trap: 0xA8C1
+    executor: C_
+
+# ####
+
+- function:
+    name: FillArc
+    args:
+      - name: r
+        type: const Rect*
+      - name: start
+        type: INTEGER
+      - name: angle
+        type: INTEGER
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8C2
+    executor: C_
+
+# ####
+
+- function:
+    name: FrameRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8D2
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8D3
+    executor: C_
+
+# ####
+
+- function:
+    name: EraseRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8D4
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertRgn
+    args:
+      - name: rh
+        type: RgnHandle
+    trap: 0xA8D5
+    executor: C_
+
+# ####
+
+- function:
+    name: FillRgn
+    args:
+      - name: rh
+        type: RgnHandle
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8D6
+    executor: C_
+
+# ####
+
+- function:
+    name: FramePoly
+    args:
+      - name: poly
+        type: PolyHandle
+    trap: 0xA8C6
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintPoly
+    args:
+      - name: poly
+        type: PolyHandle
+    trap: 0xA8C7
+    executor: C_
+
+# ####
+
+- function:
+    name: ErasePoly
+    args:
+      - name: poly
+        type: PolyHandle
+    trap: 0xA8C8
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertPoly
+    args:
+      - name: poly
+        type: PolyHandle
+    trap: 0xA8C9
+    executor: C_
+
+# ####
+
+- function:
+    name: FillPoly
+    args:
+      - name: poly
+        type: PolyHandle
+      - name: pat
+        type: const Pattern*
+    trap: 0xA8CA
+    executor: C_
+
+# ####
+
+- function:
+    name: SetStdProcs
+    args:
+      - name: procs
+        type: QDProcs*
+    trap: 0xA8EA
+    executor: C_
+
+# ####
+
+- function:
+    name: StdArc
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: r
+        type: const Rect*
+      - name: starta
+        type: INTEGER
+      - name: arca
+        type: INTEGER
+    trap: 0xA8BD
+    executor: C_
+
+# ####
+
+- function:
+    name: StdBits
+    args:
+      - name: srcbmp
+        type: const BitMap*
+      - name: srcrp
+        type: const Rect*
+      - name: dstrp
+        type: const Rect*
+      - name: mode
+        type: INTEGER
+      - name: mask
+        type: RgnHandle
+    trap: 0xA8EB
+    executor: C_
+
+# ####
+
+- function:
+    name: StdLine
+    args:
+      - name: p
+        type: Point
+    trap: 0xA890
+    executor: C_
+
+# ####
+
+- function:
+    name: StdOval
+    args:
+      - name: v
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+    trap: 0xA8B6
+    executor: C_
+
+# ####
+
+- function:
+    name: StdComment
+    args:
+      - name: kind
+        type: INTEGER
+      - name: size
+        type: INTEGER
+      - name: hand
+        type: Handle
+    trap: 0xA8F1
+    executor: C_
+
+# ####
+
+- function:
+    name: StdGetPic
+    args:
+      - name: dp
+        type: void*
+      - name: bc
+        type: INTEGER
+    trap: 0xA8EE
+    executor: C_
+
+# ####
+
+- function:
+    name: StdPutPic
+    args:
+      - name: sp
+        type: const void*
+      - name: bc
+        type: INTEGER
+    trap: 0xA8F0
+    executor: C_
+
+# ####
+
+- function:
+    name: StdPoly
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: ph
+        type: PolyHandle
+    trap: 0xA8C5
+    executor: C_
+
+# ####
+
+- function:
+    name: StdRRect
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: r
+        type: const Rect*
+      - name: width
+        type: INTEGER
+      - name: height
+        type: INTEGER
+    trap: 0xA8AF
+    executor: C_
+
+# ####
+
+- function:
+    name: StdRect
+    args:
+      - name: v
+        type: GrafVerb
+      - name: rp
+        type: const Rect*
+    trap: 0xA8A0
+    executor: C_
+
+# ####
+
+- function:
+    name: StdRgn
+    args:
+      - name: verb
+        type: GrafVerb
+      - name: rgn
+        type: RgnHandle
+    trap: 0xA8D1
+    executor: C_
+
+# ####
+
+- function:
+    name: StdText
+    args:
+      - name: n
+        type: INTEGER
+      - name: textbufp
+        type: Ptr
+      - name: num
+        type: Point
+      - name: den
+        type: Point
+    trap: 0xA882
+    executor: C_
+
+# ####
+
+- function:
+    name: StdTxMeas
+    return: INTEGER
+    args:
+      - name: n
+        type: INTEGER
+      - name: p
+        type: Ptr
+      - name: nump
+        type: Point*
+      - name: denp
+        type: Point*
+      - name: finfop
+        type: FontInfo*
+    trap: 0xA8ED
+    executor: C_
+
+# ####
+
+- function:
+    name: MeasureText
+    args:
+      - name: n
+        type: INTEGER
+      - name: text
+        type: Ptr
+      - name: chars
+        type: Ptr
+    trap: 0xA837
+    executor: C_
+
+# ####
+
+- function:
+    name: TextFont
+    args:
+      - name: f
+        type: INTEGER
+    trap: 0xA887
+    executor: C_
+
+# ####
+
+- function:
+    name: TextFace
+    args:
+      - name: thef
+        type: INTEGER
+    trap: 0xA888
+    executor: C_
+
+# ####
+
+- function:
+    name: TextMode
+    args:
+      - name: m
+        type: INTEGER
+    trap: 0xA889
+    executor: C_
+
+# ####
+
+- function:
+    name: TextSize
+    args:
+      - name: s
+        type: INTEGER
+    trap: 0xA88A
+    executor: C_
+
+# ####
+
+- function:
+    name: SpaceExtra
+    args:
+      - name: e
+        type: Fixed
+    trap: 0xA88E
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawChar
+    args:
+      - name: thec
+        type: CharParameter
+    trap: 0xA883
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawString
+    args:
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA884
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawText
+    args:
+      - name: tb
+        type: Ptr
+      - name: fb
+        type: INTEGER
+      - name: bc
+        type: INTEGER
+    trap: 0xA885
+    executor: C_
+
+# ####
+
+- function:
+    name: CharWidth
+    return: INTEGER
+    args:
+      - name: thec
+        type: CharParameter
+    trap: 0xA88D
+    executor: C_
+
+# ####
+
+- function:
+    name: StringWidth
+    return: INTEGER
+    args:
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA88C
+    executor: C_
+
+# ####
+
+- function:
+    name: TextWidth
+    return: INTEGER
+    args:
+      - name: tb
+        type: Ptr
+      - name: fb
+        type: INTEGER
+      - name: bc
+        type: INTEGER
+    trap: 0xA886
+    executor: C_
+
+# ####
+
+- function:
+    name: GetFontInfo
+    args:
+      - name: ip
+        type: FontInfo*
+    trap: 0xA88B
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCPixel
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+      - name: colorp
+        type: RGBColor*
+    trap: 0xAA17
+    executor: C_
+
+# ####
+
+- function:
+    name: SetCPixel
+    args:
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+      - name: colorp
+        type: RGBColor*
+    trap: 0xAA16
+    executor: C_
+
+# ####
+
+- function:
+    name: SeedCFill
+    args:
+      - name: srcbp
+        type: BitMap*
+      - name: dstbp
+        type: BitMap*
+      - name: srcrp
+        type: const Rect*
+      - name: dstrp
+        type: const Rect*
+      - name: seedh
+        type: INTEGER
+      - name: seedv
+        type: INTEGER
+      - name: matchprocp
+        type: ProcPtr
+      - name: matchdata
+        type: LONGINT
+    trap: 0xAA50
+    executor: C_
+
+# ####
+
+- function:
+    name: CalcCMask
+    args:
+      - name: srcbp
+        type: BitMap*
+      - name: dstbp
+        type: BitMap*
+      - name: srcrp
+        type: const Rect*
+      - name: dstrp
+        type: const Rect*
+      - name: seedrgbp
+        type: RGBColor*
+      - name: matchprocp
+        type: ProcPtr
+      - name: matchdata
+        type: LONGINT
+    trap: 0xAA4F
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyDeepMask
+    args:
+      - name: srcBits
+        type: BitMap*
+      - name: maskBits
+        type: BitMap*
+      - name: dstBits
+        type: BitMap*
+      - name: srcRect
+        type: const Rect*
+      - name: maskRect
+        type: const Rect*
+      - name: dstRect
+        type: const Rect*
+      - name: mode
+        type: INTEGER
+      - name: maskRgn
+        type: RgnHandle
+    trap: 0xAA51
+    executor: C_
+
+# ####
+
+- executor_only:
+    code: |
+      inline QDGlobals& qdGlobals()
+      {
+          Ptr thePortPtr = *(GUEST<Ptr> *)SYN68K_TO_US(EM_A5);
+          return *(QDGlobals*)(thePortPtr - offsetof(QDGlobals, thePort));
+      }

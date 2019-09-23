@@ -1,0 +1,59 @@
+- enum:
+    values:
+      - name: sdOnPowerOff
+        value: 1
+      - name: sdOnRestart
+        value: 2
+      - name: sdOnUnmount
+        value: 4
+      - name: sdOnDrivers
+        value: 8
+      - name: sdOnRestartOrPower
+        value: sdOnPowerOff | sdOnRestart
+
+# ####
+
+- dispatcher:
+    name: ShutDown
+    trap: 0xA895
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: ShutDwnPower
+    dispatcher: ShutDown
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: ShutDwnStart
+    dispatcher: ShutDown
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: ShutDwnInstall
+    args:
+      - name: shutdown_proc
+        type: ProcPtr
+      - name: flags
+        type: int16_t
+    dispatcher: ShutDown
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: ShutDwnRemove
+    args:
+      - name: shutdown_proc
+        type: ProcPtr
+    dispatcher: ShutDown
+    selector: 0x0004
+    executor: C_

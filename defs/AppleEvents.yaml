@@ -1,0 +1,1659 @@
+- typedef:
+    name: AEEventClass
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: AEEventID
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: AEKeyword
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: DescType
+    type: ResType
+
+# ####
+
+- struct:
+    name: AEDesc
+    members:
+      - name: descriptorType
+        type: DescType
+      - name: dataHandle
+        type: Handle
+    size: 8
+
+# ####
+
+- typedef:
+    name: descriptor_t
+    type: AEDesc
+    comment: |
+      ### hack, delete
+
+# ####
+
+- executor_only:
+    code: |
+      #define DESC_TYPE(desc) ((desc)->descriptorType)
+      #define DESC_DATA(desc) ((desc)->dataHandle)
+
+# ####
+
+- struct:
+    name: AEKeyDesc
+    members:
+      - name: descKey
+        type: AEKeyword
+      - name: descContent
+        type: AEDesc
+    size: 12
+
+# ####
+
+- typedef:
+    name: key_desc_t
+    type: AEKeyDesc
+
+# ####
+
+- executor_only:
+    code: |
+      #define KEY_DESC_KEYWORD(keydesc) ((keydesc)->descKey)
+      #define KEY_DESC_CONTENT(keydesc) ((keydesc)->descContent)
+
+# ####
+
+- typedef:
+    name: AEAddressDesc
+    type: AEDesc
+
+# ####
+
+- typedef:
+    name: AEDescList
+    type: AEDesc
+
+# ####
+
+- typedef:
+    name: AERecord
+    type: AEDescList
+
+# ####
+
+- typedef:
+    name: AppleEvent
+    type: AERecord
+
+# ####
+
+- typedef:
+    name: AESendMode
+    type: int32_t
+
+# ####
+
+- enum:
+    values:
+      - name: _kAEReplyMask
+        value: 0x3
+
+# ####
+
+- enum:
+    values:
+      - name: kAENoReply
+        value: 0x1
+      - name: kAEQueueReply
+        value: 0x2
+      - name: kAEWaitReply
+        value: 0x3
+
+# ####
+
+- enum:
+    values:
+      - name: _kAEInteractMask
+        value: 0x30
+
+# ####
+
+- enum:
+    values:
+      - name: kAENeverInteract
+        value: 0x10
+      - name: kAECanInteract
+        value: 0x20
+      - name: kAEAlwaysInteract
+        value: 0x30
+
+# ####
+
+- enum:
+    values:
+      - name: kAECanSwitchLayer
+        value: 0x40
+      - name: kAEDontReconnect
+        value: 0x80
+
+# ####
+
+- typedef:
+    name: AESendPriority
+    type: int16_t
+    comment: |
+      #define kAEWantReceipt	???
+
+# ####
+
+- typedef:
+    name: AEEventSource
+    type: uint8_t
+
+# ####
+
+- typedef:
+    name: AEInteractionAllowed
+    type: uint8_t
+
+# ####
+
+- typedef:
+    name: AEArrayType
+    type: uint8_t
+
+# ####
+
+- enum:
+    values:
+      - name: kAEInteractWithSelf
+        value: 0
+      - name: kAEInteractWithLocal
+        value: 1
+      - name: kAEInteractWithAll
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: kAEUnknownSource
+        value: 0
+      - name: kAEDirectCall
+        value: 1
+      - name: kAESameProcess
+        value: 2
+      - name: kAELocalProcess
+        value: 3
+      - name: kAERemoteProcess
+        value: 4
+
+# ####
+
+- enum:
+    values:
+      - name: kAEDataArray
+      - name: kAEPackedArray
+      - name: kAEHandleArray
+      - name: kAEDescArray
+      - name: kAEKeyDescArray
+
+# ####
+
+- enum:
+    values:
+      - name: kAutoGenerateReturnID
+        value: -1
+      - name: kAnyTransactionID
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: kAENormalPriority
+        value: 0
+      - name: kAEHighPriority
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: kAEDefaultTimeout
+        value: -1
+      - name: kNoTimeOut
+        value: -2
+
+# ####
+
+- union:
+    name: AEArrayData
+    members:
+      - name: AEDataArray
+        type: int16_t[1]
+      - name: AEPackedArray
+        type: int8_t[1]
+      - name: AEHandleArray
+        type: Handle[1]
+      - name: AEDescArray
+        type: AEDesc[1]
+      - name: AEKeyDescArray
+        type: AEKeyDesc[1]
+    size: 12
+
+# ####
+
+- typedef:
+    name: AEArrayDataPointer
+    type: AEArrayData*
+
+# ####
+
+- typedef:
+    name: IdleUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: EventFilterUPP
+    type: ProcPtr
+
+# ####
+
+- funptr:
+    return: OSErr
+    args:
+      - name: evt
+        type: const AppleEvent*
+      - name: reply
+        type: AppleEvent*
+      - name: refcon
+        type: int32_t
+    name: AEEventHandlerUPP
+
+# ####
+
+- funptr:
+    return: OSErr
+    args:
+      - name: data_type
+        type: DescType
+      - name: data
+        type: Ptr
+      - name: data_size
+        type: Size
+      - name: to_type
+        type: DescType
+      - name: refcon
+        type: int32_t
+      - name: desc_out
+        type: AEDesc*
+    name: AECoercePtrUPP
+
+# ####
+
+- funptr:
+    return: OSErr
+    args:
+      - name: desc
+        type: AEDesc*
+      - name: to_type
+        type: DescType
+      - name: refcon
+        type: int32_t
+      - name: desc_out
+        type: AEDesc*
+    name: AECoerceDescUPP
+
+# ####
+
+- struct:
+    name: AE_hdlr
+    members:
+      - name: fn
+        type: void*
+      - name: refcon
+        type: int32_t
+
+# ####
+
+- typedef:
+    name: AE_hdlr_t
+    type: AE_hdlr
+    comment: |
+      #### internal
+    size: 8
+
+# ####
+
+- struct:
+    name: AE_hdlr_selector
+    members:
+      - name: sel0
+        type: int32_t
+      - name: sel1
+        type: int32_t
+
+# ####
+
+- typedef:
+    name: AE_hdlr_selector_t
+    type: AE_hdlr_selector
+    size: 8
+
+# ####
+
+- struct:
+    name: AE_hdlr_table_elt
+    members:
+      - name: pad_1
+        type: int32_t
+      - name: selector
+        type: AE_hdlr_selector_t
+      - name: hdlr
+        type: AE_hdlr_t
+      - name: pad_2
+        type: int32_t
+
+# ####
+
+- typedef:
+    name: AE_hdlr_table_elt_t
+    type: AE_hdlr_table_elt
+    size: 24
+
+# ####
+
+- executor_only:
+    code: |
+      #define AE_TABLE_ELTS(table) ((*table)->elts)
+      #define AE_TABLE_N_ELTS(table) ((*table)->n_elts)
+      #define AE_TABLE_N_ALLOCATED_BYTES(table) \
+          ((*table)->n_allocated_bytes)
+
+# ####
+
+- struct:
+    name: AE_hdlr_table
+    members:
+      - name: pad_1
+        type: int32_t
+      - name: n_allocated_bytes
+        type: int32_t
+      - name: n_elts
+        type: int32_t
+      - name: pad_2
+        type: int32_t[10]
+      - name: elts
+        type: AE_hdlr_table_elt_t[0]
+
+# ####
+
+- typedef:
+    name: AE_hdlr_table_t
+    type: AE_hdlr_table
+    size: 52
+
+# ####
+
+- typedef:
+    name: AE_hdlr_table_ptr
+    type: AE_hdlr_table_t*
+
+# ####
+
+- typedef:
+    name: AE_hdlr_table_h
+    type: AE_hdlr_table_ptr*
+
+# ####
+
+- struct:
+    name: AE_zone_tables
+    members:
+      - name: event_hdlr_table
+        type: AE_hdlr_table_h
+      - name: coercion_hdlr_table
+        type: AE_hdlr_table_h
+      - name: special_hdlr_table
+        type: AE_hdlr_table_h
+      - name: pad_1
+        type: char[28]
+      - name: unknown_appl_value
+        type: char[4]
+      - name: pad_2
+        type: char[8]
+      - name: unknown_sys_handle
+        type: Handle
+
+# ####
+
+- typedef:
+    name: AE_zone_tables_t
+    type: AE_zone_tables
+    comment: |
+      points to a 32byte handle of unknown contents (at least,
+           sometimes)
+    size: 56
+
+# ####
+
+- typedef:
+    name: AE_zone_tables_ptr
+    type: AE_zone_tables_t*
+
+# ####
+
+- typedef:
+    name: AE_zone_tables_h
+    type: AE_zone_tables_ptr*
+
+# ####
+
+- struct:
+    members:
+      - name: pad_1
+        type: char[340]
+      - name: appl_zone_tables
+        type: AE_zone_tables_h
+      - name: pad_2
+        type: char[36]
+      - name: system_zone_tables
+        type: AE_zone_tables_h
+      - name: pad_3
+        type: char[212]
+    name: AE_info_t
+    size: 596
+
+# ####
+
+- typedef:
+    name: AE_info_ptr
+    type: AE_info_t*
+
+# ####
+
+- dispatcher:
+    name: Pack8
+    trap: 0xA816
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: _AE_hdlr_table_alloc
+    return: OSErr
+    args:
+      - type: int32_t
+      - type: int32_t
+      - type: int32_t
+      - type: int8_t
+      - type: AE_hdlr_table_h*
+    comment: |
+      "internal". TODO: verify if they really exist as entry points.
+    dispatcher: Pack8
+    selector: 0x092E
+    executor: C_
+
+# ####
+
+- function:
+    name: _AE_hdlr_delete
+    return: OSErr
+    args:
+      - type: AE_hdlr_table_h
+      - type: int32_t
+      - type: AE_hdlr_selector_t*
+    dispatcher: Pack8
+    selector: 0x0632
+    executor: C_
+
+# ####
+
+- function:
+    name: _AE_hdlr_lookup
+    return: OSErr
+    args:
+      - type: AE_hdlr_table_h
+      - type: int32_t
+      - type: AE_hdlr_selector_t*
+      - type: AE_hdlr_t*
+    dispatcher: Pack8
+    selector: 0x0833
+    executor: C_
+
+# ####
+
+- function:
+    name: _AE_hdlr_install
+    return: OSErr
+    args:
+      - type: AE_hdlr_table_h
+      - type: int32_t
+      - type: AE_hdlr_selector_t*
+      - type: AE_hdlr_t*
+    dispatcher: Pack8
+    selector: 0x0831
+    executor: C_
+
+# ####
+
+- executor_only:
+    code: |
+      /* private */
+      
+      extern bool send_application_open_aevt_p;
+      extern bool application_accepts_open_app_aevt_p;
+      
+      /*  error codes */
+      
+      #define AE_RETURN_ERROR(error)                         \
+          do {                                               \
+              OSErr _error_ = (error);                       \
+                                                             \
+              if(_error_ != noErr)                           \
+                  warning_unexpected("error `%d'", _error_); \
+              return _error_;                                \
+          } while(0)
+
+# ####
+
+- enum:
+    values:
+      - name: invalidConnection
+        value: -609
+
+# ####
+
+- enum:
+    values:
+      - name: errAECoercionFail
+        value: -1700
+      - name: errAEDescNotFound
+        value: -1701
+      - name: errAEWrongDataType
+        value: -1703
+      - name: errAENotAEDesc
+        value: -1704
+
+# ####
+
+- enum:
+    values:
+      - name: errAEEventNotHandled
+        value: -1708
+      - name: errAEUnknownAddressType
+        value: -1716
+
+# ####
+
+- enum:
+    values:
+      - name: errAEHandlerNotFound
+        value: -1717
+      - name: errAEIllegalIndex
+        value: -1719
+
+# ####
+
+- enum:
+    values:
+      - name: typeFSS
+        value: "'fss '"
+      - name: typeAEList
+        value: "'list'"
+      - name: typeAERecord
+        value: "'reco'"
+      - name: typeAppleEvent
+        value: "'aevt'"
+      - name: typeProcessSerialNumber
+        value: "'psn '"
+      - name: typeNull
+        value: "'null'"
+      - name: typeApplSignature
+        value: "'sign'"
+      - name: typeType
+        value: "'type'"
+      - name: typeWildCard
+        value: "'****'"
+      - name: typeAlias
+        value: "'alis'"
+      - name: typeBoolean
+        value: "'bool'"
+      - name: typeChar
+        value: "'TEXT'"
+      - name: typeSInt16
+        value: "'shor'"
+      - name: typeSInt32
+        value: "'long'"
+      - name: typeUInt32
+        value: "'magn'"
+      - name: typeSInt64
+        value: "'comp'"
+      - name: typeIEEE32BitFloatingPoint
+        value: "'sing'"
+      - name: typeIEEE64BitFloatingPoint
+        value: "'doub'"
+      - name: type128BitFloatingPoint
+        value: "'ldbl'"
+      - name: typeDecimalStruct
+        value: "'decm'"
+    comment: |
+      types
+
+# ####
+
+- enum:
+    values:
+      - name: keyAddressAttr
+        value: "'addr'"
+      - name: keyEventClassAttr
+        value: "'evcl'"
+      - name: keyEventIDAttr
+        value: "'evid'"
+      - name: keyProcessSerialNumber
+        value: "'psn '"
+      - name: keyDirectObject
+        value: "'----'"
+
+# ####
+
+- enum:
+    values:
+      - name: kCoreEventClass
+        value: "'aevt'"
+      - name: kAEOpenApplication
+        value: "'oapp'"
+      - name: kAEOpenDocuments
+        value: "'odoc'"
+      - name: kAEPrintDocuments
+        value: "'pdoc'"
+      - name: kAEAnswer
+        value: "'ansr'"
+      - name: kAEQuitApplication
+        value: "'quit'"
+      - name: keySelectProc
+        value: "'selh'"
+
+# ####
+
+- lowmem:
+    name: AE_info
+    type: AE_info_ptr
+    address: 0x2B6
+    comment: |
+      AppleEvents AEGizmo (true);
+
+# ####
+
+- function:
+    name: AEGetCoercionHandler
+    return: OSErr
+    args:
+      - name: from_type
+        type: DescType
+      - name: to_type
+        type: DescType
+      - name: hdlr_out
+        type: AECoerceDescUPP*
+      - name: refcon_out
+        type: int32_t*
+      - name: from_type_is_desc_p_out
+        type: Boolean*
+      - name: system_handler_p
+        type: Boolean
+    comment: |
+      prototypes go here
+    dispatcher: Pack8
+    selector: 0x0B24
+    executor: C_
+
+# ####
+
+- function:
+    name: AECreateDesc
+    return: OSErr
+    args:
+      - name: type
+        type: DescType
+      - name: data
+        type: void*
+      - name: data_size
+        type: Size
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0825
+    executor: C_
+
+# ####
+
+- function:
+    name: AEDisposeDesc
+    return: OSErr
+    args:
+      - name: desc
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0204
+    executor: C_
+
+# ####
+
+- function:
+    name: AECoerceDesc
+    return: OSErr
+    args:
+      - name: desc
+        type: AEDesc*
+      - name: result_type
+        type: DescType
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0603
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetParamPtr
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+      - name: desired_type
+        type: DescType
+      - name: type_out
+        type: DescType*
+      - name: data
+        type: Ptr
+      - name: max_size
+        type: Size
+      - name: size_out
+        type: Size*
+    dispatcher: Pack8
+    selector: 0x0E11
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetParamDesc
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+      - name: desired_type
+        type: DescType
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0812
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutParamPtr
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+      - name: type
+        type: DescType
+      - name: data
+        type: Ptr
+      - name: data_size
+        type: Size
+    dispatcher: Pack8
+    selector: 0x0A0F
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutParamDesc
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+      - name: desc
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0610
+    executor: C_
+
+# ####
+
+- function:
+    name: AESizeOfParam
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+      - name: type_out
+        type: DescType*
+      - name: size_out
+        type: Size*
+    comment: |
+      extern OSErr C_AEDeleteParam(AppleEvent *evt, AEKeyword keyword);
+      PASCAL_SUBTRAP(AEDeleteParam, 0xA816, 0x0413, Pack8);
+      The following does not exist. Maybe it should be AEDeleteParam?
+      extern OSErr C_AEDeleteAttribute(AppleEvent *evt,
+                                                   AEKeyword keyword);
+      PASCAL_SUBTRAP_UNKNOWN(AEDeleteAttribute, 0xA816, Pack8);
+    dispatcher: Pack8
+    selector: 0x0829
+    executor: C_
+
+# ####
+
+- function:
+    name: AESetInteractionAllowed
+    return: OSErr
+    args:
+      - name: level
+        type: AEInteractionAllowed
+    dispatcher: Pack8
+    selector: 0x011E
+    executor: C_
+
+# ####
+
+- function:
+    name: AEResetTimer
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+    dispatcher: Pack8
+    selector: 0x0219
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetTheCurrentEvent
+    return: OSErr
+    args:
+      - name: return_evt
+        type: AppleEvent*
+    dispatcher: Pack8
+    selector: 0x021A
+    executor: C_
+
+# ####
+
+- function:
+    name: AESetTheCurrentEvent
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+    dispatcher: Pack8
+    selector: 0x022C
+    executor: C_
+
+# ####
+
+- function:
+    name: AESuspendTheCurrentEvent
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+    dispatcher: Pack8
+    selector: 0x022B
+    executor: C_
+
+# ####
+
+- function:
+    name: AEResumeTheCurrentEvent
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: reply
+        type: AppleEvent*
+      - name: dispatcher
+        type: AEEventHandlerUPP
+      - name: refcon
+        type: int32_t
+    dispatcher: Pack8
+    selector: 0x0818
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetInteractionAllowed
+    return: OSErr
+    args:
+      - name: return_level
+        type: AEInteractionAllowed*
+    dispatcher: Pack8
+    selector: 0x021D
+    executor: C_
+
+# ####
+
+- function:
+    name: AEDuplicateDesc
+    return: OSErr
+    args:
+      - name: src
+        type: AEDesc*
+      - name: dst
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0405
+    executor: C_
+
+# ####
+
+- function:
+    name: AECountItems
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: count_out
+        type: int32_t*
+    dispatcher: Pack8
+    selector: 0x0407
+    executor: C_
+
+# ####
+
+- function:
+    name: AEDeleteItem
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+    dispatcher: Pack8
+    selector: 0x040E
+    executor: C_
+
+# ####
+
+- function:
+    name: AEDeleteParam
+    return: OSErr
+    args:
+      - name: record
+        type: AERecord*
+      - name: keyword
+        type: AEKeyword
+    dispatcher: Pack8
+    selector: 0x0413
+    executor: C_
+
+# ####
+
+- function:
+    name: AEInstallSpecialHandler
+    return: OSErr
+    args:
+      - name: function_class
+        type: AEKeyword
+      - name: hdlr
+        type: AEEventHandlerUPP
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0500
+    executor: C_
+
+# ####
+
+- function:
+    name: AERemoveSpecialHandler
+    return: OSErr
+    args:
+      - name: function_class
+        type: AEKeyword
+      - name: hdlr
+        type: AEEventHandlerUPP
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0501
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetSpecialHandler
+    return: OSErr
+    args:
+      - name: function_class
+        type: AEKeyword
+      - name: hdlr_out
+        type: AEEventHandlerUPP*
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x052D
+    executor: C_
+
+# ####
+
+- function:
+    name: AESend
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: reply
+        type: AppleEvent*
+      - name: send_mode
+        type: AESendMode
+      - name: send_priority
+        type: AESendPriority
+      - name: timeout
+        type: int32_t
+      - name: idle_proc
+        type: IdleUPP
+      - name: filter_proc
+        type: EventFilterUPP
+    dispatcher: Pack8
+    selector: 0x0D17
+    executor: C_
+
+# ####
+
+- function:
+    name: AECoercePtr
+    return: OSErr
+    args:
+      - name: data_type
+        type: DescType
+      - name: data
+        type: Ptr
+      - name: data_size
+        type: Size
+      - name: result_type
+        type: DescType
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0A02
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetEventHandler
+    return: OSErr
+    args:
+      - name: event_class
+        type: AEEventClass
+      - name: event_id
+        type: AEEventID
+      - name: hdlr
+        type: AEEventHandlerUPP*
+      - name: refcon
+        type: int32_t*
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0921
+    executor: C_
+
+# ####
+
+- function:
+    name: AERemoveEventHandler
+    return: OSErr
+    args:
+      - name: event_class
+        type: AEEventClass
+      - name: event_id
+        type: AEEventID
+      - name: hdlr
+        type: AEEventHandlerUPP
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0720
+    executor: C_
+
+# ####
+
+- function:
+    name: AEProcessAppleEvent
+    return: OSErr
+    args:
+      - name: evt
+        type: EventRecord*
+    dispatcher: Pack8
+    selector: 0x021B
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutDesc
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+      - name: desc
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0609
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutAttributePtr
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: keyword
+        type: AEKeyword
+      - name: type
+        type: DescType
+      - name: data
+        type: Ptr
+      - name: size
+        type: Size
+    dispatcher: Pack8
+    selector: 0x0A16
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutAttributeDesc
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: keyword
+        type: AEKeyword
+      - name: desc
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0627
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetNthPtr
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+      - name: desired_type
+        type: DescType
+      - name: keyword_out
+        type: AEKeyword*
+      - name: type_out
+        type: DescType*
+      - name: data
+        type: Ptr
+      - name: max_size
+        type: int32_t
+      - name: size_out
+        type: int32_t*
+    dispatcher: Pack8
+    selector: 0x100A
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetAttributePtr
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: keyword
+        type: AEKeyword
+      - name: desired_type
+        type: DescType
+      - name: type_out
+        type: DescType*
+      - name: data
+        type: Ptr
+      - name: max_size
+        type: Size
+      - name: size_out
+        type: Size*
+    dispatcher: Pack8
+    selector: 0x0E15
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetArray
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: array_type
+        type: AEArrayType
+      - name: array_ptr
+        type: AEArrayDataPointer
+      - name: max_size
+        type: Size
+      - name: return_item_type
+        type: DescType*
+      - name: return_item_size
+        type: Size*
+      - name: return_item_count
+        type: int32_t*
+    dispatcher: Pack8
+    selector: 0x0D0C
+    executor: C_
+
+# ####
+
+- function:
+    name: AECreateAppleEvent
+    return: OSErr
+    args:
+      - name: event_class
+        type: AEEventClass
+      - name: event_id
+        type: AEEventID
+      - name: target
+        type: AEAddressDesc*
+      - name: return_id
+        type: int16_t
+      - name: transaction_id
+        type: int32_t
+      - name: evt
+        type: AppleEvent*
+    dispatcher: Pack8
+    selector: 0x0B14
+    executor: C_
+
+# ####
+
+- function:
+    name: AEInstallCoercionHandler
+    return: OSErr
+    args:
+      - name: from_type
+        type: DescType
+      - name: to_type
+        type: DescType
+      - name: hdlr
+        type: AECoerceDescUPP
+      - name: refcon
+        type: int32_t
+      - name: from_type_is_desc_p
+        type: Boolean
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0A22
+    executor: C_
+
+# ####
+
+- function:
+    name: AEInstallEventHandler
+    return: OSErr
+    args:
+      - name: event_class
+        type: AEEventClass
+      - name: event_id
+        type: AEEventID
+      - name: hdlr
+        type: AEEventHandlerUPP
+      - name: refcon
+        type: int32_t
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x091F
+    executor: C_
+
+# ####
+
+- function:
+    name: AERemoveCoercionHandler
+    return: OSErr
+    args:
+      - name: from_type
+        type: DescType
+      - name: to_type
+        type: DescType
+      - name: hdlr
+        type: AECoerceDescUPP
+      - name: system_handler_p
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0723
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutArray
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: type
+        type: AEArrayType
+      - name: array_data
+        type: AEArrayDataPointer
+      - name: item_type
+        type: DescType
+      - name: item_size
+        type: Size
+      - name: item_count
+        type: int32_t
+    dispatcher: Pack8
+    selector: 0x0B0D
+    executor: C_
+
+# ####
+
+- function:
+    name: AECreateList
+    return: OSErr
+    args:
+      - name: list_elt_prefix
+        type: Ptr
+      - name: list_elt_prefix_size
+        type: Size
+      - name: is_record_p
+        type: Boolean
+      - name: list_out
+        type: AEDescList*
+    dispatcher: Pack8
+    selector: 0x0706
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetAttributeDesc
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: keyword
+        type: AEKeyword
+      - name: desired_type
+        type: DescType
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0826
+    executor: C_
+
+# ####
+
+- function:
+    name: AESizeOfAttribute
+    return: OSErr
+    args:
+      - name: evt
+        type: AppleEvent*
+      - name: keyword
+        type: AEKeyword
+      - name: type_out
+        type: DescType*
+      - name: size_out
+        type: Size*
+    dispatcher: Pack8
+    selector: 0x0828
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetNthDesc
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+      - name: desired_type
+        type: DescType
+      - name: keyword_out
+        type: AEKeyword*
+      - name: desc_out
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0A0B
+    executor: C_
+
+# ####
+
+- function:
+    name: AESizeOfNthItem
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+      - name: type_out
+        type: DescType*
+      - name: size_out
+        type: Size*
+    dispatcher: Pack8
+    selector: 0x082A
+    executor: C_
+
+# ####
+
+- function:
+    name: AEPutPtr
+    return: OSErr
+    args:
+      - name: list
+        type: AEDescList*
+      - name: index
+        type: int32_t
+      - name: type
+        type: DescType
+      - name: data
+        type: Ptr
+      - name: data_size
+        type: Size
+    dispatcher: Pack8
+    selector: 0x0A08
+    executor: C_
+
+# ####
+
+- function:
+    name: AEInteractWithUser
+    return: OSErr
+    args:
+      - name: timeout
+        type: int32_t
+      - name: nm_req
+        type: NMRecPtr
+      - name: idle_proc
+        type: IdleUPP
+    dispatcher: Pack8
+    selector: 0x061C
+    executor: C_
+
+# ####
+
+- function:
+    name: AEManagerInfo
+    return: OSErr
+    args:
+      - name: resultp
+        type: LONGINT*
+    dispatcher: Pack8
+    selector: 0x0441
+    executor: C_
+
+# ####
+
+- function:
+    name: AEDisposeToken
+    return: OSErr
+    args:
+      - name: theToken
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x023A
+    executor: C_
+
+# ####
+
+- function:
+    name: AEResolve
+    return: OSErr
+    args:
+      - name: objectSpecifier
+        type: AEDesc*
+      - name: callbackFlags
+        type: INTEGER
+      - name: theToken
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0536
+    executor: C_
+
+# ####
+
+- function:
+    name: AERemoveObjectAccessor
+    return: OSErr
+    args:
+      - name: desiredClass
+        type: DescType
+      - name: containerType
+        type: DescType
+      - name: theAccessor
+        type: ProcPtr
+      - name: isSysHandler
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0738
+    executor: C_
+
+# ####
+
+- function:
+    name: AEInstallObjectAccessor
+    return: OSErr
+    args:
+      - name: desiredClass
+        type: DescType
+      - name: containerType
+        type: DescType
+      - name: theAccessor
+        type: ProcPtr
+      - name: refcon
+        type: LONGINT
+      - name: isSysHandler
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0937
+    executor: C_
+
+# ####
+
+- function:
+    name: AEGetObjectAccessor
+    return: OSErr
+    args:
+      - name: desiredClass
+        type: DescType
+      - name: containerType
+        type: DescType
+      - name: theAccessor
+        type: ProcPtr*
+      - name: accessorRefcon
+        type: LONGINT*
+      - name: isSysHandler
+        type: Boolean
+    dispatcher: Pack8
+    selector: 0x0939
+    executor: C_
+
+# ####
+
+- function:
+    name: AECallObjectAccessor
+    return: OSErr
+    args:
+      - name: desiredClass
+        type: DescType
+      - name: containerToken
+        type: AEDesc*
+      - name: containerClass
+        type: DescType
+      - name: keyForm
+        type: DescType
+      - name: keyData
+        type: AEDesc*
+      - name: theToken
+        type: AEDesc*
+    dispatcher: Pack8
+    selector: 0x0C3B
+    executor: C_
+
+# ####
+
+- function:
+    name: AESetObjectCallbacks
+    return: OSErr
+    args:
+      - name: myCompareProc
+        type: ProcPtr
+      - name: myCountProc
+        type: ProcPtr
+      - name: myDisposeTokenProc
+        type: ProcPtr
+      - name: myGetMarkTokenProc
+        type: ProcPtr
+      - name: myMarkProc
+        type: ProcPtr
+      - name: myAdjustMarksProc
+        type: ProcPtr
+      - name: myGetErrDescProc
+        type: ProcPtr
+    dispatcher: Pack8
+    selector: 0x0E35
+    executor: C_

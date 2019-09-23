@@ -1,0 +1,551 @@
+- typedef:
+    name: Cell
+    type: Point
+
+# ####
+
+- typedef:
+    name: DataArray
+    type: Byte[32001]
+
+# ####
+
+- typedef:
+    name: DataPtr
+    type: DataArray*
+
+# ####
+
+- typedef:
+    name: DataHandle
+    type: DataPtr*
+
+# ####
+
+- funptr:
+    return: Boolean
+    name: ListClickLoopUPP
+
+# ####
+
+- struct:
+    name: ListRec
+    members:
+      - name: rView
+        type: Rect
+      - name: port
+        type: GrafPtr
+      - name: indent
+        type: Point
+      - name: cellSize
+        type: Point
+      - name: visible
+        type: Rect
+      - name: vScroll
+        type: ControlHandle
+      - name: hScroll
+        type: ControlHandle
+      - name: selFlags
+        type: SignedByte
+      - name: lActive
+        type: Boolean
+      - name: lReserved
+        type: SignedByte
+      - name: listFlags
+        type: SignedByte
+      - name: clikTime
+        type: LONGINT
+      - name: clikLoc
+        type: Point
+      - name: mouseLoc
+        type: Point
+      - name: lClikLoop
+        type: ListClickLoopUPP
+      - name: lastClick
+        type: Cell
+      - name: refCon
+        type: LONGINT
+      - name: listDefProc
+        type: Handle
+      - name: userHandle
+        type: Handle
+      - name: dataBounds
+        type: Rect
+      - name: cells
+        type: DataHandle
+      - name: maxIndex
+        type: INTEGER
+      - name: cellArray
+        type: INTEGER[1]
+    size: 88
+
+# ####
+
+- typedef:
+    name: ListPtr
+    type: ListRec*
+
+# ####
+
+- typedef:
+    name: ListHandle
+    type: ListPtr*
+
+# ####
+
+- enum:
+    values:
+      - name: lGrowBox
+        value: 0x20
+      - name: lMysteryFlags
+        value: 0x14
+      - name: lDrawingModeOff
+        value: 8
+      - name: lDoVAutoscroll
+        value: 2
+      - name: lDoHAutoscroll
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: lOnlyOne
+        value: -128
+      - name: lExtendDrag
+        value: 64
+      - name: lNoDisjoint
+        value: 32
+
+# ####
+
+- enum:
+    values:
+      - name: lNoExtend
+        value: 16
+      - name: lNoRect
+        value: 8
+      - name: lUseSense
+        value: 4
+      - name: lNoNilHilite
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: lInitMsg
+        value: 0
+      - name: lDrawMsg
+        value: 1
+      - name: lHiliteMsg
+        value: 2
+      - name: lCloseMsg
+        value: 3
+
+# ####
+
+- dispatcher:
+    name: Pack0
+    trap: 0xA9E7
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: LGetCellDataLocation
+    args:
+      - name: offsetp
+        type: INTEGER*
+      - name: lenp
+        type: INTEGER*
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0034
+    executor: C_
+
+# ####
+
+- function:
+    name: LNextCell
+    return: Boolean
+    args:
+      - name: hnext
+        type: Boolean
+      - name: vnext
+        type: Boolean
+      - name: cellp
+        type: Cell*
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0048
+    executor: C_
+
+# ####
+
+- function:
+    name: LRect
+    args:
+      - name: cellrect
+        type: Rect*
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x004C
+    executor: C_
+
+# ####
+
+- function:
+    name: LSearch
+    return: Boolean
+    args:
+      - name: dp
+        type: Ptr
+      - name: dl
+        type: INTEGER
+      - name: proc
+        type: Ptr
+      - name: cellp
+        type: Cell*
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0054
+    executor: C_
+
+# ####
+
+- function:
+    name: LSize
+    args:
+      - name: width
+        type: INTEGER
+      - name: height
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0060
+    executor: C_
+
+# ####
+
+- function:
+    name: LAddColumn
+    return: INTEGER
+    args:
+      - name: count
+        type: INTEGER
+      - name: coln
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: LAddRow
+    return: INTEGER
+    args:
+      - name: count
+        type: INTEGER
+      - name: rown
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: LDelColumn
+    args:
+      - name: count
+        type: INTEGER
+      - name: coln
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0020
+    executor: C_
+
+# ####
+
+- function:
+    name: LDelRow
+    args:
+      - name: count
+        type: INTEGER
+      - name: rown
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0024
+    executor: C_
+
+# ####
+
+- function:
+    name: LNew
+    return: ListHandle
+    args:
+      - name: rview
+        type: const Rect*
+      - name: bounds
+        type: const Rect*
+      - name: csize
+        type: Point
+      - name: proc
+        type: INTEGER
+      - name: wind
+        type: WindowPtr
+      - name: draw
+        type: Boolean
+      - name: grow
+        type: Boolean
+      - name: scrollh
+        type: Boolean
+      - name: scrollv
+        type: Boolean
+    dispatcher: Pack0
+    selector: 0x0044
+    executor: C_
+
+# ####
+
+- function:
+    name: LDispose
+    args:
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0028
+    executor: C_
+
+# ####
+
+- function:
+    name: LDraw
+    args:
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0030
+    executor: C_
+
+# ####
+
+- function:
+    name: LSetDrawingMode
+    args:
+      - name: draw
+        type: Boolean
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x002C
+    executor: C_
+
+# ####
+
+- function:
+    name: LScroll
+    args:
+      - name: ncol
+        type: INTEGER
+      - name: nrow
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0050
+    executor: C_
+
+# ####
+
+- function:
+    name: LAutoScroll
+    args:
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0010
+    executor: C_
+
+# ####
+
+- function:
+    name: LUpdate
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0064
+    executor: C_
+
+# ####
+
+- function:
+    name: LActivate
+    args:
+      - name: act
+        type: Boolean
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0
+    executor: C_
+
+# ####
+
+- function:
+    name: LClick
+    return: Boolean
+    args:
+      - name: pt
+        type: Point
+      - name: mods
+        type: INTEGER
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0018
+    executor: C_
+
+# ####
+
+- function:
+    name: LLastClick
+    return: LONGINT
+    args:
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0040
+    executor: C_
+
+# ####
+
+- function:
+    name: LSetSelect
+    args:
+      - name: setit
+        type: Boolean
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x005C
+    executor: C_
+
+# ####
+
+- function:
+    name: LAddToCell
+    args:
+      - name: dp
+        type: Ptr
+      - name: dl
+        type: INTEGER
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x000C
+    executor: C_
+
+# ####
+
+- function:
+    name: LClrCell
+    args:
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x001C
+    executor: C_
+
+# ####
+
+- function:
+    name: LGetCell
+    args:
+      - name: dp
+        type: Ptr
+      - name: dlp
+        type: INTEGER*
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0038
+    executor: C_
+
+# ####
+
+- function:
+    name: LSetCell
+    args:
+      - name: dp
+        type: Ptr
+      - name: dl
+        type: INTEGER
+      - name: cell
+        type: Cell
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0058
+    executor: C_
+
+# ####
+
+- function:
+    name: LCellSize
+    args:
+      - name: csize
+        type: Point
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x0014
+    executor: C_
+
+# ####
+
+- function:
+    name: LGetSelect
+    return: Boolean
+    args:
+      - name: next
+        type: Boolean
+      - name: cellp
+        type: Cell*
+      - name: list
+        type: ListHandle
+    dispatcher: Pack0
+    selector: 0x003C
+    executor: C_

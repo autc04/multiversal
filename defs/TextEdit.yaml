@@ -1,0 +1,1036 @@
+- enum:
+    values:
+      - name: teFlushDefault
+        value: 0
+      - name: teCenter
+        value: 1
+      - name: teFlushRight
+        value: -1
+      - name: teFlushLeft
+        value: -2
+    comment: |
+      new justification defines, accepted by `TESetAlignment ()' and
+         `TETextBox ()'
+
+# ####
+
+- enum:
+    values:
+      - name: teJustLeft
+        value: 0
+      - name: teJustCenter
+        value: 1
+      - name: teJustRight
+        value: -1
+      - name: teForceLeft
+        value: -2
+    comment: |
+      older justification defines
+
+# ####
+
+- enum:
+    values:
+      - name: doFont
+        value: 1
+      - name: doFace
+        value: 2
+      - name: doSize
+        value: 4
+      - name: doColor
+        value: 8
+      - name: doAll
+        value: 15
+      - name: addSize
+        value: 16
+      - name: doToggle
+        value: 32
+
+# ####
+
+- enum:
+    values:
+      - name: teFind
+        value: 0
+      - name: teHilite
+        value: 1
+      - name: teDraw
+        value: -1
+      - name: teCaret
+        value: -2
+
+# ####
+
+- enum:
+    values:
+      - name: caret_vis
+        value: -1
+      - name: caret_invis
+        value: 255
+      - name: hilite_vis
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: teFAutoScroll
+        value: 0
+      - name: teFTextBuffering
+        value: 1
+      - name: teFOutlineHilite
+        value: 2
+      - name: teFInlineInput
+        value: 3
+      - name: teFUseTextServices
+        value: 4
+
+# ####
+
+- enum:
+    values:
+      - name: teBitClear
+        value: 0
+      - name: teBitSet
+        value: 1
+      - name: teBitTest
+        value: -1
+
+# ####
+
+- struct:
+    name: TERec
+    members:
+      - name: destRect
+        type: Rect
+      - name: viewRect
+        type: Rect
+      - name: selRect
+        type: Rect
+      - name: lineHeight
+        type: INTEGER
+      - name: fontAscent
+        type: INTEGER
+      - name: selPoint
+        type: Point
+      - name: selStart
+        type: INTEGER
+      - name: selEnd
+        type: INTEGER
+      - name: active
+        type: INTEGER
+      - name: wordBreak
+        type: ProcPtr
+      - name: clikLoop
+        type: ProcPtr
+      - name: clickTime
+        type: LONGINT
+      - name: clickLoc
+        type: INTEGER
+      - name: caretTime
+        type: LONGINT
+      - name: caretState
+        type: INTEGER
+      - name: just
+        type: INTEGER
+      - name: teLength
+        type: INTEGER
+      - name: hText
+        type: Handle
+      - name: recalBack
+        type: INTEGER
+      - name: recalLines
+        type: INTEGER
+      - name: clikStuff
+        type: INTEGER
+      - name: crOnly
+        type: INTEGER
+      - name: txFont
+        type: INTEGER
+      - name: txFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: txMode
+        type: INTEGER
+      - name: txSize
+        type: INTEGER
+      - name: inPort
+        type: GrafPtr
+      - name: highHook
+        type: ProcPtr
+      - name: caretHook
+        type: ProcPtr
+      - name: nLines
+        type: INTEGER
+      - name: lineStarts
+        type: INTEGER[1]
+    size: 98
+
+# ####
+
+- typedef:
+    name: TEPtr
+    type: TERec*
+
+# ####
+
+- typedef:
+    name: TEHandle
+    type: TEPtr*
+
+# ####
+
+- struct:
+    name: StyleRun
+    members:
+      - name: startChar
+        type: INTEGER
+      - name: styleIndex
+        type: INTEGER
+    size: 4
+
+# ####
+
+- struct:
+    name: STElement
+    members:
+      - name: stCount
+        type: INTEGER
+      - name: stHeight
+        type: INTEGER
+      - name: stAscent
+        type: INTEGER
+      - name: stFont
+        type: INTEGER
+      - name: stFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: stSize
+        type: INTEGER
+      - name: stColor
+        type: RGBColor
+    size: 18
+
+# ####
+
+- typedef:
+    name: TEStyleTable
+    type: STElement[1]
+
+# ####
+
+- typedef:
+    name: STPtr
+    type: STElement*
+
+# ####
+
+- typedef:
+    name: STHandle
+    type: STPtr*
+
+# ####
+
+- struct:
+    name: LHElement
+    members:
+      - name: lhHeight
+        type: INTEGER
+      - name: lhAscent
+        type: INTEGER
+    size: 4
+
+# ####
+
+- typedef:
+    name: LHTable
+    type: LHElement[1]
+
+# ####
+
+- typedef:
+    name: LHPtr
+    type: LHElement*
+
+# ####
+
+- typedef:
+    name: LHHandle
+    type: LHPtr*
+
+# ####
+
+- struct:
+    name: TextStyle
+    members:
+      - name: tsFont
+        type: INTEGER
+      - name: tsFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: tsSize
+        type: INTEGER
+      - name: tsColor
+        type: RGBColor
+    size: 12
+
+# ####
+
+- struct:
+    name: ScrpSTElement
+    members:
+      - name: scrpStartChar
+        type: LONGINT
+      - name: scrpHeight
+        type: INTEGER
+      - name: scrpAscent
+        type: INTEGER
+      - name: scrpFont
+        type: INTEGER
+      - name: scrpFace
+        type: Style
+      - name: filler
+        type: Byte
+      - name: scrpSize
+        type: INTEGER
+      - name: scrpColor
+        type: RGBColor
+    size: 20
+
+# ####
+
+- typedef:
+    name: ScrpSTTable
+    type: ScrpSTElement[1]
+
+# ####
+
+- struct:
+    name: StScrpRec
+    members:
+      - name: scrpNStyles
+        type: INTEGER
+      - name: scrpStyleTab
+        type: ScrpSTTable
+    size: 22
+
+# ####
+
+- typedef:
+    name: StScrpPtr
+    type: StScrpRec*
+
+# ####
+
+- typedef:
+    name: StScrpHandle
+    type: StScrpPtr*
+
+# ####
+
+- struct:
+    name: NullSTRec
+    members:
+      - name: TEReserved
+        type: LONGINT
+      - name: nullScrap
+        type: StScrpHandle
+    size: 8
+
+# ####
+
+- typedef:
+    name: NullSTPtr
+    type: NullSTRec*
+
+# ####
+
+- typedef:
+    name: NullSTHandle
+    type: NullSTPtr*
+
+# ####
+
+- struct:
+    name: TEStyleRec
+    members:
+      - name: nRuns
+        type: INTEGER
+      - name: nStyles
+        type: INTEGER
+      - name: styleTab
+        type: STHandle
+      - name: lhTab
+        type: LHHandle
+      - name: teRefCon
+        type: LONGINT
+      - name: nullStyle
+        type: NullSTHandle
+      - name: runs
+        type: StyleRun[1]
+    size: 24
+
+# ####
+
+- typedef:
+    name: TEStylePtr
+    type: TEStyleRec*
+
+# ####
+
+- typedef:
+    name: TEStyleHandle
+    type: TEStylePtr*
+
+# ####
+
+- typedef:
+    name: Chars
+    type: Byte[1]
+
+# ####
+
+- typedef:
+    name: CharsPtr
+    type: Byte*
+
+# ####
+
+- typedef:
+    name: CharsHandle
+    type: Byte**
+
+# ####
+
+- lowmem:
+    name: TEDoText
+    type: ProcPtr
+    address: 0xA70
+    comment: |
+      TextEdit IMI-391 (true);
+
+# ####
+
+- lowmem:
+    name: TERecal
+    type: ProcPtr
+    address: 0xA74
+    comment: |
+      TextEdit IMI-391 (false);
+
+# ####
+
+- lowmem:
+    name: TEScrpLength
+    type: INTEGER
+    address: 0xAB0
+    comment: |
+      TextEdit IMI-389 (true);
+
+# ####
+
+- lowmem:
+    name: TEScrpHandle
+    type: Handle
+    address: 0xAB4
+    comment: |
+      TextEdit IMI-389 (true);
+
+# ####
+
+- dispatcher:
+    name: TEDispatch
+    trap: 0xA83D
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: TESetText
+    args:
+      - name: p
+        type: Ptr
+      - name: ln
+        type: LONGINT
+      - name: teh
+        type: TEHandle
+    trap: 0xA9CF
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetText
+    return: CharsHandle
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9CB
+    executor: C_
+
+# ####
+
+- function:
+    name: TESetAlignment
+    args:
+      - name: j
+        type: INTEGER
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DF
+    executor: C_
+
+# ####
+
+- function:
+    name: TEUpdate
+    args:
+      - name: r
+        type: const Rect*
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D3
+    executor: C_
+
+# ####
+
+- function:
+    name: TETextBox
+    args:
+      - name: p
+        type: Ptr
+      - name: ln
+        type: LONGINT
+      - name: r
+        type: const Rect*
+      - name: j
+        type: INTEGER
+    trap: 0xA9CE
+    executor: C_
+
+# ####
+
+- function:
+    name: TEScroll
+    args:
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DD
+    executor: C_
+
+# ####
+
+- function:
+    name: TEKey
+    args:
+      - name: thec
+        type: CharParameter
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DC
+    executor: C_
+
+# ####
+
+- function:
+    name: TECopy
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D5
+    executor: C_
+
+# ####
+
+- function:
+    name: TECut
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D6
+    executor: C_
+
+# ####
+
+- function:
+    name: TEPaste
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DB
+    executor: C_
+
+# ####
+
+- function:
+    name: TEDelete
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D7
+    executor: C_
+
+# ####
+
+- function:
+    name: TEInsert
+    args:
+      - name: p
+        type: Ptr
+      - name: ln
+        type: LONGINT
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DE
+    executor: C_
+
+# ####
+
+- function:
+    name: TEPinScroll
+    args:
+      - name: dh
+        type: INTEGER
+      - name: dv
+        type: INTEGER
+      - name: teh
+        type: TEHandle
+    trap: 0xA812
+    executor: C_
+
+# ####
+
+- function:
+    name: TESelView
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA811
+    executor: C_
+
+# ####
+
+- function:
+    name: TEAutoView
+    args:
+      - name: autoflag
+        type: Boolean
+      - name: teh
+        type: TEHandle
+    trap: 0xA813
+    executor: C_
+
+# ####
+
+- function:
+    name: TEStyleNew
+    return: TEHandle
+    args:
+      - name: dst
+        type: const Rect*
+      - name: view
+        type: const Rect*
+    trap: 0xA83E
+    executor: C_
+
+# ####
+
+- function:
+    name: TESetStyleHandle
+    args:
+      - name: theHandle
+        type: TEStyleHandle
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetStyleHandle
+    return: TEStyleHandle
+    args:
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetStyleScrapHandle
+    return: StScrpHandle
+    args:
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: TEStyleInsert
+    args:
+      - name: text
+        type: Ptr
+      - name: length
+        type: LONGINT
+      - name: hST
+        type: StScrpHandle
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0007
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetOffset
+    return: INTEGER
+    args:
+      - name: pt
+        type: Point
+      - name: teh
+        type: TEHandle
+    trap: 0xA83C
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetPoint
+    return: LONGINT
+    args:
+      - name: offset
+        type: INTEGER
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetHeight
+    return: int32_t
+    args:
+      - name: endLine
+        type: LONGINT
+      - name: startLine
+        type: LONGINT
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0009
+    executor: C_
+
+# ####
+
+- function:
+    name: TEGetStyle
+    args:
+      - name: offset
+        type: INTEGER
+      - name: theStyle
+        type: TextStyle*
+      - name: lineHeight
+        type: INTEGER*
+      - name: fontAscent
+        type: INTEGER*
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: TEStylePaste
+    args:
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: TESetStyle
+    args:
+      - name: mode
+        type: INTEGER
+      - name: newStyle
+        type: TextStyle*
+      - name: redraw
+        type: Boolean
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: TEReplaceStyle
+    args:
+      - name: mode
+        type: INTEGER
+      - name: oldStyle
+        type: TextStyle*
+      - name: newStyle
+        type: TextStyle*
+      - name: redraw
+        type: Boolean
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: TEContinuousStyle
+    return: Boolean
+    args:
+      - name: modep
+        type: INTEGER*
+      - name: thestyle
+        type: TextStyle*
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x000A
+    executor: C_
+
+# ####
+
+- function:
+    name: TEUseStyleScrap
+    args:
+      - name: start
+        type: LONGINT
+      - name: stop
+        type: LONGINT
+      - name: newstyles
+        type: StScrpHandle
+      - name: redraw
+        type: Boolean
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x000B
+    executor: C_
+
+# ####
+
+- function:
+    name: TECustomHook
+    args:
+      - name: sel
+        type: INTEGER
+      - name: addr
+        type: ProcPtr*
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x000C
+    executor: C_
+
+# ####
+
+- function:
+    name: TENumStyles
+    return: LONGINT
+    args:
+      - name: start
+        type: LONGINT
+      - name: stop
+        type: LONGINT
+      - name: teh
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x000D
+    executor: C_
+
+# ####
+
+- function:
+    name: TEInit
+    trap: 0xA9CC
+    executor: C_
+
+# ####
+
+- function:
+    name: TENew
+    return: TEHandle
+    args:
+      - name: dst
+        type: const Rect*
+      - name: view
+        type: const Rect*
+    trap: 0xA9D2
+    executor: C_
+
+# ####
+
+- function:
+    name: TEDispose
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9CD
+    executor: C_
+
+# ####
+
+- function:
+    name: TEIdle
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9DA
+    executor: C_
+
+# ####
+
+- function:
+    name: TEClick
+    args:
+      - name: p
+        type: Point
+      - name: ext
+        type: Boolean
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D4
+    executor: C_
+
+# ####
+
+- function:
+    name: TESetSelect
+    args:
+      - name: start
+        type: LONGINT
+      - name: stop
+        type: LONGINT
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D1
+    executor: C_
+
+# ####
+
+- function:
+    name: TEActivate
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D8
+    executor: C_
+
+# ####
+
+- function:
+    name: TEDeactivate
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D9
+    executor: C_
+
+# ####
+
+- function:
+    name: TESetWordBreak
+    args:
+      - name: wb
+        type: ProcPtr
+      - name: teh
+        type: TEHandle
+
+# ####
+
+- function:
+    name: TESetClickLoop
+    args:
+      - name: cp
+        type: ProcPtr
+      - name: teh
+        type: TEHandle
+
+# ####
+
+- function:
+    name: TECalText
+    args:
+      - name: teh
+        type: TEHandle
+    trap: 0xA9D0
+    executor: C_
+
+# ####
+
+- function:
+    name: TEFromScrap
+    return: OSErr
+
+# ####
+
+- function:
+    name: TEToScrap
+    return: OSErr
+
+# ####
+
+- function:
+    name: TEScrapHandle
+    return: Handle
+
+# ####
+
+- function:
+    name: TEGetScrapLength
+    return: LONGINT
+
+# ####
+
+- function:
+    name: TESetScrapLength
+    args:
+      - name: ln
+        type: LONGINT
+
+# ####
+
+- function:
+    name: TEFeatureFlag
+    return: int16_t
+    args:
+      - name: feature
+        type: int16_t
+      - name: action
+        type: int16_t
+      - name: te
+        type: TEHandle
+    dispatcher: TEDispatch
+    selector: 0x000E
+    executor: C_

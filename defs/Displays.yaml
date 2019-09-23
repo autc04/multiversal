@@ -1,0 +1,26 @@
+- funptr:
+    args:
+      - name: theEvent
+        type: AppleEvent*
+    name: DMNotificationUPP
+
+# ####
+
+- dispatcher:
+    name: DisplayDispatch
+    trap: 0xABEB
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: DMRegisterNotifyProc
+    return: OSErr
+    args:
+      - name: proc
+        type: DMNotificationUPP
+      - name: psn
+        type: ProcessSerialNumber*
+    dispatcher: DisplayDispatch
+    selector: 0x0414
+    executor: C_

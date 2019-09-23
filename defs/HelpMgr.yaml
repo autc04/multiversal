@@ -1,0 +1,384 @@
+- struct:
+    name: HMStringResType
+    members:
+      - name: hmmResID
+        type: INTEGER
+      - name: hmmIndex
+        type: INTEGER
+    size: 4
+
+# ####
+
+- struct:
+    name: HMMessageRecord
+    members:
+      - name: hmmHelpType
+        type: INTEGER
+      - name: u
+        union:
+          - name: hmmString
+            type: Str255
+          - name: hmmPict
+            type: INTEGER
+          - name: hmmStringRes
+            type: HMStringResType
+          - name: hmmTEHandle
+            type: TEHandle
+          - name: hmmPictHandle
+            type: PicHandle
+          - name: hmmTERes
+            type: INTEGER
+          - name: hmmSTRRes
+            type: INTEGER
+    size: 258
+
+# ####
+
+- typedef:
+    name: HMMessageRecPtr
+    type: HMMessageRecord*
+
+# ####
+
+- enum:
+    values:
+      - name: hmHelpDisabled
+        value: -850
+      - name: hmBalloonAborted
+        value: -853
+      - name: hmSameAsLastBalloon
+        value: -854
+      - name: hmHelpManagerNotInited
+        value: -855
+      - name: hmSkippedBalloon
+        value: -857
+      - name: hmWrongVersion
+        value: -858
+      - name: hmUnknownHelpType
+        value: -859
+      - name: hmOperationUnsupported
+        value: -861
+      - name: hmNoBalloonUp
+        value: -862
+      - name: hmCloseViewActive
+        value: -863
+
+# ####
+
+- dispatcher:
+    name: Pack14
+    trap: 0xA830
+    selector-location: D0W
+    comment: |
+      & 0xFF ? ###
+
+# ####
+
+- function:
+    name: HMGetBalloons
+    return: Boolean
+    dispatcher: Pack14
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: HMSetBalloons
+    return: OSErr
+    args:
+      - name: flag
+        type: Boolean
+    dispatcher: Pack14
+    selector: 0x0104
+    executor: C_
+
+# ####
+
+- function:
+    name: HMIsBalloon
+    return: Boolean
+    dispatcher: Pack14
+    selector: 0x0007
+    executor: C_
+
+# ####
+
+- function:
+    name: HMShowBalloon
+    return: OSErr
+    args:
+      - name: msgp
+        type: HMMessageRecord*
+      - name: tip
+        type: Point
+      - name: alternaterectp
+        type: RectPtr
+      - name: tipprocptr
+        type: Ptr
+      - name: proc
+        type: INTEGER
+      - name: variant
+        type: INTEGER
+      - name: method
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x0B01
+    executor: C_
+
+# ####
+
+- function:
+    name: HMShowMenuBalloon
+    return: OSErr
+    args:
+      - name: item
+        type: INTEGER
+      - name: menuid
+        type: INTEGER
+      - name: flags
+        type: LONGINT
+      - name: itemreserved
+        type: LONGINT
+      - name: tip
+        type: Point
+      - name: alternaterectp
+        type: RectPtr
+      - name: tipproc
+        type: Ptr
+      - name: proc
+        type: INTEGER
+      - name: variant
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x0E05
+    executor: C_
+
+# ####
+
+- function:
+    name: HMRemoveBalloon
+    return: OSErr
+    dispatcher: Pack14
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetHelpMenuHandle
+    return: OSErr
+    args:
+      - name: mhp
+        type: MenuHandle*
+    dispatcher: Pack14
+    selector: 0x0200
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetFont
+    return: OSErr
+    args:
+      - name: fontp
+        type: INTEGER*
+    dispatcher: Pack14
+    selector: 0x020A
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetFontSize
+    return: OSErr
+    args:
+      - name: sizep
+        type: INTEGER*
+    dispatcher: Pack14
+    selector: 0x020B
+    executor: C_
+
+# ####
+
+- function:
+    name: HMSetFont
+    return: OSErr
+    args:
+      - name: font
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x0108
+    executor: C_
+
+# ####
+
+- function:
+    name: HMSetFontSize
+    return: OSErr
+    args:
+      - name: size
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x0109
+    executor: C_
+
+# ####
+
+- function:
+    name: HMSetDialogResID
+    return: OSErr
+    args:
+      - name: resid
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x010C
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetDialogResID
+    return: OSErr
+    args:
+      - name: residp
+        type: INTEGER*
+    dispatcher: Pack14
+    selector: 0x0213
+    executor: C_
+
+# ####
+
+- function:
+    name: HMSetMenuResID
+    return: OSErr
+    args:
+      - name: menuid
+        type: INTEGER
+      - name: resid
+        type: INTEGER
+    dispatcher: Pack14
+    selector: 0x020D
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetMenuResID
+    return: OSErr
+    args:
+      - name: menuidp
+        type: INTEGER*
+      - name: residp
+        type: INTEGER*
+    dispatcher: Pack14
+    selector: 0x0314
+    executor: C_
+
+# ####
+
+- function:
+    name: HMScanTemplateItems
+    return: OSErr
+    args:
+      - name: whichid
+        type: INTEGER
+      - name: whicresfile
+        type: INTEGER
+      - name: whictype
+        type: ResType
+    dispatcher: Pack14
+    selector: 0x0410
+    executor: C_
+
+# ####
+
+- function:
+    name: HMBalloonRect
+    return: OSErr
+    args:
+      - name: messp
+        type: HMMessageRecord*
+      - name: rectp
+        type: Rect*
+    dispatcher: Pack14
+    selector: 0x040E
+    executor: C_
+
+# ####
+
+- function:
+    name: HMBalloonPict
+    return: OSErr
+    args:
+      - name: messp
+        type: HMMessageRecord*
+      - name: pictp
+        type: PicHandle*
+    dispatcher: Pack14
+    selector: 0x040F
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetBalloonWindow
+    return: OSErr
+    args:
+      - name: windowpp
+        type: WindowPtr*
+    dispatcher: Pack14
+    selector: 0x0215
+    executor: C_
+
+# ####
+
+- function:
+    name: HMExtractHelpMsg
+    return: OSErr
+    args:
+      - name: type
+        type: ResType
+      - name: resid
+        type: INTEGER
+      - name: msg
+        type: INTEGER
+      - name: state
+        type: INTEGER
+      - name: helpmsgp
+        type: HMMessageRecord*
+    dispatcher: Pack14
+    selector: 0x0711
+    executor: C_
+
+# ####
+
+- function:
+    name: HMGetIndHelpMsg
+    return: OSErr
+    args:
+      - name: type
+        type: ResType
+      - name: resid
+        type: INTEGER
+      - name: msg
+        type: INTEGER
+      - name: state
+        type: INTEGER
+      - name: options
+        type: LONGINT*
+      - name: tip
+        type: Point
+      - name: altrectp
+        type: Rect*
+      - name: theprocp
+        type: INTEGER*
+      - name: variantp
+        type: INTEGER*
+      - name: helpmsgp
+        type: HMMessageRecord*
+      - name: count
+        type: INTEGER*
+    dispatcher: Pack14
+    selector: 0x1306
+    executor: C_

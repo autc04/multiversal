@@ -1,0 +1,106 @@
+- enum:
+    values:
+      - name: undoCmd
+        value: 0
+      - name: cutCmd
+        value: 2
+      - name: copyCmd
+        value: 3
+      - name: pasteCmd
+        value: 4
+      - name: clearCmd
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: accEvent
+        value: 64
+      - name: accRun
+        value: 65
+      - name: accMenu
+        value: 67
+      - name: accUndo
+        value: 68
+
+# ####
+
+- lowmem:
+    name: SEvtEnb
+    type: Byte
+    address: 0x15C
+    comment: |
+      DeskMgr IMI-443 (false);
+
+# ####
+
+- function:
+    name: OpenDeskAcc
+    return: INTEGER
+    args:
+      - name: acc
+        type: ConstStringPtr
+    trap: 0xA9B6
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseDeskAcc
+    args:
+      - name: rn
+        type: INTEGER
+    trap: 0xA9B7
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemClick
+    args:
+      - name: evp
+        type: EventRecord*
+      - name: wp
+        type: WindowPtr
+    trap: 0xA9B3
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemEdit
+    return: Boolean
+    args:
+      - name: editcmd
+        type: INTEGER
+    trap: 0xA9C2
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemTask
+    trap: 0xA9B4
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemEvent
+    return: Boolean
+    args:
+      - name: evp
+        type: EventRecord*
+    trap: 0xA9B2
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemMenu
+    args:
+      - name: menu
+        type: LONGINT
+    trap: 0xA9B5
+    executor: C_

@@ -1,0 +1,1088 @@
+- enum:
+    values:
+      - name: memFullErr
+        value: -108
+      - name: memLockedErr
+        value: -117
+      - name: memPurErr
+        value: -112
+      - name: memWZErr
+        value: -111
+
+# ####
+
+- enum:
+    values:
+      - name: nilHandleErr
+        value: -109
+
+# ####
+
+- enum:
+    values:
+      - name: memROZErr
+        value: -99
+      - name: memAdrErr
+        value: -110
+      - name: memAZErr
+        value: -113
+      - name: memPCErr
+        value: -114
+      - name: memBCErr
+        value: -115
+      - name: memSCErr
+        value: -116
+
+# ####
+
+- funptr:
+    return: LONGINT
+    args:
+      - type: Size
+    name: GrowZoneUPP
+
+# ####
+
+- struct:
+    name: block_header_t
+
+# ####
+
+- struct:
+    name: Zone
+    members:
+      - name: bkLim
+        type: Ptr
+      - name: purgePtr
+        type: Ptr
+      - name: hFstFree
+        type: Ptr
+      - name: zcbFree
+        type: LONGINT
+      - name: gzProc
+        type: GrowZoneUPP
+      - name: moreMast
+        type: INTEGER
+      - name: flags
+        type: INTEGER
+      - name: cntRel
+        type: INTEGER
+      - name: maxRel
+        type: INTEGER
+      - name: cntNRel
+        type: INTEGER
+      - name: maxNRel
+        type: INTEGER
+      - name: cntEmpty
+        type: INTEGER
+      - name: cntHandles
+        type: INTEGER
+      - name: minCBFree
+        type: LONGINT
+      - name: purgeProc
+        type: ProcPtr
+      - name: sparePtr
+        type: Ptr
+      - name: allocPtr
+        type: block_header_t*
+      - name: heapData
+        type: INTEGER
+    size: 54
+
+# ####
+
+- typedef:
+    name: THz
+    type: Zone*
+
+# ####
+
+- lowmem:
+    name: MemTop
+    type: Ptr
+    address: 0x108
+    comment: |
+      MemoryMgr IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: BufPtr
+    type: Ptr
+    address: 0x10C
+    comment: |
+      MemoryMgr IMII-19 (true-b);
+
+# ####
+
+- lowmem:
+    name: HeapEnd
+    type: Ptr
+    address: 0x114
+    comment: |
+      MemoryMgr IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: TheZone
+    type: THz
+    address: 0x118
+    comment: |
+      MemoryMgr IMII-31 (true);
+
+# ####
+
+- lowmem:
+    name: ApplLimit
+    type: Ptr
+    address: 0x130
+    comment: |
+      MemoryMgr IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: MemErr
+    type: INTEGER
+    address: 0x220
+    comment: |
+      MemoryMgr IMIV-80 (true);
+
+# ####
+
+- lowmem:
+    name: SysZone
+    type: THz
+    address: 0x2A6
+    comment: |
+      MemoryMgr IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: ApplZone
+    type: THz
+    address: 0x2AA
+    comment: |
+      MemoryMgr IMII-19 (true);
+
+# ####
+
+- lowmem:
+    name: ROMBase
+    type: Ptr
+    address: 0x2AE
+    comment: |
+      MemoryMgr IMIV-236 (true-b);
+
+# ####
+
+- lowmem:
+    name: RAMBase
+    type: Ptr
+    address: 0x2B2
+    comment: |
+      MemoryMgr IMI-87 (false);
+
+# ####
+
+- lowmem:
+    name: heapcheck
+    type: Ptr
+    address: 0x316
+    comment: |
+      MemoryMgr SysEqu.a (true-b);
+
+# ####
+
+- lowmem:
+    name: Lo3Bytes
+    type: LONGINT
+    address: 0x31A
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: MinStack
+    type: LONGINT
+    address: 0x31E
+    comment: |
+      MemoryMgr IMII-17 (true-b);
+
+# ####
+
+- lowmem:
+    name: DefltStack
+    type: LONGINT
+    address: 0x322
+    comment: |
+      MemoryMgr IMII-17 (true-b);
+
+# ####
+
+- lowmem:
+    name: GZRootHnd
+    type: Handle
+    address: 0x328
+    comment: |
+      MemoryMgr IMI-43 (true);
+
+# ####
+
+- lowmem:
+    name: GZMoveHnd
+    type: Handle
+    address: 0x330
+    comment: |
+      MemoryMgr LowMem.h (false);
+
+# ####
+
+- lowmem:
+    name: IAZNotify
+    type: ProcPtr
+    address: 0x33C
+    comment: |
+      MemoryMgr ThinkC (true-b);
+
+# ####
+
+- lowmem:
+    name: CurrentA5
+    type: Ptr
+    address: 0x904
+    comment: |
+      MemoryMgr IMI-95 (true);
+
+# ####
+
+- lowmem:
+    name: CurStackBase
+    type: Ptr
+    address: 0x908
+    comment: |
+      MemoryMgr IMII-19 (true-b);
+
+# ####
+
+- lowmem:
+    name: Scratch20
+    type: Byte[20]
+    address: 0x1E4
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: ToolScratch
+    type: Byte[8]
+    address: 0x9CE
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: Scratch8
+    type: Byte[8]
+    address: 0x9FA
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: OneOne
+    type: LONGINT
+    address: 0xA02
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: MinusOne
+    type: LONGINT
+    address: 0xA06
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- lowmem:
+    name: ApplScratch
+    type: Byte[12]
+    address: 0xA78
+    comment: |
+      MemoryMgr IMI-85 (true);
+
+# ####
+
+- executor_only:
+    code: |
+      /* traps which can have a `sys' or `clear' bit set */
+      #define SYSBIT (1 << 10)
+      #define CLRBIT (1 << 9)
+      
+      namespace callconv
+      {
+          template<typename Loc> struct ReturnMemErr
+          {
+              syn68k_addr_t afterwards(syn68k_addr_t ret)
+              {
+                  Loc::set(LM(MemErr));
+                  return ret;
+              }
+          };
+          template<typename Loc> struct ReturnMemErrConditional
+          {
+              syn68k_addr_t afterwards(syn68k_addr_t ret)
+              {
+                  auto err = LM(MemErr);
+                  if(err < 0)
+                      Loc::set(err);
+                  return ret;
+              }
+          };
+      }
+
+# ####
+
+- function:
+    name: NewEmptyHandle
+    return: Handle
+    args:
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _NewEmptyHandle_flags
+    trap: 0xA166
+    returnreg: A0
+    variants:
+      - NewEmptyHandle
+      - NewEmptyHandleSys
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: NewHandle
+    return: Handle
+    args:
+      - name: size
+        type: Size
+        register: D0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+      - name: clear_p
+        type: bool
+        register: TrapBit<CLRBIT>
+    executor: _NewHandle_flags
+    trap: 0xA122
+    returnreg: A0
+    variants:
+      - NewHandle
+      - NewHandleClear
+      - NewHandleSys
+      - NewHandleSysClear
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: RecoverHandle
+    return: Handle
+    args:
+      - name: p
+        type: Ptr
+        register: A0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _RecoverHandle_flags
+    trap: 0xA128
+    returnreg: A0
+    variants:
+      - RecoverHandle
+      - RecoverHandleSys
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: NewPtr
+    return: Ptr
+    args:
+      - name: size
+        type: Size
+        register: D0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+      - name: clear_p
+        type: bool
+        register: TrapBit<CLRBIT>
+    executor: _NewPtr_flags
+    trap: 0xA11E
+    returnreg: A0
+    variants:
+      - NewPtr
+      - NewPtrClear
+      - NewPtrSys
+      - NewPtrSysClear
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: FreeMem
+    return: int32_t
+    args:
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _FreeMem_flags
+    trap: 0xA01C
+    returnreg: D0
+    variants:
+      - FreeMem
+      - FreeMemSys
+
+# ####
+
+- function:
+    name: MaxMem
+    return: Size
+    args:
+      - name: growp
+        type: Size*
+        register: Out<A0>
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _MaxMem_flags
+    trap: 0xA11D
+    returnreg: D0
+    variants:
+      - MaxMem
+      - MaxMemSys
+
+# ####
+
+- function:
+    name: CompactMem
+    return: Size
+    args:
+      - name: sizeneeded
+        type: Size
+        register: D0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _CompactMem_flags
+    trap: 0xA04C
+    returnreg: D0
+    variants:
+      - CompactMem
+      - CompactMemSys
+
+# ####
+
+- function:
+    name: ReserveMem
+    args:
+      - name: needed
+        type: Size
+        register: D0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _ResrvMem_flags
+    trap: 0xA040
+    variants:
+      - ReserveMem
+      - ReserveMemSys
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: PurgeMem
+    args:
+      - name: needed
+        type: Size
+        register: D0
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _PurgeMem_flags
+    trap: 0xA04D
+    variants:
+      - PurgeMem
+      - PurgeMemSys
+    executor_extras: callconv::ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: MaxBlock
+    return: Size
+    args:
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _MaxBlock_flags
+    trap: 0xA061
+    returnreg: D0
+    variants:
+      - MaxBlock
+      - MaxBlockSys
+
+# ####
+
+- function:
+    name: PurgeSpace
+    args:
+      - name: totalp
+        type: Size*
+        register: Out<D0>
+      - name: contigp
+        type: Size*
+        register: Out<A0>
+      - name: sys_p
+        type: bool
+        register: TrapBit<SYSBIT>
+    executor: _PurgeSpace_flags
+    trap: 0xA062
+    variants:
+      - PurgeSpace
+      - PurgeSpaceSys
+
+# ####
+
+- function:
+    name: MemError
+    return: OSErr
+    inline: "*(INTEGER *)0x0220"
+    executor: C_
+
+# ####
+
+- function:
+    name: HGetState
+    return: SignedByte
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA069
+    returnreg: D0
+
+# ####
+
+- function:
+    name: HSetState
+    args:
+      - name: h
+        type: Handle
+        register: A0
+      - name: flags
+        type: SignedByte
+        register: D0
+    executor: true
+    trap: 0xA06A
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HLock
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA029
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HUnlock
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA02A
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HPurge
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA049
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HNoPurge
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA04A
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HSetRBit
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA067
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HClrRBit
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA068
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: InitApplZone
+    executor: true
+    trap: 0xA02C
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: SetApplBase
+    args:
+      - name: newbase
+        type: Ptr
+        register: A0
+    executor: true
+    trap: 0xA057
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: MoreMasters
+    executor: true
+    trap: 0xA036
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: InitZone
+    args:
+      - name: pGrowZone
+        type: GrowZoneUPP
+      - name: cMoreMasters
+        type: int16_t
+      - name: limitPtr
+        type: Ptr
+      - name: startPtr
+        type: THz
+    executor: true
+
+# ####
+
+- function:
+    name: GetZone
+    return: THz
+    executor: true
+    trap: 0xA11A
+    returnreg: A0
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: SetZone
+    args:
+      - name: hz
+        type: THz
+        register: A0
+    executor: true
+    trap: 0xA01B
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: DisposeHandle
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA023
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: GetHandleSize
+    return: Size
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA025
+    returnreg: D0
+    executor_extras: ReturnMemErrConditional<D0>
+
+# ####
+
+- function:
+    name: SetHandleSize
+    args:
+      - name: h
+        type: Handle
+        register: A0
+      - name: newsize
+        type: Size
+        register: D0
+    executor: true
+    trap: 0xA024
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HandleZone
+    return: THz
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA126
+    returnreg: A0
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: ReallocateHandle
+    args:
+      - name: h
+        type: Handle
+        register: A0
+      - name: size
+        type: Size
+        register: D0
+    executor: true
+    trap: 0xA027
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: DisposePtr
+    args:
+      - name: p
+        type: Ptr
+        register: A0
+    executor: true
+    trap: 0xA01F
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: GetPtrSize
+    return: Size
+    args:
+      - name: p
+        type: Ptr
+        register: A0
+    executor: true
+    trap: 0xA021
+    returnreg: D0
+    executor_extras: ReturnMemErrConditional<D0>
+
+# ####
+
+- function:
+    name: SetPtrSize
+    args:
+      - name: p
+        type: Ptr
+        register: A0
+      - name: newsize
+        type: Size
+        register: D0
+    executor: true
+    trap: 0xA020
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: PtrZone
+    return: THz
+    args:
+      - name: p
+        type: Ptr
+        register: A0
+    executor: true
+    trap: 0xA148
+    returnreg: A0
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: BlockMove
+    args:
+      - name: src
+        type: const void*
+        register: A0
+      - name: dst
+        type: void*
+        register: A1
+      - name: cnt
+        type: Size
+        register: D0
+      - name: flush_p
+        type: bool
+        register: TrapBit<0x200>
+    executor: _BlockMove_flags
+    trap: 0xA02E
+    variants:
+      - BlockMove
+      - BlockMoveData
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: MaxApplZone
+    executor: true
+    trap: 0xA063
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: MoveHHi
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA064
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: SetApplLimit
+    args:
+      - name: newlimit
+        type: Ptr
+        register: A0
+    executor: true
+    trap: 0xA02D
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: SetGrowZone
+    args:
+      - name: newgz
+        type: GrowZoneUPP
+        register: A0
+    executor: true
+    trap: 0xA04B
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: EmptyHandle
+    args:
+      - name: h
+        type: Handle
+        register: A0
+    executor: true
+    trap: 0xA02B
+    executor_extras: ReturnMemErr<D0>
+
+# ####
+
+- function:
+    name: HLockHi
+    args:
+      - name: h
+        type: Handle
+    executor: C_
+
+# ####
+
+- function:
+    name: SystemZone
+    return: THz
+    executor: C_
+
+# ####
+
+- function:
+    name: ApplicationZone
+    return: THz
+    returnreg: D0
+    m68k-inline: [0x2038, 0x02aa]
+
+# ####
+
+- function:
+    name: StackSpace
+    return: Size
+    executor: true
+    trap: 0xA065
+    returnreg: D0
+
+# ####
+
+- function:
+    name: GetApplLimit
+    return: Ptr
+    executor: C_
+
+# ####
+
+- function:
+    name: TopMem
+    return: Ptr
+    executor: C_
+
+# ####
+
+- function:
+    name: GZSaveHnd
+    return: Handle
+    executor: C_
+
+# ####
+
+- dispatcher:
+    name: OSDispatch
+    trap: 0xA88F
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: TempFreeMem
+    return: int32_t
+    comment: |
+      temporary memory functions; see tempmem.c
+    dispatcher: OSDispatch
+    selector: 0x0018
+    executor: C_
+
+# ####
+
+- function:
+    name: TempMaxMem
+    return: Size
+    args:
+      - name: grow
+        type: Size*
+    dispatcher: OSDispatch
+    selector: 0x0015
+    executor: C_
+
+# ####
+
+- function:
+    name: TempTopMem
+    return: Ptr
+    dispatcher: OSDispatch
+    selector: 0x0016
+    executor: C_
+
+# ####
+
+- function:
+    name: TempNewHandle
+    return: Handle
+    args:
+      - name: logical_size
+        type: Size
+      - name: result_code
+        type: OSErr*
+    dispatcher: OSDispatch
+    selector: 0x001D
+    executor: C_
+
+# ####
+
+- function:
+    name: TempHLock
+    args:
+      - name: h
+        type: Handle
+      - name: result_code
+        type: OSErr*
+    dispatcher: OSDispatch
+    selector: 0x001E
+    executor: C_
+
+# ####
+
+- function:
+    name: TempHUnlock
+    args:
+      - name: h
+        type: Handle
+      - name: result_code
+        type: OSErr*
+    dispatcher: OSDispatch
+    selector: 0x001F
+    executor: C_
+
+# ####
+
+- function:
+    name: TempDisposeHandle
+    args:
+      - name: h
+        type: Handle
+      - name: result_code
+        type: OSErr*
+    dispatcher: OSDispatch
+    selector: 0x0020
+    executor: C_

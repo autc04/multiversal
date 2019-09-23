@@ -1,0 +1,324 @@
+- typedef:
+    name: LaunchFlags
+    type: INTEGER
+
+# ####
+
+- struct:
+    name: ProcessSerialNumber
+    members:
+      - name: highLongOfPSN
+        type: uint32_t
+      - name: lowLongOfPSN
+        type: uint32_t
+    size: 8
+
+# ####
+
+- struct:
+    members:
+      - name: magic
+        type: uint32_t
+      - name: n_fsspec
+        type: INTEGER
+      - name: fsspec
+        type: FSSpec[0]
+    name: ROMlib_AppParameters_t
+
+# ####
+
+- enum:
+    values:
+      - name: APP_PARAMS_MAGIC
+        value: 0xd6434a1b
+    comment: |
+      chosen from /dev/random
+
+# ####
+
+- typedef:
+    name: AppParametersPtr
+    type: ROMlib_AppParameters_t*
+
+# ####
+
+- struct:
+    name: LaunchParamBlockRec
+    members:
+      - name: reserved1
+        type: LONGINT
+      - name: reserved2
+        type: INTEGER
+      - name: launchBlockID
+        type: INTEGER
+      - name: launchEPBLength
+        type: LONGINT
+      - name: launchFileFlags
+        type: INTEGER
+      - name: launchControlFlags
+        type: LaunchFlags
+      - name: launchAppSpec
+        type: FSSpecPtr
+      - name: launchProcessSN
+        type: ProcessSerialNumber
+      - name: launchPreferredSize
+        type: LONGINT
+      - name: launchMinimumSize
+        type: LONGINT
+      - name: launchAvailableSize
+        type: LONGINT
+      - name: launchAppParameters
+        type: AppParametersPtr
+    size: 44
+
+# ####
+
+- enum:
+    values:
+      - name: extendedBlock
+        value: 0x4C43
+
+# ####
+
+- enum:
+    values:
+      - name: extendedBlockLen
+        value: sizeof(LaunchParamBlockRec) - 12
+
+# ####
+
+- enum:
+    values:
+      - name: launchContinue
+        value: 0x4000
+
+# ####
+
+- struct:
+    name: ProcessInfoRec
+    members:
+      - name: processInfoLength
+        type: uint32_t
+      - name: processName
+        type: StringPtr
+      - name: processNumber
+        type: ProcessSerialNumber
+      - name: processType
+        type: uint32_t
+      - name: processSignature
+        type: OSType
+      - name: processMode
+        type: uint32_t
+      - name: processLocation
+        type: Ptr
+      - name: processSize
+        type: uint32_t
+      - name: processFreeMem
+        type: uint32_t
+      - name: processLauncher
+        type: ProcessSerialNumber
+      - name: processLaunchDate
+        type: uint32_t
+      - name: processActiveTime
+        type: uint32_t
+      - name: processAppSpec
+        type: FSSpecPtr
+    size: 60
+
+# ####
+
+- typedef:
+    name: ProcessInfoPtr
+    type: ProcessInfoRec*
+
+# ####
+
+- enum:
+    values:
+      - name: modeDeskAccessory
+        value: 0x00020000
+      - name: modeMultiLaunch
+        value: 0x00010000
+      - name: modeNeedSuspendResume
+        value: 0x00004000
+      - name: modeCanBackground
+        value: 0x00001000
+      - name: modeDoesActivateOnFGSwitch
+        value: 0x00000800
+      - name: modeOnlyBackground
+        value: 0x00000400
+      - name: modeGetFrontClicks
+        value: 0x00000200
+      - name: modeGetAppDiedMsg
+        value: 0x00000100
+      - name: mode32BitCompatible
+        value: 0x00000080
+      - name: modeHighLevelEventAware
+        value: 0x00000040
+      - name: modeLocalAndRemoteHLEvents
+        value: 0x00000020
+      - name: modeStationeryAware
+        value: 0x00000010
+      - name: modeUseTextEditServices
+        value: 0x00000008
+    comment: |
+      flags for the `processMode' field of the `ProcessInformationRec'
+         record
+
+# ####
+
+- enum:
+    values:
+      - name: kNoProcess
+        value: 0
+      - name: kSystemProcess
+        value: 1
+      - name: kCurrentProcess
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: procNotFound
+        value: -600
+
+# ####
+
+- executor_only:
+    code: |
+      extern void process_create(bool desk_accessory_p,
+                                 uint32_t type, uint32_t signature);
+
+# ####
+
+- function:
+    name: GetCurrentProcess
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x0037
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNextProcess
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x0038
+    executor: C_
+
+# ####
+
+- function:
+    name: GetProcessInformation
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+      - name: info
+        type: ProcessInfoPtr
+    dispatcher: OSDispatch
+    selector: 0x003A
+    executor: C_
+
+# ####
+
+- function:
+    name: SameProcess
+    return: OSErr
+    args:
+      - name: serial_number0
+        type: ProcessSerialNumber*
+      - name: serial_number1
+        type: ProcessSerialNumber*
+      - name: same_out
+        type: Boolean*
+    dispatcher: OSDispatch
+    selector: 0x003D
+    executor: C_
+
+# ####
+
+- executor_only:
+    code: |
+      extern OSErr C_GetFrontProcess(ProcessSerialNumber *serial_number, int32_t dummy = -1);
+      PASCAL_SUBTRAP(GetFrontProcess, 0xA88F, 0x0039, OSDispatch);
+
+# ####
+
+- function:
+    name: SetFrontProcess
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x003B
+    executor: C_
+
+# ####
+
+- function:
+    name: WakeUpProcess
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x003C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetProcessSerialNumberFromPortName
+    return: OSErr
+    args:
+      - name: port_name
+        type: PPCPortPtr
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x0035
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPortNameFromProcessSerialNumber
+    return: OSErr
+    args:
+      - name: port_name
+        type: PPCPortPtr
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x0046
+    executor: C_
+
+# ####
+
+- function:
+    name: LaunchApplication
+    return: OSErr
+    args:
+      - name: params
+        type: LaunchParamBlockRec*
+        register: A0
+    executor: true
+    trap: 0xA9F2
+    returnreg: D0
+
+# ####
+
+- executor_only:
+    code: |
+      extern OSErr NewLaunch(ConstStringPtr appl, INTEGER vrefnum,
+                             LaunchParamBlockRec *lpbp);

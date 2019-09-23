@@ -1,0 +1,445 @@
+- struct:
+    name: DCtlEntry
+
+# ####
+
+- typedef:
+    name: DCtlPtr
+    type: DCtlEntry*
+
+# ####
+
+- typedef:
+    name: DCtlHandle
+    type: DCtlPtr*
+
+# ####
+
+- typedef:
+    name: DCtlHandlePtr
+    type: DCtlHandle*
+
+# ####
+
+- funptr:
+    return: OSErr
+    args:
+      - type: ParmBlkPtr
+        register: A0
+      - type: DCtlPtr
+        register: A1
+    returnreg: D0
+    name: DriverUPP
+
+# ####
+
+- struct:
+    members:
+      - name: udrvrOpen
+        type: DriverUPP
+      - name: udrvrPrime
+        type: DriverUPP
+        comment: |
+          read and write
+      - name: udrvrCtl
+        type: DriverUPP
+        comment: |
+          control and killio
+      - name: udrvrStatus
+        type: DriverUPP
+      - name: udrvrClose
+        type: DriverUPP
+      - name: udrvrName
+        type: Str255
+    name: umacdriver
+
+# ####
+
+- typedef:
+    name: umacdriverptr
+    type: umacdriver*
+
+# ####
+
+- struct:
+    name: ramdriver
+    members:
+      - name: drvrFlags
+        type: INTEGER
+      - name: drvrDelay
+        type: INTEGER
+      - name: drvrEMask
+        type: INTEGER
+      - name: drvrMenu
+        type: INTEGER
+      - name: drvrOpen
+        type: INTEGER
+      - name: drvrPrime
+        type: INTEGER
+      - name: drvrCtl
+        type: INTEGER
+      - name: drvrStatus
+        type: INTEGER
+      - name: drvrClose
+        type: INTEGER
+      - name: drvrName
+        type: char
+    size: 20
+
+# ####
+
+- typedef:
+    name: ramdriverptr
+    type: ramdriver*
+
+# ####
+
+- typedef:
+    name: ramdriverhand
+    type: ramdriverptr*
+
+# ####
+
+- enum:
+    values:
+      - name: Open
+      - name: Prime
+      - name: Ctl
+      - name: Stat
+      - name: Close
+    name: DriverRoutineType
+
+# ####
+
+- struct:
+    name: DCtlEntry
+    members:
+      - name: dCtlDriver
+        type: umacdriverptr
+        comment: |
+          not just Ptr
+      - name: dCtlFlags
+        type: INTEGER
+      - name: dCtlQHdr
+        type: QHdr
+      - name: dCtlPosition
+        type: LONGINT
+      - name: dCtlStorage
+        type: Handle
+      - name: dCtlRefNum
+        type: INTEGER
+      - name: dCtlCurTicks
+        type: LONGINT
+      - name: dCtlWindow
+        type: WindowPtr
+      - name: dCtlDelay
+        type: INTEGER
+      - name: dCtlEMask
+        type: INTEGER
+      - name: dCtlMenu
+        type: INTEGER
+    size: 40
+
+# ####
+
+- enum:
+    values:
+      - name: asyncTrpBit
+        value: 1 << 10
+      - name: noQueueBit
+        value: 1 << 9
+
+# ####
+
+- enum:
+    values:
+      - name: NEEDTIMEBIT
+        value: 1 << 13
+
+# ####
+
+- enum:
+    values:
+      - name: aRdCmd
+        value: 2
+      - name: aWrCmd
+        value: 3
+
+# ####
+
+- enum:
+    values:
+      - name: killCode
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: NDEVICES
+        value: 48
+
+# ####
+
+- enum:
+    values:
+      - name: abortErr
+        value: -27
+      - name: badUnitErr
+        value: -21
+      - name: controlErr
+        value: -17
+      - name: dInstErr
+        value: -26
+      - name: dRemovErr
+        value: -25
+      - name: notOpenErr
+        value: -28
+      - name: openErr
+        value: -23
+      - name: readErr
+        value: -19
+      - name: statusErr
+        value: -18
+      - name: unitEmptyErr
+        value: -22
+      - name: writErr
+        value: -20
+
+# ####
+
+- lowmem:
+    name: UTableBase
+    type: DCtlHandlePtr
+    address: 0x11C
+    comment: |
+      DeviceMgr IMII-192 (false);
+
+# ####
+
+- lowmem:
+    name: Lvl1DT
+    type: ProcPtr[8]
+    address: 0x192
+    comment: |
+      DeviceMgr IMII-197 (false);
+
+# ####
+
+- lowmem:
+    name: Lvl2DT
+    type: ProcPtr[8]
+    address: 0x1B2
+    comment: |
+      DeviceMgr IMII-198 (false);
+
+# ####
+
+- lowmem:
+    name: UnitNtryCnt
+    type: INTEGER
+    address: 0x1D2
+    comment: |
+      DeviceMgr ThinkC (true-b);
+
+# ####
+
+- lowmem:
+    name: VIA
+    type: Ptr
+    address: 0x1D4
+    comment: |
+      DeviceMgr IMIII-39 (true-b);
+
+# ####
+
+- lowmem:
+    name: SCCRd
+    type: Ptr
+    address: 0x1D8
+    comment: |
+      DeviceMgr IMII-199 (false);
+
+# ####
+
+- lowmem:
+    name: SCCWr
+    type: Ptr
+    address: 0x1DC
+    comment: |
+      DeviceMgr IMII-199 (false);
+
+# ####
+
+- lowmem:
+    name: IWM
+    type: Ptr
+    address: 0x1E0
+    comment: |
+      DeviceMgr ThinkC (false);
+
+# ####
+
+- lowmem:
+    name: ExtStsDT
+    type: ProcPtr[4]
+    address: 0x2BE
+    comment: |
+      DeviceMgr IMII-199 (false);
+
+# ####
+
+- lowmem:
+    name: JFetch
+    type: Ptr
+    address: 0x8F4
+    comment: |
+      DeviceMgr IMII-194 (false);
+
+# ####
+
+- lowmem:
+    name: JStash
+    type: Ptr
+    address: 0x8F8
+    comment: |
+      DeviceMgr IMII-195 (false);
+
+# ####
+
+- lowmem:
+    name: JIODone
+    type: Ptr
+    address: 0x8FC
+    comment: |
+      DeviceMgr IMII-195 (false);
+
+# ####
+
+- function:
+    name: PBControl
+    return: OSErr
+    args:
+      - name: pbp
+        type: ParmBlkPtr
+        register: A0
+      - name: a
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA004
+    returnreg: D0
+    variants:
+      - PBControlSync
+      - PBControlAsync
+
+# ####
+
+- function:
+    name: PBStatus
+    return: OSErr
+    args:
+      - name: pbp
+        type: ParmBlkPtr
+        register: A0
+      - name: a
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA005
+    returnreg: D0
+    variants:
+      - PBStatusSync
+      - PBStatusAsync
+
+# ####
+
+- function:
+    name: PBKillIO
+    return: OSErr
+    args:
+      - name: pbp
+        type: ParmBlkPtr
+        register: A0
+      - name: a
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA006
+    returnreg: D0
+    variants:
+      - PBKillIOSync
+      - PBKillIOAsync
+
+# ####
+
+- function:
+    name: OpenDriver
+    return: OSErr
+    args:
+      - name: name
+        type: ConstStringPtr
+      - name: rnp
+        type: INTEGER*
+    executor: true
+
+# ####
+
+- function:
+    name: CloseDriver
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: Control
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: code
+        type: INTEGER
+      - name: param
+        type: const void*
+    executor: true
+
+# ####
+
+- function:
+    name: Status
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: code
+        type: INTEGER
+      - name: param
+        type: Ptr
+    executor: true
+
+# ####
+
+- function:
+    name: KillIO
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: GetDCtlEntry
+    return: DCtlHandle
+    args:
+      - name: rn
+        type: INTEGER
+    executor: true

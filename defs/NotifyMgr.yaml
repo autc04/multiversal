@@ -1,0 +1,63 @@
+- struct:
+    name: NMRec
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: nmFlags
+        type: INTEGER
+      - name: nmPrivate
+        type: LONGINT
+      - name: nmReserved
+        type: INTEGER
+      - name: nmMark
+        type: INTEGER
+      - name: nmIcon
+        type: Handle
+      - name: nmSound
+        type: Handle
+      - name: nmStr
+        type: StringPtr
+      - name: nmResp
+        type: ProcPtr
+        comment: |
+          void myresponse(NMRecPtr foo)
+      - name: nmRefCon
+        type: LONGINT
+    size: 36
+
+# ####
+
+- typedef:
+    name: NMRecPtr
+    type: NMRec*
+    comment: |
+      value of -1 means remove queue element
+                                 automatically
+
+# ####
+
+- function:
+    name: NMInstall
+    return: OSErr
+    args:
+      - name: nmptr
+        type: NMRecPtr
+        register: A0
+    executor: true
+    trap: 0xA05E
+    returnreg: D0
+
+# ####
+
+- function:
+    name: NMRemove
+    return: OSErr
+    args:
+      - name: nmptr
+        type: NMRecPtr
+        register: A0
+    executor: true
+    trap: 0xA05F
+    returnreg: D0

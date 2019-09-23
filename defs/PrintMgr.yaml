@@ -1,0 +1,594 @@
+- enum:
+    values:
+      - name: bDraftLoop
+        value: 0
+      - name: bSpoolLoop
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: bDevCItoh
+        value: 1
+      - name: bDevLaser
+        value: 3
+
+# ####
+
+- enum:
+    values:
+      - name: iPFMaxPgs
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: iPrSavPFil
+        value: -1
+      - name: iIOAbort
+        value: -27
+      - name: MemFullErr
+        value: -108
+      - name: iPrAbort
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: iPrDevCtl
+        value: 7
+      - name: lPrReset
+        value: 0x10000
+      - name: lPrLineFeed
+        value: 0x30000
+      - name: lPrLFSixth
+        value: 0x3FFFF
+      - name: lPrPageEnd
+        value: 0x20000
+      - name: iPrBitsCtl
+        value: 4
+      - name: lScreenBits
+        value: 0
+      - name: lPaintBits
+        value: 1
+      - name: iPrIOCtl
+        value: 5
+
+# ####
+
+- executor_only:
+    code: |
+      const char *const sPrDrvr = ".Print";
+
+# ####
+
+- enum:
+    values:
+      - name: iPrDrvrRef
+        value: -3
+
+# ####
+
+- struct:
+    name: TPrPort
+    members:
+      - name: gPort
+        type: GrafPort
+      - name: saveprocs
+        type: QDProcs
+      - name: spare
+        type: LONGINT[4]
+      - name: fOurPtr
+        type: Boolean
+      - name: fOurBits
+        type: Boolean
+    size: 178
+
+# ####
+
+- typedef:
+    name: TPPrPort
+    type: TPrPort*
+
+# ####
+
+- struct:
+    name: TPrInfo
+    members:
+      - name: iDev
+        type: INTEGER
+      - name: iVRes
+        type: INTEGER
+      - name: iHRes
+        type: INTEGER
+      - name: rPage
+        type: Rect
+    size: 14
+
+# ####
+
+- enum:
+    values:
+      - name: feedCut
+      - name: feedFanFold
+      - name: feedMechCut
+      - name: feedOther
+    name: TFeed
+
+# ####
+
+- struct:
+    name: TPrStl
+    members:
+      - name: wDev
+        type: INTEGER
+      - name: iPageV
+        type: INTEGER
+      - name: iPageH
+        type: INTEGER
+      - name: bPort
+        type: SignedByte
+      - name: feed
+        type: char
+    size: 8
+
+# ####
+
+- enum:
+    values:
+      - name: scanTB
+      - name: scanBL
+      - name: scanLR
+      - name: scanRL
+    name: TScan
+
+# ####
+
+- struct:
+    name: TPrXInfo
+    members:
+      - name: iRowBytes
+        type: INTEGER
+      - name: iBandV
+        type: INTEGER
+      - name: iBandH
+        type: INTEGER
+      - name: iDevBytes
+        type: INTEGER
+      - name: iBands
+        type: INTEGER
+      - name: bPatScale
+        type: SignedByte
+      - name: bULThick
+        type: SignedByte
+      - name: bULOffset
+        type: SignedByte
+      - name: bULShadow
+        type: SignedByte
+      - name: scan
+        type: char
+      - name: bXInfoX
+        type: SignedByte
+    size: 16
+
+# ####
+
+- struct:
+    name: TPrJob
+    members:
+      - name: iFstPage
+        type: INTEGER
+      - name: iLstPage
+        type: INTEGER
+      - name: iCopies
+        type: INTEGER
+      - name: bJDocLoop
+        type: SignedByte
+      - name: fFromUsr
+        type: Boolean
+      - name: pIdleProc
+        type: ProcPtr
+      - name: pFileName
+        type: StringPtr
+      - name: iFileVol
+        type: INTEGER
+      - name: bFileVers
+        type: SignedByte
+      - name: bJobX
+        type: SignedByte
+    size: 20
+
+# ####
+
+- struct:
+    name: TPrint
+    members:
+      - name: iPrVersion
+        type: INTEGER
+      - name: prInfo
+        type: TPrInfo
+      - name: rPaper
+        type: Rect
+      - name: prStl
+        type: TPrStl
+      - name: prInfoPT
+        type: TPrInfo
+      - name: prXInfo
+        type: TPrXInfo
+      - name: prJob
+        type: TPrJob
+      - name: printX
+        type: INTEGER[19]
+    size: 120
+
+# ####
+
+- typedef:
+    name: TPPrint
+    type: TPrint*
+
+# ####
+
+- typedef:
+    name: THPrint
+    type: TPPrint*
+
+# ####
+
+- typedef:
+    name: TPRect
+    type: Rect*
+
+# ####
+
+- struct:
+    name: TPrStatus
+    members:
+      - name: iTotPages
+        type: INTEGER
+      - name: iCurPage
+        type: INTEGER
+      - name: iTotCopies
+        type: INTEGER
+      - name: iCurCopy
+        type: INTEGER
+      - name: iTotBands
+        type: INTEGER
+      - name: iCurBand
+        type: INTEGER
+      - name: fPgDirty
+        type: Boolean
+      - name: fImaging
+        type: Boolean
+      - name: hPrint
+        type: THPrint
+      - name: pPRPort
+        type: TPPrPort
+      - name: hPic
+        type: PicHandle
+    size: 26
+
+# ####
+
+- struct:
+    name: TPrDlg
+    members:
+      - name: dlg
+        type: DialogRecord
+      - name: pFltrProc
+        type: ModalFilterUPP
+      - name: pItemProc
+        type: UserItemUPP
+      - name: hPrintUsr
+        type: THPrint
+      - name: fDoIt
+        type: Boolean
+      - name: fDone
+        type: Boolean
+      - name: lUser1
+        type: LONGINT
+      - name: lUser2
+        type: LONGINT
+      - name: lUser3
+        type: LONGINT
+      - name: lUser4
+        type: LONGINT
+      - name: iNumFst
+        type: INTEGER
+      - name: iNumLst
+        type: INTEGER
+    size: 204
+
+# ####
+
+- typedef:
+    name: TPPrDlg
+    type: TPrDlg*
+    comment: |
+      From Technote 095
+      more stuff may be here
+
+# ####
+
+- lowmem:
+    name: PrintErr
+    type: INTEGER
+    address: 0x944
+    comment: |
+      PrintMgr IMII-161 (true-b);
+
+# ####
+
+- dispatcher:
+    name: PrGlue
+    trap: 0xA8FD
+    selector-location: StackL
+
+# ####
+
+- function:
+    name: PrError
+    return: INTEGER
+    dispatcher: PrGlue
+    selector: 0xBA000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrSetError
+    args:
+      - name: iErr
+        type: INTEGER
+    dispatcher: PrGlue
+    selector: 0xC0000200
+    executor: C_
+
+# ####
+
+- function:
+    name: PrOpen
+    dispatcher: PrGlue
+    selector: 0xC8000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrClose
+    dispatcher: PrGlue
+    selector: 0xD0000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrDrvrOpen
+    dispatcher: PrGlue
+    selector: 0x80000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrDrvrClose
+    dispatcher: PrGlue
+    selector: 0x88000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrCtlCall
+    args:
+      - name: iWhichCtl
+        type: INTEGER
+      - name: lParam1
+        type: LONGINT
+      - name: lParam2
+        type: LONGINT
+      - name: lParam3
+        type: LONGINT
+    dispatcher: PrGlue
+    selector: 0xA0000E00
+    executor: C_
+
+# ####
+
+- function:
+    name: PrDrvrDCE
+    return: Handle
+    dispatcher: PrGlue
+    selector: 0x94000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrDrvrVers
+    return: INTEGER
+    dispatcher: PrGlue
+    selector: 0x9A000000
+    executor: C_
+
+# ####
+
+- function:
+    name: PrJobInit
+    return: TPPrDlg
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x44040410
+    executor: C_
+
+# ####
+
+- function:
+    name: PrStlInit
+    return: TPPrDlg
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x3C04040C
+    executor: C_
+
+# ####
+
+- function:
+    name: PrDlgMain
+    return: Boolean
+    args:
+      - name: hPrint
+        type: THPrint
+      - name: initfptr
+        type: ProcPtr
+    dispatcher: PrGlue
+    selector: 0x4A040894
+    executor: C_
+
+# ####
+
+- function:
+    name: PrGeneral
+    args:
+      - name: pData
+        type: Ptr
+    dispatcher: PrGlue
+    selector: 0x70070480
+    executor: C_
+
+# ####
+
+- function:
+    name: PrOpenDoc
+    return: TPPrPort
+    args:
+      - name: hPrint
+        type: THPrint
+      - name: port
+        type: TPPrPort
+      - name: pIOBuf
+        type: Ptr
+    dispatcher: PrGlue
+    selector: 0x04000C00
+    executor: C_
+
+# ####
+
+- function:
+    name: PrOpenPage
+    args:
+      - name: port
+        type: TPPrPort
+      - name: pPageFrame
+        type: TPRect
+    dispatcher: PrGlue
+    selector: 0x10000808
+    executor: C_
+
+# ####
+
+- function:
+    name: PrClosePage
+    args:
+      - name: pPrPort
+        type: TPPrPort
+    dispatcher: PrGlue
+    selector: 0x1800040C
+    executor: C_
+
+# ####
+
+- function:
+    name: PrCloseDoc
+    args:
+      - name: port
+        type: TPPrPort
+    dispatcher: PrGlue
+    selector: 0x08000484
+    executor: C_
+
+# ####
+
+- function:
+    name: PrPicFile
+    args:
+      - name: hPrint
+        type: THPrint
+      - name: pPrPort
+        type: TPPrPort
+      - name: pIOBuf
+        type: Ptr
+      - name: pDevBuf
+        type: Ptr
+      - name: prStatus
+        type: TPrStatus*
+    dispatcher: PrGlue
+    selector: 0x60051480
+    executor: C_
+
+# ####
+
+- function:
+    name: PrintDefault
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x20040480
+    executor: C_
+
+# ####
+
+- function:
+    name: PrValidate
+    return: Boolean
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x52040498
+    executor: C_
+
+# ####
+
+- function:
+    name: PrStlDialog
+    return: Boolean
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x2A040484
+    executor: C_
+
+# ####
+
+- function:
+    name: PrJobDialog
+    return: Boolean
+    args:
+      - name: hPrint
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x32040488
+    executor: C_
+
+# ####
+
+- function:
+    name: PrJobMerge
+    args:
+      - name: hPrintSrc
+        type: THPrint
+      - name: hPrintDst
+        type: THPrint
+    dispatcher: PrGlue
+    selector: 0x5804089C
+    executor: C_

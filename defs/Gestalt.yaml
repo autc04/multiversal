@@ -1,0 +1,430 @@
+- enum:
+    values:
+      - name: gestaltPhysicalRAMSize
+        value: "'ram '"
+      - name: gestaltAddressingModeAttr
+        value: "'addr'"
+      - name: gestaltAliasMgrAttr
+        value: "'alis'"
+      - name: gestaltAppleEventsAttr
+        value: "'evnt'"
+      - name: gestaltAppleTalkVersion
+        value: "'atlk'"
+      - name: gestaltAUXVersion
+        value: "'a/ux'"
+      - name: gestaltConnMgrAttr
+        value: "'conn'"
+      - name: gestaltCRMAttr
+        value: "'crm '"
+      - name: gestaltCTBVersion
+        value: "'ctbv'"
+      - name: gestaltDBAccessMgrAttr
+        value: "'dbac'"
+      - name: gestaltDITLExtAttr
+        value: "'ditl'"
+      - name: gestaltEasyAccessAttr
+        value: "'easy'"
+      - name: gestaltEditionMgrAttr
+        value: "'edtn'"
+      - name: gestaltExtToolboxTable
+        value: "'xttt'"
+      - name: gestaltFindFolderAttr
+        value: "'fold'"
+      - name: gestaltFontMgrAttr
+        value: "'font'"
+      - name: gestaltFPUType
+        value: "'fpu '"
+      - name: gestaltFSAttr
+        value: "'fs  '"
+      - name: gestaltFXfrMgrAttr
+        value: "'fxfr'"
+      - name: gestaltHardwareAttr
+        value: "'hdwr'"
+      - name: gestaltHelpMgrAttr
+        value: "'help'"
+      - name: gestaltIconUtilitiesAttr
+        value: "'icon'"
+      - name: gestaltKeyboardType
+        value: "'kbd '"
+      - name: gestaltLogicalPageSize
+        value: "'pgsz'"
+      - name: gestaltLogicalRAMSize
+        value: "'lram'"
+      - name: gestaltLowMemorySize
+        value: "'lmem'"
+      - name: gestaltMiscAttr
+        value: "'misc'"
+      - name: gestaltMMUType
+        value: "'mmu '"
+      - name: gestaltNotificatinMgrAttr
+        value: "'nmgr'"
+      - name: gestaltNuBusConnectors
+        value: "'sltc'"
+      - name: gestaltOSAttr
+        value: "'os  '"
+      - name: gestaltOSTable
+        value: "'ostt'"
+      - name: gestaltParityAttr
+        value: "'prty'"
+      - name: gestaltPopupAttr
+        value: "'pop!'"
+      - name: gestaltPowerMgrAttr
+        value: "'powr'"
+      - name: gestaltPPCToolboxAttr
+        value: "'ppc '"
+      - name: gestaltProcessorType
+        value: "'proc'"
+      - name: gestaltQuickdrawVersion
+        value: "'qd  '"
+      - name: gestaltQuickdrawFeatures
+        value: "'qdrw'"
+      - name: gestaltResourceMgrAttr
+        value: "'rsrc'"
+      - name: gestaltScriptCount
+        value: "'scr#'"
+      - name: gestaltScriptMgrVersion
+        value: "'scri'"
+      - name: gestaltSoundAttr
+        value: "'snd '"
+      - name: gestaltSpeechAttr
+        value: "'ttsc'"
+      - name: gestaltStandardFileAttr
+        value: "'stdf'"
+      - name: gestaltStdNBPAttr
+        value: "'nlup'"
+      - name: gestaltTermMgrAttr
+        value: "'term'"
+      - name: gestaltTextEditVersion
+        value: "'te  '"
+      - name: gestaltTimeMgrVersion
+        value: "'tmgr'"
+      - name: gestaltToolboxTable
+        value: "'tbbt'"
+      - name: gestaltVersion
+        value: "'vers'"
+      - name: gestaltVMAttr
+        value: "'vm  '"
+      - name: gestaltMachineIcon
+        value: "'micn'"
+      - name: gestaltMachineType
+        value: "'mach'"
+      - name: gestaltROMSize
+        value: "'rom '"
+      - name: gestaltROMVersion
+        value: "'romv'"
+      - name: gestaltSystemVersion
+        value: "'sysv'"
+      - name: gestaltNativeCPUtype
+        value: "'cput'"
+      - name: gestaltSysArchitecture
+        value: "'sysa'"
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltMacQuadra610
+        value: 53
+      - name: gestaltCPU68040
+        value: 4
+      - name: gestaltCPU601
+        value: 0x101
+      - name: gestaltCPU603
+        value: 0x103
+      - name: gestaltCPU604
+        value: 0x104
+      - name: gestaltCPU603e
+        value: 0x106
+      - name: gestaltCPU603ev
+        value: 0x107
+      - name: gestaltCPU750
+        value: 0x108
+        comment: |
+          G3
+      - name: gestaltCPU604e
+        value: 0x109
+      - name: gestaltCPU604ev
+        value: 0x10A
+      - name: gestaltCPUG4
+        value: 0x10C
+        comment: |
+          determined by running test app on Sybil
+      - name: gestaltNoMMU
+        value: 0
+      - name: gestalt68k
+        value: 1
+      - name: gestaltPowerPC
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: gestalt32BitAddressing
+        value: 0
+      - name: gestalt32BitSysZone
+        value: 1
+      - name: gestalt32BitCapable
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltHasVIA1
+        value: 0
+      - name: gestaltHasVIA2
+        value: 1
+      - name: gestaltHasASC
+        value: 3
+      - name: gestaltHasSSC
+        value: 4
+      - name: gestaltHasSCI
+        value: 7
+    comment: |
+      gestaltHardwareAttr return values
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltEasyAccessOff
+        value: 1 << 0
+      - name: gestalt68881
+        value: 1
+      - name: gestaltMacKbd
+        value: 1
+      - name: gestalt68040MMu
+        value: 4
+      - name: gestalt68000
+        value: 1
+      - name: gestalt68040
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltOriginalQD
+        value: 0
+      - name: gestalt8BitQD
+        value: 0x0100
+      - name: gestalt32BitQD
+        value: 0x0200
+      - name: gestalt32BitQD11
+        value: 0x0210
+      - name: gestalt32BitQD12
+        value: 0x0220
+      - name: gestalt32BitQD13
+        value: 0x0230
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltHasColor
+        value: 0
+      - name: gestaltHasDeepGWorlds
+        value: 1
+      - name: gestaltHasDirectPixMaps
+        value: 2
+      - name: gestaltHasGrayishTextOr
+        value: 3
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltTE1
+        value: 1
+      - name: gestaltTE2
+        value: 2
+      - name: gestaltTE3
+        value: 3
+      - name: gestaltTE4
+        value: 4
+      - name: gestaltTE5
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltDITLExtPresent
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltStandardTimeMgr
+        value: 1
+      - name: gestaltVMPresent
+        value: 1 << 0
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltClassic
+        value: 1
+      - name: gestaltMacXL
+        value: 2
+      - name: gestaltMac512KE
+        value: 3
+      - name: gestaltMacPlus
+        value: 4
+      - name: gestaltMacSE
+        value: 5
+      - name: gestaltMacII
+        value: 6
+      - name: gestaltMacIIx
+        value: 7
+      - name: gestaltMacIIcx
+        value: 8
+      - name: gestaltMacSE30
+        value: 9
+      - name: gestaltPortable
+        value: 10
+      - name: gestaltMacIIci
+        value: 11
+      - name: gestaltMacIIfx
+        value: 13
+      - name: gestaltMacClassic
+        value: 17
+      - name: gestaltMacIIsi
+        value: 18
+      - name: gestaltMacLC
+        value: 19
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltHasFSSpecCalls
+        value: 1 << 1
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltStandardFile58
+        value: 1 << 0
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltUndefSelectorErr
+        value: -5551
+      - name: gestaltUnknownErr
+        value: -5550
+      - name: gestaltDupSelectorErr
+        value: -5552
+      - name: gestaltLocationErr
+        value: -5553
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltSerialAttr
+        value: "'ser '"
+      - name: gestaltHasGPIaToDCDa
+        value: 0
+      - name: gestaltHasGPIaToRTxCa
+        value: 1
+      - name: gestaltHasGPIbToDCDb
+        value: 2
+      - name: gestaltHidePortA
+        value: 3
+      - name: gestaltHidePortB
+        value: 4
+      - name: gestaltPortADisabled
+        value: 5
+      - name: gestaltPortBDisabled
+        value: 6
+
+# ####
+
+- enum:
+    values:
+      - name: gestaltOpenTpt
+        value: "'otan'"
+
+# ####
+
+- funptr:
+    return: OSErr
+    args:
+      - type: OSType
+      - type: LONGINT*
+    name: SelectorFunctionUPP
+
+# ####
+
+- dispatcher:
+    name: GestaltDispatch
+    trap: 0xA1AD
+    selector-location: TrapBits
+
+# ####
+
+- enum:
+    values:
+      - name: _Gestalt
+        value: 0xA1AD
+
+# ####
+
+- function:
+    name: Gestalt
+    return: OSErr
+    args:
+      - name: selector
+        type: OSType
+        register: D0
+      - name: responsep
+        type: LONGINT*
+        register: Out<A0>
+    executor: C_
+    dispatcher: GestaltDispatch
+    selector: 0x000
+    returnreg: D0
+
+# ####
+
+- function:
+    name: NewGestalt
+    return: OSErr
+    args:
+      - name: selector
+        type: OSType
+        register: D0
+      - name: selFunc
+        type: SelectorFunctionUPP
+        register: A0
+    executor: C_
+    dispatcher: GestaltDispatch
+    selector: 0x200
+    returnreg: D0
+
+# ####
+
+- function:
+    name: ReplaceGestalt
+    return: OSErr
+    args:
+      - name: selector
+        type: OSType
+        register: D0
+      - name: selFunc
+        type: SelectorFunctionUPP
+        register: A0
+      - name: oldSelFuncp
+        type: SelectorFunctionUPP*
+        register: Out<A0>
+    executor: C_
+    dispatcher: GestaltDispatch
+    selector: 0x400
+    returnreg: D0

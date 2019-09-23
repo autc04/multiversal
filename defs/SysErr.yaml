@@ -1,0 +1,59 @@
+- enum:
+    values:
+      - name: EXIST_YES
+        value: 0
+      - name: EXIST_NO
+        value: 0xFF
+    name: exist_enum_t
+
+# ####
+
+- lowmem:
+    name: DSAlertTab
+    type: Ptr
+    address: 0x2BA
+    comment: |
+      SysErr IMII-359 (true);
+
+# ####
+
+- lowmem:
+    name: DSAlertRect
+    type: Rect
+    address: 0x3F8
+    comment: |
+      SysErr IMII-362 (true);
+
+# ####
+
+- lowmem:
+    name: WWExist
+    type: Byte
+    address: 0x8F2
+    comment: |
+      SysError SysEqu.a (true);
+
+# ####
+
+- lowmem:
+    name: QDExist
+    type: Byte
+    address: 0x8F3
+    comment: |
+      SysError SysEqu.a (true);
+
+# ####
+
+- executor_only:
+    code: |
+      extern char syserr_msg[];
+
+# ####
+
+- function:
+    name: SysError
+    args:
+      - name: errorcode
+        type: int16_t
+    trap: 0xA9C9
+    executor: C_

@@ -1,0 +1,848 @@
+- enum:
+    values:
+      - name: ctrlItem
+        value: 4
+      - name: btnCtrl
+        value: 0
+      - name: chkCtrl
+        value: 1
+      - name: radCtrl
+        value: 2
+      - name: resCtrl
+        value: 3
+      - name: statText
+        value: 8
+      - name: editText
+        value: 16
+      - name: iconItem
+        value: 32
+      - name: picItem
+        value: 64
+      - name: userItem
+        value: 0
+      - name: itemDisable
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: OK
+        value: 1
+      - name: Cancel
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: stopIcon
+        value: 0
+      - name: noteIcon
+        value: 1
+      - name: cautionIcon
+        value: 2
+
+# ####
+
+- struct:
+    name: DialogRecord
+    members:
+      - name: window
+        type: WindowRecord
+      - name: items
+        type: Handle
+      - name: textH
+        type: TEHandle
+      - name: editField
+        type: INTEGER
+      - name: editOpen
+        type: INTEGER
+      - name: aDefItem
+        type: INTEGER
+    size: 170
+
+# ####
+
+- typedef:
+    name: DialogPeek
+    type: DialogRecord*
+
+# ####
+
+- typedef:
+    name: CDialogPtr
+    type: CWindowPtr
+
+# ####
+
+- typedef:
+    name: DialogPtr
+    type: WindowPtr
+
+# ####
+
+- executor_only:
+    code: |
+      /* dialog record accessors */
+      #define DIALOG_WINDOW(dialog) ((WindowPtr) & ((DialogPeek)dialog)->window)
+      #define DIALOG_ITEMS(dialog) (((DialogPeek)(dialog))->items)
+      #define DIALOG_TEXTH(dialog) (((DialogPeek)(dialog))->textH)
+      #define DIALOG_EDIT_FIELD(dialog) (((DialogPeek)(dialog))->editField)
+      #define DIALOG_EDIT_OPEN(dialog) (((DialogPeek)(dialog))->editOpen)
+      #define DIALOG_ADEF_ITEM(dialog) (((DialogPeek)(dialog))->aDefItem)
+
+# ####
+
+- struct:
+    name: DialogTemplate
+    members:
+      - name: boundsRect
+        type: Rect
+      - name: procID
+        type: INTEGER
+      - name: visible
+        type: Boolean
+      - name: filler1
+        type: Boolean
+      - name: goAwayFlag
+        type: Boolean
+      - name: filler2
+        type: Boolean
+      - name: refCon
+        type: LONGINT
+      - name: itemsID
+        type: INTEGER
+      - name: title
+        type: Str255
+    size: 276
+
+# ####
+
+- typedef:
+    name: DialogTPtr
+    type: DialogTemplate*
+
+# ####
+
+- typedef:
+    name: DialogTHndl
+    type: DialogTPtr*
+
+# ####
+
+- typedef:
+    name: StageList
+    type: int16_t
+    size: 2
+
+# ####
+
+- struct:
+    name: AlertTemplate
+    members:
+      - name: boundsRect
+        type: Rect
+      - name: itemsID
+        type: INTEGER
+      - name: stages
+        type: StageList
+    size: 12
+
+# ####
+
+- typedef:
+    name: AlertTPtr
+    type: AlertTemplate*
+
+# ####
+
+- typedef:
+    name: AlertTHndl
+    type: AlertTPtr*
+
+# ####
+
+- enum:
+    values:
+      - name: overlayDITL
+        value: 0
+      - name: appendDITLRight
+        value: 1
+      - name: appendDITLBottom
+        value: 2
+
+# ####
+
+- typedef:
+    name: DITLMethod
+    type: int16_t
+
+# ####
+
+- enum:
+    values:
+      - name: TEdoFont
+        value: 1
+      - name: TEdoFace
+        value: 2
+      - name: TEdoSize
+        value: 4
+      - name: TEdoColor
+        value: 8
+      - name: TEdoAll
+        value: 15
+
+# ####
+
+- enum:
+    values:
+      - name: TEaddSize
+        value: 16
+
+# ####
+
+- enum:
+    values:
+      - name: doBColor
+        value: 8192
+      - name: doMode
+        value: 16384
+      - name: doFontName
+        value: 32768
+
+# ####
+
+- funptr:
+    args:
+      - name: soundNumber
+        type: INTEGER
+    name: SoundUPP
+
+# ####
+
+- funptr:
+    return: Boolean
+    args:
+      - name: theDialog
+        type: DialogPtr
+      - name: theEvent
+        type: EventRecord*
+      - name: itemHit
+        type: INTEGER*
+    name: ModalFilterUPP
+
+# ####
+
+- funptr:
+    return: Boolean
+    args:
+      - name: theDialog
+        type: DialogPtr
+      - name: theEvent
+        type: EventRecord*
+      - name: itemHit
+        type: INTEGER*
+      - name: yourDataPtr
+        type: void*
+    name: ModalFilterYDUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: theDialog
+        type: DialogPtr
+      - name: itemNo
+        type: INTEGER
+    name: UserItemUPP
+
+# ####
+
+- lowmem:
+    name: ResumeProc
+    type: ProcPtr
+    address: 0xA8C
+    comment: |
+      DialogMgr IMI-411 (true);
+
+# ####
+
+- lowmem:
+    name: ANumber
+    type: INTEGER
+    address: 0xA98
+    comment: |
+      DialogMgr IMI-423 (true);
+
+# ####
+
+- lowmem:
+    name: ACount
+    type: INTEGER
+    address: 0xA9A
+    comment: |
+      DialogMgr IMI-423 (true);
+
+# ####
+
+- lowmem:
+    name: DABeeper
+    type: SoundUPP
+    address: 0xA9C
+    comment: |
+      DialogMgr IMI-411 (true);
+
+# ####
+
+- lowmem:
+    name: DAStrings
+    type: Handle[4]
+    address: 0xAA0
+    comment: |
+      DialogMgr IMI-421 (true);
+
+# ####
+
+- lowmem:
+    name: DlgFont
+    type: INTEGER
+    address: 0xAFA
+    comment: |
+      DialogMgr IMI-412 (true);
+
+# ####
+
+- dispatcher:
+    name: DialogDispatch
+    trap: 0xAA68
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: Alert
+    return: INTEGER
+    args:
+      - name: id
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    trap: 0xA985
+    executor: C_
+
+# ####
+
+- function:
+    name: StopAlert
+    return: INTEGER
+    args:
+      - name: id
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    trap: 0xA986
+    executor: C_
+
+# ####
+
+- function:
+    name: NoteAlert
+    return: INTEGER
+    args:
+      - name: id
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    trap: 0xA987
+    executor: C_
+
+# ####
+
+- function:
+    name: CautionAlert
+    return: INTEGER
+    args:
+      - name: id
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    trap: 0xA988
+    executor: C_
+
+# ####
+
+- function:
+    name: CouldAlert
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA989
+    executor: C_
+
+# ####
+
+- function:
+    name: FreeAlert
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA98A
+    executor: C_
+
+# ####
+
+- function:
+    name: CouldDialog
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA979
+    executor: C_
+
+# ####
+
+- function:
+    name: FreeDialog
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA97A
+    executor: C_
+
+# ####
+
+- function:
+    name: NewDialog
+    return: DialogPtr
+    args:
+      - name: dst
+        type: void*
+      - name: r
+        type: const Rect*
+      - name: tit
+        type: ConstStringPtr
+      - name: vis
+        type: Boolean
+      - name: procid
+        type: INTEGER
+      - name: behind
+        type: WindowPtr
+      - name: gaflag
+        type: Boolean
+      - name: rc
+        type: LONGINT
+      - name: items
+        type: Handle
+    trap: 0xA97D
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewDialog
+    return: DialogPtr
+    args:
+      - name: id
+        type: INTEGER
+      - name: dst
+        type: void*
+      - name: behind
+        type: WindowPtr
+    trap: 0xA97C
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseDialog
+    args:
+      - name: dp
+        type: DialogPtr
+    trap: 0xA982
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeDialog
+    args:
+      - name: dp
+        type: DialogPtr
+    trap: 0xA983
+    executor: C_
+
+# ####
+
+- function:
+    name: ModalDialog
+    args:
+      - name: fp
+        type: ModalFilterUPP
+      - name: item
+        type: INTEGER*
+    trap: 0xA991
+    executor: C_
+
+# ####
+
+- function:
+    name: IsDialogEvent
+    return: Boolean
+    args:
+      - name: evt
+        type: EventRecord*
+    trap: 0xA97F
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawDialog
+    args:
+      - name: dp
+        type: DialogPtr
+    trap: 0xA981
+    executor: C_
+
+# ####
+
+- function:
+    name: FindDialogItem
+    return: INTEGER
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: pt
+        type: Point
+    trap: 0xA984
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateDialog
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: rgn
+        type: RgnHandle
+    trap: 0xA978
+    executor: C_
+
+# ####
+
+- function:
+    name: DialogSelect
+    return: Boolean
+    args:
+      - name: evt
+        type: EventRecord*
+      - name: dpp
+        type: DialogPtr*
+      - name: item
+        type: INTEGER*
+    trap: 0xA980
+    executor: C_
+
+# ####
+
+- function:
+    name: DialogCut
+    args:
+      - name: dp
+        type: DialogPtr
+
+# ####
+
+- function:
+    name: DialogCopy
+    args:
+      - name: dp
+        type: DialogPtr
+
+# ####
+
+- function:
+    name: DialogPaste
+    args:
+      - name: dp
+        type: DialogPtr
+
+# ####
+
+- function:
+    name: DialogDelete
+    args:
+      - name: dp
+        type: DialogPtr
+
+# ####
+
+- function:
+    name: ErrorSound
+    args:
+      - name: sp
+        type: SoundUPP
+    trap: 0xA98C
+    executor: C_
+
+# ####
+
+- function:
+    name: InitDialogs
+    args:
+      - name: rp
+        type: ProcPtr
+    trap: 0xA97B
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogFont
+    args:
+      - name: i
+        type: INTEGER
+
+# ####
+
+- function:
+    name: ParamText
+    args:
+      - name: p0
+        type: ConstStringPtr
+      - name: p1
+        type: ConstStringPtr
+      - name: p2
+        type: ConstStringPtr
+      - name: p3
+        type: ConstStringPtr
+    trap: 0xA98B
+    executor: C_
+
+# ####
+
+- function:
+    name: GetDialogItem
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: itemno
+        type: INTEGER
+      - name: itype
+        type: INTEGER*
+      - name: item
+        type: Handle*
+      - name: r
+        type: Rect*
+    trap: 0xA98D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogItem
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: itemno
+        type: INTEGER
+      - name: itype
+        type: INTEGER
+      - name: item
+        type: Handle
+      - name: r
+        type: const Rect*
+    trap: 0xA98E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetDialogItemText
+    args:
+      - name: item
+        type: Handle
+      - name: text
+        type: StringPtr
+    trap: 0xA990
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogItemText
+    args:
+      - name: item
+        type: Handle
+      - name: text
+        type: ConstStringPtr
+    trap: 0xA98F
+    executor: C_
+
+# ####
+
+- function:
+    name: SelectDialogItemText
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: itemno
+        type: INTEGER
+      - name: start
+        type: INTEGER
+      - name: stop
+        type: INTEGER
+    trap: 0xA97E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetAlertStage
+    return: INTEGER
+
+# ####
+
+- function:
+    name: ResetAlertStage
+
+# ####
+
+- function:
+    name: HideDialogItem
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: item
+        type: INTEGER
+    trap: 0xA827
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowDialogItem
+    args:
+      - name: dp
+        type: DialogPtr
+      - name: item
+        type: INTEGER
+    trap: 0xA828
+    executor: C_
+
+# ####
+
+- function:
+    name: NewColorDialog
+    return: DialogPtr
+    args:
+      - type: void*
+      - type: const Rect*
+      - type: ConstStringPtr
+      - type: Boolean
+      - type: INTEGER
+      - type: WindowPtr
+      - type: Boolean
+      - type: LONGINT
+      - type: Handle
+    trap: 0xAA4B
+    executor: C_
+
+# ####
+
+- function:
+    name: GetStdFilterProc
+    return: OSErr
+    args:
+      - name: proc
+        type: ProcPtr*
+    dispatcher: DialogDispatch
+    selector: 0x0203
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogDefaultItem
+    return: OSErr
+    args:
+      - name: dialog
+        type: DialogPtr
+      - name: new_item
+        type: int16_t
+    dispatcher: DialogDispatch
+    selector: 0x0304
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogCancelItem
+    return: OSErr
+    args:
+      - name: dialog
+        type: DialogPtr
+      - name: new_item
+        type: int16_t
+    dispatcher: DialogDispatch
+    selector: 0x0305
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDialogTracksCursor
+    return: OSErr
+    args:
+      - name: dialog
+        type: DialogPtr
+      - name: tracks
+        type: Boolean
+    dispatcher: DialogDispatch
+    selector: 0x0306
+    executor: C_
+
+# ####
+
+- function:
+    name: AppendDITL
+    args:
+      - type: DialogPtr
+      - type: Handle
+      - type: DITLMethod
+
+# ####
+
+- function:
+    name: ShortenDITL
+    args:
+      - type: DialogPtr
+      - type: int16_t
+
+# ####
+
+- function:
+    name: CountDITL
+    return: int16_t
+    args:
+      - type: DialogPtr
+
+# ####
+
+- typedef:
+    name: DialogRef
+    type: DialogPtr
+
+# ####
+
+- typedef:
+    name: DialogItemIndex
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: DialogItemType
+    type: int16_t

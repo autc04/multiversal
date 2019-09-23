@@ -1,0 +1,98 @@
+- union:
+    members:
+      - name: slotDev
+        struct:
+          - name: sdExtDevID
+            type: SignedByte
+          - name: sdPartition
+            type: SignedByte
+          - name: sdSlotNum
+            type: SignedByte
+          - name: sdSRsrcID
+            type: SignedByte
+      - name: scsiDev
+        struct:
+          - name: sdReserved1
+            type: SignedByte
+          - name: sdReserved2
+            type: SignedByte
+          - name: sdRefNum
+            type: INTEGER
+    name: DefStartRec
+    size: 4
+
+# ####
+
+- typedef:
+    name: DefStartPtr
+    type: DefStartRec*
+
+# ####
+
+- struct:
+    members:
+      - name: sdSlot
+        type: SignedByte
+      - name: sdSResource
+        type: SignedByte
+    name: DefVideoRec
+    size: 2
+
+# ####
+
+- typedef:
+    name: DefVideoPtr
+    type: DefVideoRec*
+
+# ####
+
+- struct:
+    members:
+      - name: sdReserved
+        type: SignedByte
+      - name: sdOSType
+        type: SignedByte
+    name: DefOSRec
+    size: 2
+
+# ####
+
+- typedef:
+    name: DefOSPtr
+    type: DefOSRec*
+
+# ####
+
+- lowmem:
+    name: CPUFlag
+    type: Byte
+    address: 0x12F
+    comment: |
+      StartMgr IMV-348 (true-b);
+
+# ####
+
+- lowmem:
+    name: TimeDBRA
+    type: INTEGER
+    address: 0xD00
+    comment: |
+      StartMgr IMV (false);
+
+# ####
+
+- lowmem:
+    name: TimeSCCDB
+    type: INTEGER
+    address: 0xD02
+    comment: |
+      StartMgr IMV (false);
+
+# ####
+
+- lowmem:
+    name: TimeSCSIDB
+    type: INTEGER
+    address: 0xDA6
+    comment: |
+      StartMgr IMV (false);

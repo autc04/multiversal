@@ -1,0 +1,27 @@
+- struct:
+    name: ComponentRecord
+    members:
+      - name: data
+        type: LONGINT[1]
+    size: 4
+
+# ####
+
+- typedef:
+    name: Component
+    type: ComponentRecord*
+
+# ####
+
+- struct:
+    name: ComponentInstanceRecord
+    members:
+      - name: data
+        type: LONGINT[1]
+    size: 4
+
+# ####
+
+- typedef:
+    name: ComponentInstance
+    type: ComponentInstanceRecord*

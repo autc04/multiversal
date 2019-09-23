@@ -1,0 +1,1286 @@
+- struct:
+    name: SndCommand
+    members:
+      - name: cmd
+        type: INTEGER
+      - name: param1
+        type: INTEGER
+      - name: param2
+        type: LONGINT
+    size: 8
+
+# ####
+
+- enum:
+    values:
+      - name: stdQLength
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: stdSH
+        value: 0
+        comment: |
+          standard sound header
+      - name: cmpSH
+        value: 0xFE
+        comment: |
+          compressed sound header
+      - name: extSH
+        value: 0xFF
+        comment: |
+          extended sound header
+
+# ####
+
+- struct:
+    name: SndChannel
+
+# ####
+
+- funptr:
+    args:
+      - type: SndChannel*
+      - type: SndCommand*
+    name: SndCallbackUPP
+
+# ####
+
+- struct:
+    name: SndChannel
+    members:
+      - name: nextChan
+        type: SndChannel*
+      - name: firstMod
+        type: Ptr
+      - name: callBack
+        type: SndCallbackUPP
+      - name: userInfo
+        type: LONGINT
+      - name: wait
+        type: LONGINT
+      - name: cmdInProg
+        type: SndCommand
+      - name: flags
+        type: INTEGER
+      - name: qLength
+        type: INTEGER
+      - name: qHead
+        type: INTEGER
+      - name: qTail
+        type: INTEGER
+      - name: queue
+        type: SndCommand[stdQLength]
+    size: 1060
+
+# ####
+
+- typedef:
+    name: SndChannelPtr
+    type: SndChannel*
+
+# ####
+
+- enum:
+    values:
+      - name: nullCmd
+      - name: initCmd
+      - name: freeCmd
+      - name: quietCmd
+      - name: flushCmd
+      - name: waitCmd
+        value: 10
+      - name: pauseCmd
+      - name: resumeCmd
+      - name: callBackCmd
+      - name: syncCmd
+      - name: emptyCmd
+      - name: tickleCmd
+        value: 20
+      - name: requestNextCmd
+      - name: howOftenCmd
+      - name: wakeUpCmd
+      - name: availableCmd
+      - name: noteCmd
+        value: 40
+      - name: restCmd
+      - name: freqCmd
+      - name: ampCmd
+      - name: timbreCmd
+      - name: waveTableCmd
+        value: 60
+      - name: phaseCmd
+      - name: soundCmd
+        value: 80
+      - name: bufferCmd
+      - name: rateCmd
+      - name: midiDataCmd
+        value: 100
+
+# ####
+
+- struct:
+    name: soundbuffer_t
+    members:
+      - name: offset
+        type: LONGINT
+      - name: nsamples
+        type: LONGINT
+      - name: rate
+        type: LONGINT
+      - name: altbegin
+        type: LONGINT
+      - name: altend
+        type: LONGINT
+      - name: basenote
+        type: INTEGER
+      - name: buf
+        type: uint8_t[1]
+    size: 24
+
+# ####
+
+- struct:
+    name: _SoundHeader
+    members:
+      - name: samplePtr
+        type: Ptr
+      - name: length
+        type: LONGINT
+      - name: sampleRate
+        type: Fixed
+      - name: loopStart
+        type: LONGINT
+      - name: loopEnd
+        type: LONGINT
+      - name: encode
+        type: Byte
+      - name: baseFrequency
+        type: Byte
+      - name: sampleArea
+        type: Byte[1]
+
+# ####
+
+- typedef:
+    name: SoundHeader
+    type: _SoundHeader
+    size: 24
+
+# ####
+
+- typedef:
+    name: SoundHeaderPtr
+    type: _SoundHeader*
+
+# ####
+
+- struct:
+    name: _ExtSoundHeader
+    members:
+      - name: samplePtr
+        type: Ptr
+      - name: numChannels
+        type: LONGINT
+      - name: sampleRate
+        type: Fixed
+      - name: loopStart
+        type: LONGINT
+      - name: loopEnd
+        type: LONGINT
+      - name: encode
+        type: Byte
+      - name: baseFrequency
+        type: Byte
+      - name: numFrames
+        type: LONGINT
+      - name: AIFFSampleRate
+        type: extended80
+        comment: |
+          ???  should be Extended80
+      - name: MarkerChunk
+        type: Ptr
+      - name: instrumentChunks
+        type: Ptr
+      - name: AESRecording
+        type: Ptr
+      - name: sampleSize
+        type: INTEGER
+      - name: futureUse1
+        type: INTEGER
+      - name: futureUse2
+        type: LONGINT
+      - name: futureUse3
+        type: LONGINT
+      - name: futureUse4
+        type: LONGINT
+      - name: sampleArea
+        type: Byte[1]
+
+# ####
+
+- typedef:
+    name: ExtSoundHeader
+    type: _ExtSoundHeader
+    size: 66
+
+# ####
+
+- typedef:
+    name: ExtSoundHeaderPtr
+    type: _ExtSoundHeader*
+
+# ####
+
+- enum:
+    values:
+      - name: noteSynth
+        value: 1
+      - name: waveTableSynth
+        value: 3
+      - name: sampledSynth
+        value: 5
+      - name: MIDISynthIn
+        value: 7
+      - name: MIDISynthOut
+        value: 9
+
+# ####
+
+- enum:
+    values:
+      - name: badChannel
+        value: -205
+      - name: badFormat
+        value: -206
+      - name: noHardware
+        value: -200
+      - name: notEnoughHardware
+        value: -201
+      - name: queueFull
+        value: -203
+      - name: resProblem
+        value: -204
+
+# ####
+
+- lowmem:
+    name: SoundActive
+    type: Byte
+    address: 0x27E
+    comment: |
+      SoundDvr MPW (true);
+
+# ####
+
+- enum:
+    values:
+      - name: soundactiveoff
+        value: 0
+      - name: soundactive5
+        value: 5
+      - name: soundactiveinplay
+        value: 0x81
+      - name: soundactivenone
+        value: 0xFF
+
+# ####
+
+- struct:
+    name: SndDoubleBuffer
+    members:
+      - name: dbNumFrames
+        type: LONGINT
+      - name: dbFlags
+        type: LONGINT
+      - name: dbUserInfo
+        type: LONGINT[2]
+      - name: dbSoundData
+        type: Byte[1]
+    size: 18
+
+# ####
+
+- typedef:
+    name: SndDoubleBufferPtr
+    type: SndDoubleBuffer*
+
+# ####
+
+- enum:
+    values:
+      - name: dbBufferReady
+        value: 1
+      - name: dbLastBuffer
+        value: 4
+
+# ####
+
+- funptr:
+    args:
+      - type: SndChannelPtr
+      - type: SndDoubleBufferPtr
+    name: SndDoubleBackUPP
+
+# ####
+
+- struct:
+    name: SndDoubleBufferHeader
+    members:
+      - name: dbhNumChannels
+        type: INTEGER
+      - name: dbhSampleSize
+        type: INTEGER
+      - name: dbhCompressionID
+        type: INTEGER
+      - name: dbhPacketSize
+        type: INTEGER
+      - name: dbhSampleRate
+        type: Fixed
+      - name: dbhBufferPtr
+        type: SndDoubleBufferPtr[2]
+      - name: dbhDoubleBack
+        type: SndDoubleBackUPP
+    size: 24
+
+# ####
+
+- typedef:
+    name: SndDoubleBufferHeaderPtr
+    type: SndDoubleBufferHeader*
+
+# ####
+
+- struct:
+    name: _SCSTATUS
+    members:
+      - name: scStartTime
+        type: Fixed
+      - name: scEndTime
+        type: Fixed
+      - name: scCurrentTime
+        type: Fixed
+      - name: scChannelBusy
+        type: Boolean
+      - name: scChannelDisposed
+        type: Boolean
+      - name: scChannelPaused
+        type: Boolean
+      - name: scUnused
+        type: Boolean
+      - name: scChannelAttributes
+        type: LONGINT
+      - name: scCPULoad
+        type: LONGINT
+
+# ####
+
+- typedef:
+    name: SCStatus
+    type: _SCSTATUS
+    size: 24
+
+# ####
+
+- typedef:
+    name: SCStatusPtr
+    type: _SCSTATUS*
+
+# ####
+
+- typedef:
+    name: SMStatusPtr
+    type: void*
+
+# ####
+
+- typedef:
+    name: NumVersion
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: AudioSelectionPtr
+    type: void*
+
+# ####
+
+- typedef:
+    name: SPBPtr
+    type: void*
+
+# ####
+
+- typedef:
+    name: UnsignedFixed
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: CompressionInfoPtr
+    type: Ptr
+
+# ####
+
+- dispatcher:
+    name: SoundDispatch
+    trap: 0xA800
+    selector-location: D0<0xFFFFFF>
+
+# ####
+
+- function:
+    name: SndGetSysBeepState
+    args:
+      - name: statep
+        type: INTEGER*
+    dispatcher: SoundDispatch
+    selector: 0x02180008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndSetSysBeepState
+    return: OSErr
+    args:
+      - name: state
+        type: INTEGER
+    dispatcher: SoundDispatch
+    selector: 0x011C0008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndChannelStatus
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: length
+        type: INTEGER
+      - name: statusp
+        type: SCStatusPtr
+    dispatcher: SoundDispatch
+    selector: 0x05100008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndManagerStatus
+    return: OSErr
+    args:
+      - name: length
+        type: INTEGER
+      - name: statusp
+        type: SMStatusPtr
+    dispatcher: SoundDispatch
+    selector: 0x03140008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndSoundManagerVersion
+    return: NumVersion
+    dispatcher: SoundDispatch
+    selector: 0x000C0008
+    executor: C_
+
+# ####
+
+- function:
+    name: MACEVersion
+    return: NumVersion
+    dispatcher: SoundDispatch
+    selector: 0x00000010
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBVersion
+    return: NumVersion
+    dispatcher: SoundDispatch
+    selector: 0x00000014
+    executor: C_
+
+# ####
+
+- function:
+    name: SndStartFilePlay
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: refnum
+        type: INTEGER
+      - name: resnum
+        type: INTEGER
+      - name: buffersize
+        type: LONGINT
+      - name: bufferp
+        type: Ptr
+      - name: theselectionp
+        type: AudioSelectionPtr
+      - name: completionp
+        type: ProcPtr
+      - name: async
+        type: Boolean
+    dispatcher: SoundDispatch
+    selector: 0x0D000008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndPauseFilePlay
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+    dispatcher: SoundDispatch
+    selector: 0x02040008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndStopFilePlay
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: async
+        type: Boolean
+    dispatcher: SoundDispatch
+    selector: 0x03080008
+    executor: C_
+
+# ####
+
+- function:
+    name: SndPlayDoubleBuffer
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: paramp
+        type: SndDoubleBufferHeaderPtr
+    dispatcher: SoundDispatch
+    selector: 0x04200008
+    executor: C_
+
+# ####
+
+- function:
+    name: Comp3to1
+    args:
+      - name: inp
+        type: Ptr
+      - name: outp
+        type: Ptr
+      - name: cnt
+        type: LONGINT
+      - name: instatep
+        type: Ptr
+      - name: outstatep
+        type: Ptr
+      - name: numchannels
+        type: LONGINT
+      - name: whichchannel
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x00040010
+    executor: C_
+
+# ####
+
+- function:
+    name: Comp6to1
+    args:
+      - name: inp
+        type: Ptr
+      - name: outp
+        type: Ptr
+      - name: cnt
+        type: LONGINT
+      - name: instatep
+        type: Ptr
+      - name: outstatep
+        type: Ptr
+      - name: numchannels
+        type: LONGINT
+      - name: whichchannel
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x000C0010
+    executor: C_
+
+# ####
+
+- function:
+    name: Exp1to3
+    args:
+      - name: inp
+        type: Ptr
+      - name: outp
+        type: Ptr
+      - name: cnt
+        type: LONGINT
+      - name: instatep
+        type: Ptr
+      - name: outstatep
+        type: Ptr
+      - name: numchannels
+        type: LONGINT
+      - name: whichchannel
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x00080010
+    executor: C_
+
+# ####
+
+- function:
+    name: Exp1to6
+    args:
+      - name: inp
+        type: Ptr
+      - name: outp
+        type: Ptr
+      - name: cnt
+        type: LONGINT
+      - name: instatep
+        type: Ptr
+      - name: outstatep
+        type: Ptr
+      - name: numchannels
+        type: LONGINT
+      - name: whichchannel
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x00100010
+    executor: C_
+
+# ####
+
+- function:
+    name: SndRecord
+    return: OSErr
+    args:
+      - name: filterp
+        type: ProcPtr
+      - name: corner
+        type: Point
+      - name: quality
+        type: OSType
+      - name: sndhandlep
+        type: Handle*
+    dispatcher: SoundDispatch
+    selector: 0x08040014
+    executor: C_
+
+# ####
+
+- function:
+    name: SndRecordToFile
+    return: OSErr
+    args:
+      - name: filterp
+        type: ProcPtr
+      - name: corner
+        type: Point
+      - name: quality
+        type: OSType
+      - name: refnum
+        type: INTEGER
+    dispatcher: SoundDispatch
+    selector: 0x07080014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBOpenDevice
+    return: OSErr
+    args:
+      - name: name
+        type: ConstStringPtr
+      - name: permission
+        type: INTEGER
+      - name: inrefnump
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x05180014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBCloseDevice
+    return: OSErr
+    args:
+      - name: inrefnum
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x021C0014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBRecord
+    return: OSErr
+    args:
+      - name: inparamp
+        type: SPBPtr
+      - name: async
+        type: Boolean
+    dispatcher: SoundDispatch
+    selector: 0x03200014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBRecordToFile
+    return: OSErr
+    args:
+      - name: refnum
+        type: INTEGER
+      - name: inparamp
+        type: SPBPtr
+      - name: async
+        type: Boolean
+    dispatcher: SoundDispatch
+    selector: 0x04240014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBPauseRecording
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x02280014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBResumeRecording
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x022C0014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBStopRecording
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x02300014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBGetRecordingStatus
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+      - name: recordingstatus
+        type: INTEGER*
+      - name: meterlevel
+        type: INTEGER*
+      - name: totalsampstorecord
+        type: LONGINT*
+      - name: numsampsrecorded
+        type: LONGINT*
+      - name: totalmsecstorecord
+        type: LONGINT*
+      - name: numbermsecsrecorded
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x0E340014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBGetDeviceInfo
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+      - name: info
+        type: OSType
+      - name: infop
+        type: Ptr
+    dispatcher: SoundDispatch
+    selector: 0x06380014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBSetDeviceInfo
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+      - name: info
+        type: OSType
+      - name: infop
+        type: Ptr
+    dispatcher: SoundDispatch
+    selector: 0x063C0014
+    executor: C_
+
+# ####
+
+- function:
+    name: SetupSndHeader
+    return: OSErr
+    args:
+      - name: sndhandle
+        type: Handle
+      - name: numchannels
+        type: INTEGER
+      - name: rate
+        type: Fixed
+      - name: size
+        type: INTEGER
+      - name: compresion
+        type: OSType
+      - name: basefreq
+        type: INTEGER
+      - name: numbytes
+        type: LONGINT
+      - name: headerlenp
+        type: INTEGER*
+    dispatcher: SoundDispatch
+    selector: 0x0D480014
+    executor: C_
+
+# ####
+
+- function:
+    name: SetupAIFFHeader
+    return: OSErr
+    args:
+      - name: refnum
+        type: INTEGER
+      - name: numchannels
+        type: INTEGER
+      - name: samplerate
+        type: Fixed
+      - name: samplesize
+        type: INTEGER
+      - name: compression
+        type: OSType
+      - name: numbytes
+        type: LONGINT
+      - name: numframes
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x0B4C0014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBSignInDevice
+    return: OSErr
+    args:
+      - name: refnum
+        type: INTEGER
+      - name: name
+        type: ConstStringPtr
+    dispatcher: SoundDispatch
+    selector: 0x030C0014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBSignOutDevice
+    return: OSErr
+    args:
+      - name: refnum
+        type: INTEGER
+    dispatcher: SoundDispatch
+    selector: 0x01100014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBGetIndexedDevice
+    return: OSErr
+    args:
+      - name: count
+        type: INTEGER
+      - name: name
+        type: ConstStringPtr
+      - name: deviceiconhandlep
+        type: Handle*
+    dispatcher: SoundDispatch
+    selector: 0x05140014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBMillisecondsToBytes
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+      - name: millip
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x04400014
+    executor: C_
+
+# ####
+
+- function:
+    name: SPBBytesToMilliseconds
+    return: OSErr
+    args:
+      - name: refnum
+        type: LONGINT
+      - name: bytecountp
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x04440014
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSysBeepVolume
+    return: OSErr
+    args:
+      - name: levelp
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x02240018
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSysBeepVolume
+    return: OSErr
+    args:
+      - name: level
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x02280018
+    executor: C_
+
+# ####
+
+- function:
+    name: GetDefaultOutputVolume
+    return: OSErr
+    args:
+      - name: levelp
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x022C0018
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDefaultOutputVolume
+    return: OSErr
+    args:
+      - name: level
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x02300018
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSoundHeaderOffset
+    return: OSErr
+    args:
+      - name: sndHandle
+        type: Handle
+      - name: offset
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x04040018
+    executor: C_
+
+# ####
+
+- function:
+    name: UnsignedFixedMulDiv
+    return: UnsignedFixed
+    args:
+      - name: value
+        type: UnsignedFixed
+      - name: multiplier
+        type: UnsignedFixed
+      - name: divisor
+        type: UnsignedFixed
+    dispatcher: SoundDispatch
+    selector: 0x060C0018
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCompressionInfo
+    return: OSErr
+    args:
+      - name: compressionID
+        type: INTEGER
+      - name: format
+        type: OSType
+      - name: numChannels
+        type: INTEGER
+      - name: sampleSize
+        type: INTEGER
+      - name: cp
+        type: CompressionInfoPtr
+    dispatcher: SoundDispatch
+    selector: 0x07100018
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSoundPreference
+    return: OSErr
+    args:
+      - name: theType
+        type: OSType
+      - name: name
+        type: ConstStringPtr
+      - name: settings
+        type: Handle
+    dispatcher: SoundDispatch
+    selector: 0x06340018
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSoundPreference
+    return: OSErr
+    args:
+      - name: theType
+        type: OSType
+      - name: name
+        type: ConstStringPtr
+      - name: settings
+        type: Handle
+    dispatcher: SoundDispatch
+    selector: 0x06380018
+    executor: C_
+
+# ####
+
+- function:
+    name: SndGetInfo
+    return: OSErr
+    args:
+      - name: chan
+        type: SndChannelPtr
+      - name: selector
+        type: OSType
+      - name: infoPtr
+        type: void*
+    dispatcher: SoundDispatch
+    selector: 0x063C0018
+    executor: C_
+
+# ####
+
+- function:
+    name: SndSetInfo
+    return: OSErr
+    args:
+      - name: chan
+        type: SndChannelPtr
+      - name: selector
+        type: OSType
+      - name: infoPtr
+        type: void*
+    dispatcher: SoundDispatch
+    selector: 0x06400018
+    executor: C_
+
+# ####
+
+- function:
+    name: SndPlay
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: sndh
+        type: Handle
+      - name: async
+        type: Boolean
+    trap: 0xA805
+    executor: C_
+
+# ####
+
+- function:
+    name: SndNewChannel
+    return: OSErr
+    args:
+      - name: chanpp
+        type: SndChannelPtr*
+      - name: synth
+        type: INTEGER
+      - name: init
+        type: LONGINT
+      - name: userroutinep
+        type: SndCallbackUPP
+    trap: 0xA807
+    executor: C_
+
+# ####
+
+- function:
+    name: SndAddModifier
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: mod
+        type: ProcPtr
+      - name: id
+        type: INTEGER
+      - name: init
+        type: LONGINT
+    trap: 0xA802
+    executor: C_
+
+# ####
+
+- function:
+    name: SndDoCommand
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: cmdp
+        type: SndCommand*
+      - name: nowait
+        type: Boolean
+    trap: 0xA803
+    executor: C_
+
+# ####
+
+- function:
+    name: SndDoImmediate
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: cmdp
+        type: SndCommand*
+    trap: 0xA804
+    executor: C_
+
+# ####
+
+- function:
+    name: SndControl
+    return: OSErr
+    args:
+      - name: id
+        type: INTEGER
+      - name: cmdp
+        type: SndCommand*
+    trap: 0xA806
+    executor: C_
+
+# ####
+
+- function:
+    name: SndDisposeChannel
+    return: OSErr
+    args:
+      - name: chanp
+        type: SndChannelPtr
+      - name: quitnow
+        type: Boolean
+    trap: 0xA801
+    executor: C_
+
+# ####
+
+- function:
+    name: FinaleUnknown1
+    dispatcher: SoundDispatch
+    selector: 0x00000000
+    executor: C_
+
+# ####
+
+- function:
+    name: FinaleUnknown2
+    return: OSErr
+    args:
+      - type: ResType
+      - type: LONGINT
+      - type: Ptr
+      - type: Ptr
+    dispatcher: SoundDispatch
+    selector: 0x00040004
+    executor: C_
+
+# ####
+
+- function:
+    name: DirectorUnknown3
+    return: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x00000004
+    executor: C_
+
+# ####
+
+- function:
+    name: DirectorUnknown4
+    return: INTEGER
+    args:
+      - type: ResType
+      - type: INTEGER
+      - type: Ptr
+      - type: Ptr
+    dispatcher: SoundDispatch
+    selector: 0x001C0004
+    executor: C_

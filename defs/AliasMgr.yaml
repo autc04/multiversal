@@ -1,0 +1,217 @@
+- typedef:
+    name: AliasFilterUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: AliasHandle
+    type: Handle
+
+# ####
+
+- typedef:
+    name: AliasTypeInfo
+    type: int16_t
+
+# ####
+
+- enum:
+    values:
+      - name: kSystemFolderType
+        value: "'macs'"
+      - name: kDesktopFolderType
+        value: "'desk'"
+      - name: kTrashFolderType
+        value: "'trsh'"
+      - name: kWhereToEmptyTrashFolderType
+        value: "'empt'"
+      - name: kPrintMonitorDocsFolderType
+        value: "'prnt'"
+      - name: kStartupFolderType
+        value: "'strt'"
+      - name: kAppleMenuFolderType
+        value: "'amnu'"
+      - name: kControlPanelFolderType
+        value: "'ctrl'"
+      - name: kExtensionFolderType
+        value: "'extn'"
+      - name: kPreferencesFolderType
+        value: "'pref'"
+      - name: kTemporaryFolderType
+        value: "'temp'"
+      - name: kFontFolderType
+        value: "'font'"
+
+# ####
+
+- dispatcher:
+    name: AliasDispatch
+    trap: 0xA823
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: FindFolder
+    return: OSErr
+    args:
+      - name: vRefNum
+        type: int16_t
+      - name: folderType
+        type: OSType
+      - name: createFolder
+        type: Boolean
+      - name: foundVRefNum
+        type: int16_t*
+      - name: foundDirID
+        type: int32_t*
+    dispatcher: AliasDispatch
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: NewAlias
+    return: OSErr
+    args:
+      - name: fromFile
+        type: FSSpecPtr
+      - name: target
+        type: FSSpecPtr
+      - name: alias
+        type: AliasHandle*
+    dispatcher: AliasDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: NewAliasMinimal
+    return: OSErr
+    args:
+      - name: target
+        type: FSSpecPtr
+      - name: alias
+        type: AliasHandle*
+    dispatcher: AliasDispatch
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: NewAliasMinimalFromFullPath
+    return: OSErr
+    args:
+      - name: fullpathLength
+        type: int16_t
+      - name: fullpath
+        type: Ptr
+      - name: zoneName
+        type: Str32
+      - name: serverName
+        type: Str31
+      - name: alias
+        type: AliasHandle*
+    dispatcher: AliasDispatch
+    selector: 0x0009
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateAlias
+    return: OSErr
+    args:
+      - name: fromFile
+        type: FSSpecPtr
+      - name: target
+        type: FSSpecPtr
+      - name: alias
+        type: AliasHandle
+      - name: wasChanged
+        type: Boolean*
+    dispatcher: AliasDispatch
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: ResolveAlias
+    return: OSErr
+    args:
+      - name: fromFile
+        type: FSSpecPtr
+      - name: alias
+        type: AliasHandle
+      - name: target
+        type: FSSpecPtr
+      - name: wasAliased
+        type: Boolean*
+    dispatcher: AliasDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: ResolveAliasFile
+    return: OSErr
+    args:
+      - name: theSpec
+        type: FSSpecPtr
+      - name: resolveAliasChains
+        type: Boolean
+      - name: targetIsFolder
+        type: Boolean*
+      - name: wasAliased
+        type: Boolean*
+    dispatcher: AliasDispatch
+    selector: 0x000C
+    executor: C_
+
+# ####
+
+- function:
+    name: MatchAlias
+    return: OSErr
+    args:
+      - name: fromFile
+        type: FSSpecPtr
+      - name: rulesMask
+        type: int32_t
+      - name: alias
+        type: AliasHandle
+      - name: aliasCount
+        type: int16_t*
+      - name: aliasList
+        type: FSSpecArrayPtr
+      - name: needsUpdate
+        type: Boolean*
+      - name: aliasFilter
+        type: AliasFilterUPP
+      - name: yourDataPtr
+        type: Ptr
+    dispatcher: AliasDispatch
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: GetAliasInfo
+    return: OSErr
+    args:
+      - name: alias
+        type: AliasHandle
+      - name: index
+        type: AliasTypeInfo
+      - name: theString
+        type: Str63
+    dispatcher: AliasDispatch
+    selector: 0x0007
+    executor: C_

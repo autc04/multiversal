@@ -1,0 +1,356 @@
+- enum:
+    values:
+      - name: baud300
+        value: 380
+      - name: baud600
+        value: 189
+      - name: baud1200
+        value: 94
+      - name: baud1800
+        value: 62
+      - name: baud2400
+        value: 46
+      - name: baud3600
+        value: 30
+      - name: baud4800
+        value: 22
+      - name: baud7200
+        value: 14
+      - name: baud9600
+        value: 10
+      - name: baud14400
+        value: 6
+      - name: baud19200
+        value: 4
+      - name: baud28800
+        value: 2
+      - name: baud38400
+        value: 1
+      - name: baud57600
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: stop10
+        value: 16384
+      - name: stop15
+        value: -32768
+      - name: stop20
+        value: -16384
+
+# ####
+
+- enum:
+    values:
+      - name: noParity
+        value: 0
+      - name: oddParity
+        value: 4096
+      - name: evenParity
+        value: 12288
+
+# ####
+
+- enum:
+    values:
+      - name: data5
+        value: 0
+      - name: data6
+        value: 2048
+      - name: data7
+        value: 1024
+      - name: data8
+        value: 3072
+
+# ####
+
+- enum:
+    values:
+      - name: swOverrunErr
+        value: 1
+      - name: parityErr
+        value: 16
+      - name: hwOverrunErr
+        value: 32
+      - name: framingErr
+        value: 64
+
+# ####
+
+- enum:
+    values:
+      - name: ctsEvent
+        value: 32
+      - name: breakEvent
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: xOffWasSent
+        value: 0x80
+
+# ####
+
+- typedef:
+    name: SPortSel
+    type: SignedByte
+
+# ####
+
+- enum:
+    values:
+      - name: sPortA
+        value: 0
+      - name: sPortB
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: kSERDConfiguration
+        value: 8
+      - name: kSERDInputBuffer
+        value: 9
+      - name: kSERDSerHShake
+        value: 10
+      - name: kSERDClearBreak
+        value: 11
+      - name: kSERDSetBreak
+        value: 12
+      - name: kSERDBaudRate
+        value: 13
+      - name: kSERDHandshake
+        value: 14
+      - name: kSERDClockMIDI
+        value: 15
+      - name: kSERDMiscOptions
+        value: 16
+      - name: kSERDAssertDTR
+        value: 17
+      - name: kSERDNegateDTR
+        value: 18
+      - name: kSERDSetPEChar
+        value: 19
+      - name: kSERDSetPEAltChar
+        value: 20
+      - name: kSERDSetXOffFlag
+        value: 21
+      - name: kSERDClearXOffFlag
+        value: 22
+      - name: kSERDSendXOn
+        value: 23
+      - name: kSERDSendXOnOut
+        value: 24
+      - name: kSERDSendXOff
+        value: 25
+      - name: kSERDSendXOffOut
+        value: 26
+      - name: kSERDResetChannel
+        value: 27
+      - name: kSERDHandshakeRS232
+        value: 28
+      - name: kSERDStickParity
+        value: 29
+      - name: kSERDAssertRTS
+        value: 30
+      - name: kSERDNegateRTS
+        value: 31
+      - name: kSERD115KBaud
+        value: 115
+      - name: kSERD230KBaud
+        value: 230
+    comment: |
+      Serial driver control codes
+
+# ####
+
+- enum:
+    values:
+      - name: kSERDInputCount
+        value: 2
+      - name: kSERDStatus
+        value: 8
+      - name: kSERDVersion
+        value: 9
+      - name: kSERDGetDCD
+        value: 256
+    comment: |
+      Serial driver status codes
+
+# ####
+
+- struct:
+    name: SerShk
+    members:
+      - name: fXOn
+        type: Byte
+      - name: fCTS
+        type: Byte
+      - name: xOn
+        type: Byte
+      - name: xOff
+        type: Byte
+      - name: errs
+        type: Byte
+      - name: evts
+        type: Byte
+      - name: fInX
+        type: Byte
+      - name: "null"
+        type: Byte
+    size: 8
+
+# ####
+
+- struct:
+    name: SerStaRec
+    members:
+      - name: cumErrs
+        type: Byte
+      - name: xOffSent
+        type: Byte
+      - name: rdPend
+        type: Byte
+      - name: wrPend
+        type: Byte
+      - name: ctsHold
+        type: Byte
+      - name: xOffHold
+        type: Byte
+      - name: dsrHold
+        type: Byte
+        comment: |
+          unimplemented
+      - name: modemStatus
+        type: Byte
+        comment: |
+          unimplemented
+    size: 8
+
+# ####
+
+- executor_only:
+    code: |
+      const char *const MODEMINAME = ".AIn";
+      const char *const MODEMONAME = ".AOut";
+      const char *const PRNTRINAME = ".AIn";
+      const char *const PRNTRONAME = ".AOut";
+
+# ####
+
+- enum:
+    values:
+      - name: MODEMIRNUM
+        value: -6
+      - name: MODEMORNUM
+        value: -7
+      - name: PRNTRIRNUM
+        value: -8
+      - name: PRNTRORNUM
+        value: -9
+
+# ####
+
+- function:
+    name: RAMSDOpen
+    return: OSErr
+    args:
+      - name: port
+        type: SPortSel
+    executor: true
+
+# ####
+
+- function:
+    name: RAMSDClose
+    args:
+      - name: port
+        type: SPortSel
+    executor: true
+
+# ####
+
+- function:
+    name: SerReset
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: config
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: SerSetBuf
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: p
+        type: Ptr
+      - name: len
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: SerHShake
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: flags
+        type: const SerShk*
+    executor: true
+
+# ####
+
+- function:
+    name: SerSetBrk
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: SerClrBrk
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+    executor: true
+
+# ####
+
+- function:
+    name: SerGetBuf
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: lp
+        type: LONGINT*
+    executor: true
+
+# ####
+
+- function:
+    name: SerStatus
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+      - name: serstap
+        type: SerStaRec*
+    executor: true

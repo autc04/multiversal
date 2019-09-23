@@ -1,0 +1,361 @@
+- typedef:
+    name: INTEGER
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: LONGINT
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: ULONGINT
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: Boolean
+    type: int8_t
+
+# ####
+
+- typedef:
+    name: CharParameter
+    type: int16_t
+    comment: |
+      very important not to use this as char
+
+# ####
+
+- typedef:
+    name: SignedByte
+    type: int8_t
+
+# ####
+
+- typedef:
+    name: Byte
+    type: uint8_t
+
+# ####
+
+- typedef:
+    name: Ptr
+    type: char*
+
+# ####
+
+- typedef:
+    name: Handle
+    type: Ptr*
+
+# ####
+
+- typedef:
+    name: Boolean
+    type: int8_t
+
+# ####
+
+- typedef:
+    name: SInt8
+    type: int8_t
+
+# ####
+
+- typedef:
+    name: UInt8
+    type: uint8_t
+
+# ####
+
+- typedef:
+    name: SInt16
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: UInt16
+    type: uint16_t
+
+# ####
+
+- typedef:
+    name: SInt32
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: UInt32
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: Str15
+    type: Byte[16]
+
+# ####
+
+- typedef:
+    name: Str31
+    type: Byte[32]
+
+# ####
+
+- typedef:
+    name: Str32
+    type: Byte[33]
+
+# ####
+
+- typedef:
+    name: Str63
+    type: Byte[64]
+
+# ####
+
+- typedef:
+    name: Str255
+    type: Byte[256]
+
+# ####
+
+- typedef:
+    name: StringPtr
+    type: Byte*
+
+# ####
+
+- typedef:
+    name: ConstStringPtr
+    type: const uint8_t*
+
+# ####
+
+- typedef:
+    name: ConstStr255Param
+    type: ConstStringPtr
+
+# ####
+
+- typedef:
+    name: ConstStr63Param
+    type: ConstStringPtr
+
+# ####
+
+- typedef:
+    name: ConstStr31Param
+    type: ConstStringPtr
+
+# ####
+
+- typedef:
+    name: ConstStr16Param
+    type: ConstStringPtr
+
+# ####
+
+- typedef:
+    name: StringHandle
+    type: StringPtr*
+
+# ####
+
+- struct:
+    name: RoutineDescriptor
+
+# ####
+
+- typedef:
+    name: UniversalProcPtr
+    type: RoutineDescriptor*
+
+# ####
+
+- funptr:
+    name: VoidUPP
+
+# ####
+
+- typedef:
+    name: Fixed
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: Fract
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: SmallFract
+    type: uint16_t
+    comment: |
+      SmallFract represnts values between 0 and 65535
+
+# ####
+
+- enum:
+    values:
+      - name: MaxSmallFract
+        value: 0xFFFF
+
+# ####
+
+- typedef:
+    name: Extended
+    type: double
+
+# ####
+
+- typedef:
+    name: Size
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: OSErr
+    type: INTEGER
+
+# ####
+
+- executor_only:
+    code: |
+      class OSErrorException : public std::runtime_error
+      {
+      public:
+          OSErr code;
+      
+          OSErrorException(OSErr err) : std::runtime_error("oserror"), code(err) {}
+      };
+
+# ####
+
+- typedef:
+    name: OSType
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: ResType
+    type: LONGINT
+
+# ####
+
+- executor_only:
+    code: |
+      constexpr OSType operator"" _4(const char*x, size_t n)
+      {
+          assert(n == 4);
+          return (uint8_t(x[0]) << 24) | (uint8_t(x[1]) << 16) | (uint8_t(x[2]) << 8) | uint8_t(x[3]);
+      }
+
+# ####
+
+- union:
+    name: QElem
+
+# ####
+
+- typedef:
+    name: QElemPtr
+    type: QElem*
+
+# ####
+
+- struct:
+    name: QHdr
+    members:
+      - name: qFlags
+        type: INTEGER
+      - name: qHead
+        type: QElemPtr
+      - name: qTail
+        type: QElemPtr
+    size: 10
+
+# ####
+
+- typedef:
+    name: QHdrPtr
+    type: QHdr*
+
+# ####
+
+- enum:
+    values:
+      - name: noErr
+        value: 0
+      - name: paramErr
+        value: -50
+
+# ####
+
+- struct:
+    name: Rect
+    members:
+      - name: top
+        type: INTEGER
+      - name: left
+        type: INTEGER
+      - name: bottom
+        type: INTEGER
+      - name: right
+        type: INTEGER
+    size: 8
+
+# ####
+
+- typedef:
+    name: RectPtr
+    type: Rect*
+
+# ####
+
+- executor_only:
+    code: |
+      inline short RECT_WIDTH(const Rect *r)
+      {
+          return r->right - r->left;
+      }
+      inline short RECT_HEIGHT(const Rect *r)
+      {
+          return r->bottom - r->top;
+      }
+
+# ####
+
+- typedef:
+    name: ScriptCode
+    type: INTEGER
+    comment: |
+      from IntlUtil.h
+
+# ####
+
+- typedef:
+    name: LangCode
+    type: INTEGER
+
+# ####
+
+- not-for: executor
+  struct:
+    name: Point
+    members:
+      - name: v
+        type: INTEGER
+      - name: h
+        type: INTEGER
+    size: 4

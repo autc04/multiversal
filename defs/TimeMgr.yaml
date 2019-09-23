@@ -1,0 +1,53 @@
+- struct:
+    name: TMTask
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: tmAddr
+        type: ProcPtr
+      - name: tmCount
+        type: LONGINT
+        comment: |
+          I don't trust IMIV-301
+    size: 14
+
+# ####
+
+- function:
+    name: InsTime
+    args:
+      - name: taskp
+        type: QElemPtr
+        register: A0
+    executor: true
+    trap: 0xA058
+    executor_extras: ClearD0
+
+# ####
+
+- function:
+    name: RmvTime
+    args:
+      - name: taskp
+        type: QElemPtr
+        register: A0
+    executor: true
+    trap: 0xA059
+    executor_extras: ClearD0
+
+# ####
+
+- function:
+    name: PrimeTime
+    args:
+      - name: taskp
+        type: QElemPtr
+        register: A0
+      - name: count
+        type: LONGINT
+        register: D0
+    executor: true
+    trap: 0xA05A
+    executor_extras: ClearD0

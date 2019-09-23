@@ -1,0 +1,144 @@
+- enum:
+    values:
+      - name: nullEvent
+        value: 0
+      - name: mouseDown
+        value: 1
+      - name: mouseUp
+        value: 2
+      - name: keyDown
+        value: 3
+      - name: keyUp
+        value: 4
+      - name: autoKey
+        value: 5
+      - name: updateEvt
+        value: 6
+      - name: diskEvt
+        value: 7
+      - name: activateEvt
+        value: 8
+      - name: networkEvt
+        value: 10
+      - name: driverEvt
+        value: 11
+      - name: app1Evt
+        value: 12
+      - name: app2Evt
+        value: 13
+      - name: app3Evt
+        value: 14
+      - name: app4Evt
+        value: 15
+      - name: kHighLevelEvent
+        value: 23
+
+# ####
+
+- enum:
+    values:
+      - name: charCodeMask
+        value: 0xFF
+      - name: keyCodeMask
+        value: 0xFF00
+
+# ####
+
+- enum:
+    values:
+      - name: mDownMask
+        value: 2
+      - name: mUpMask
+        value: 4
+      - name: keyDownMask
+        value: 8
+      - name: keyUpMask
+        value: 16
+      - name: autoKeyMask
+        value: 32
+      - name: updateMask
+        value: 64
+      - name: diskMask
+        value: 128
+      - name: activMask
+        value: 256
+
+# ####
+
+- enum:
+    values:
+      - name: highLevelEventMask
+        value: 1024
+      - name: driverMask
+        value: 2048
+      - name: app1Mask
+        value: 4096
+      - name: app2Mask
+        value: 8192
+      - name: app3Mask
+        value: 16384
+      - name: app4Mask
+        value: -32768
+      - name: everyEvent
+        value: -1
+    comment: |
+      #define networkMask	1024
+
+# ####
+
+- enum:
+    values:
+      - name: activeFlag
+        value: 1
+      - name: changeFlag
+        value: 2
+      - name: btnState
+        value: 128
+      - name: cmdKey
+        value: 256
+      - name: shiftKey
+        value: 512
+      - name: alphaLock
+        value: 1024
+      - name: optionKey
+        value: 2048
+      - name: ControlKey
+        value: 4096
+
+# ####
+
+- enum:
+    values:
+      - name: rightShiftKey
+        value: 0x2000
+      - name: rightOptionKey
+        value: 0x4000
+      - name: rightControlKey
+        value: 0x8000
+
+# ####
+
+- struct:
+    name: EventRecord
+    members:
+      - name: what
+        type: INTEGER
+      - name: message
+        type: LONGINT
+      - name: when
+        type: LONGINT
+      - name: where
+        type: Point
+      - name: modifiers
+        type: INTEGER
+    size: 16
+
+# ####
+
+- lowmem:
+    name: KeyMap
+    type: uint8_t[16]
+    address: 0x174
+    comment: |
+      was LONGINT KeypadMap[2];
+      EventMgr SysEqu.a (true-b);

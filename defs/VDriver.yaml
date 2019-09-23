@@ -1,0 +1,96 @@
+- struct:
+    name: VDParamBlock
+    members:
+      - common: COMMONFSQUEUEDEFS
+      - name: ioRefNum
+        type: INTEGER
+      - name: csCode
+        type: INTEGER
+      - name: csParam
+        type: Ptr
+
+# ####
+
+- typedef:
+    name: VDParamBlockPtr
+    type: VDParamBlock*
+
+# ####
+
+- struct:
+    name: VDEntryRecord
+    members:
+      - name: csTable
+        type: Ptr
+      - name: csStart
+        type: INTEGER
+      - name: csCount
+        type: INTEGER
+
+# ####
+
+- typedef:
+    name: VDEntRecPtr
+    type: VDEntryRecord*
+
+# ####
+
+- struct:
+    name: VDGammaRecord
+    members:
+      - name: csGTable
+        type: Ptr
+
+# ####
+
+- typedef:
+    name: VDGamRecPtr
+    type: VDGammaRecord*
+
+# ####
+
+- struct:
+    name: VDPgInfo
+    members:
+      - name: csMode
+        type: INTEGER
+      - name: csData
+        type: LONGINT
+      - name: csPage
+        type: INTEGER
+      - name: csBaseAddr
+        type: Ptr
+
+# ####
+
+- typedef:
+    name: VDPgInfoPtr
+    type: VDPgInfo*
+
+# ####
+
+- struct:
+    name: VDFlagRec
+    members:
+      - name: flag
+        type: SignedByte
+
+# ####
+
+- typedef:
+    name: VDFlagPtr
+    type: VDFlagRec*
+
+# ####
+
+- struct:
+    name: VDDefModeRec
+    members:
+      - name: spID
+        type: SignedByte
+
+# ####
+
+- typedef:
+    name: VDDefModePtr
+    type: VDDefModeRec*

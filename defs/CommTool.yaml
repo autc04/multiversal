@@ -1,0 +1,150 @@
+- struct:
+    name: CRMRec
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: crmVersion
+        type: INTEGER
+      - name: crmPrivate
+        type: LONGINT
+      - name: crmReserved
+        type: INTEGER
+      - name: crmDeviceType
+        type: LONGINT
+      - name: crmDeviceID
+        type: LONGINT
+      - name: crmAttributes
+        type: LONGINT
+      - name: crmStatus
+        type: LONGINT
+      - name: crmRefCon
+        type: LONGINT
+    size: 34
+
+# ####
+
+- typedef:
+    name: CRMRecPtr
+    type: CRMRec*
+
+# ####
+
+- typedef:
+    name: CRMErr
+    type: OSErr
+
+# ####
+
+- enum:
+    values:
+      - name: crmGenericError
+        value: -1
+      - name: crmNoErr
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: curCRMVersion
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: crmType
+        value: 9
+
+# ####
+
+- enum:
+    values:
+      - name: crmRecVersion
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: curCRMSerRecVer
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: crmSerialDevice
+        value: 1
+
+# ####
+
+- struct:
+    name: CRMSerialRecord
+    members:
+      - name: version
+        type: INTEGER
+      - name: inputDriverName
+        type: StringHandle
+      - name: outputDriverName
+        type: StringHandle
+      - name: name
+        type: StringHandle
+      - name: deviceIcon
+        type: Handle
+      - name: ratedSpeed
+        type: LONGINT
+      - name: maxSpeed
+        type: LONGINT
+      - name: reserved
+        type: LONGINT
+    size: 30
+
+# ####
+
+- typedef:
+    name: CRMSerialPtr
+    type: CRMSerialRecord*
+
+# ####
+
+- function:
+    name: CRMGetCRMVersion
+    return: INTEGER
+
+# ####
+
+- function:
+    name: CRMGetHeader
+    return: QHdrPtr
+
+# ####
+
+- function:
+    name: CRMInstall
+    args:
+      - type: QElemPtr
+
+# ####
+
+- function:
+    name: CRMRemove
+    return: OSErr
+    args:
+      - type: QElemPtr
+
+# ####
+
+- function:
+    name: CRMSearch
+    return: QElemPtr
+    args:
+      - type: QElemPtr
+
+# ####
+
+- function:
+    name: InitCRM
+    return: CRMErr

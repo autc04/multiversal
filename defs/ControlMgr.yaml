@@ -1,0 +1,653 @@
+- enum:
+    values:
+      - name: pushButProc
+        value: 0
+      - name: checkBoxProc
+        value: 1
+      - name: radioButProc
+        value: 2
+      - name: useWFont
+        value: 8
+      - name: scrollBarProc
+        value: 16
+
+# ####
+
+- enum:
+    values:
+      - name: inButton
+        value: 10
+      - name: inCheckBox
+        value: 11
+      - name: inUpButton
+        value: 20
+      - name: inDownButton
+        value: 21
+      - name: inPageUp
+        value: 22
+      - name: inPageDown
+        value: 23
+      - name: inThumb
+        value: 129
+
+# ####
+
+- enum:
+    values:
+      - name: popupFixedWidth
+        value: 1 << 0
+      - name: popupUseAddResMenu
+        value: 1 << 2
+      - name: popupUseWFont
+        value: 1 << 3
+
+# ####
+
+- enum:
+    values:
+      - name: popupTitleBold
+        value: 1 << 8
+      - name: popupTitleItalic
+        value: 1 << 9
+      - name: popupTitleUnderline
+        value: 1 << 10
+      - name: popupTitleOutline
+        value: 1 << 11
+      - name: popupTitleShadow
+        value: 1 << 12
+      - name: popupTitleCondense
+        value: 1 << 13
+      - name: popupTitleExtend
+        value: 1 << 14
+      - name: popupTitleNoStyle
+        value: 1 << 15
+
+# ####
+
+- enum:
+    values:
+      - name: popupTitleLeftJust
+        value: 0x00
+      - name: popupTitleCenterJust
+        value: 0x01
+      - name: popupTitleRightJust
+        value: 0xFF
+
+# ####
+
+- enum:
+    values:
+      - name: drawCntl
+        value: 0
+      - name: testCntl
+        value: 1
+      - name: calcCRgns
+        value: 2
+      - name: initCntl
+        value: 3
+      - name: dispCntl
+        value: 4
+      - name: posCntl
+        value: 5
+      - name: thumbCntl
+        value: 6
+      - name: dragCntl
+        value: 7
+      - name: autoTrack
+        value: 8
+
+# ####
+
+- enum:
+    values:
+      - name: calcCntlRgn
+        value: 10
+      - name: calcThumbRgn
+        value: 11
+
+# ####
+
+- enum:
+    values:
+      - name: cFrameColor
+        value: 0
+      - name: cBodyColor
+        value: 1
+      - name: cTextColor
+        value: 2
+      - name: cThumbColor
+        value: 3
+    comment: |
+      control color table parts
+
+# ####
+
+- enum:
+    values:
+      - name: cArrowsColorLight
+        value: 5
+      - name: cArrowsColorDark
+        value: 6
+      - name: cThumbLight
+        value: 7
+      - name: cThumbDark
+        value: 8
+      - name: cHiliteLight
+        value: 9
+      - name: cHiliteDark
+        value: 10
+      - name: cTitleBarLight
+        value: 11
+      - name: cTitleBarDark
+        value: 12
+      - name: cTingeLight
+        value: 13
+      - name: cTingeDark
+        value: 14
+
+# ####
+
+- funptr:
+    args:
+      - type: ControlHandle
+      - type: int16_t
+    name: ControlActionUPP
+
+# ####
+
+- struct:
+    name: ControlRecord
+    members:
+      - name: nextControl
+        type: ControlHandle
+      - name: contrlOwner
+        type: WindowPtr
+      - name: contrlRect
+        type: Rect
+      - name: contrlVis
+        type: Byte
+      - name: contrlHilite
+        type: Byte
+      - name: contrlValue
+        type: INTEGER
+      - name: contrlMin
+        type: INTEGER
+      - name: contrlMax
+        type: INTEGER
+      - name: contrlDefProc
+        type: Handle
+      - name: contrlData
+        type: Handle
+      - name: contrlAction
+        type: ControlActionUPP
+      - name: contrlRfCon
+        type: LONGINT
+      - name: contrlTitle
+        type: Str255
+    size: 296
+
+# ####
+
+- struct:
+    name: CtlCTab
+    members:
+      - name: ccSeed
+        type: LONGINT
+      - name: ccReserved
+        type: INTEGER
+      - name: ctSize
+        type: INTEGER
+      - name: ctTable
+        type: cSpecArray
+    size: 16
+
+# ####
+
+- typedef:
+    name: CCTabPtr
+    type: CtlCTab*
+
+# ####
+
+- typedef:
+    name: CCTabHandle
+    type: CCTabPtr*
+
+# ####
+
+- struct:
+    name: AuxCtlRec
+
+# ####
+
+- typedef:
+    name: AuxCtlPtr
+    type: AuxCtlRec*
+
+# ####
+
+- typedef:
+    name: AuxCtlHandle
+    type: AuxCtlPtr*
+
+# ####
+
+- struct:
+    name: AuxCtlRec
+    members:
+      - name: acNext
+        type: AuxCtlHandle
+      - name: acOwner
+        type: ControlHandle
+      - name: acCTable
+        type: CCTabHandle
+      - name: acFlags
+        type: INTEGER
+      - name: acReserved
+        type: LONGINT
+      - name: acRefCon
+        type: LONGINT
+    size: 22
+
+# ####
+
+- lowmem:
+    name: AuxCtlHead
+    type: AuxCtlHandle
+    address: 0xCD4
+    comment: |
+      ControlMgr IMV-216 (true);
+
+# ####
+
+- function:
+    name: SetControlTitle
+    args:
+      - name: c
+        type: ControlHandle
+      - name: t
+        type: ConstStringPtr
+    trap: 0xA95F
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlTitle
+    args:
+      - name: c
+        type: ControlHandle
+      - name: t
+        type: StringPtr
+    trap: 0xA95E
+    executor: C_
+
+# ####
+
+- function:
+    name: HideControl
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA958
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowControl
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA957
+    executor: C_
+
+# ####
+
+- function:
+    name: HiliteControl
+    args:
+      - name: c
+        type: ControlHandle
+      - name: state
+        type: INTEGER
+    trap: 0xA95D
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawControls
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA969
+    executor: C_
+
+# ####
+
+- function:
+    name: Draw1Control
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA96D
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateControls
+    args:
+      - name: wp
+        type: WindowPtr
+      - name: rh
+        type: RgnHandle
+    trap: 0xA953
+    executor: C_
+
+# ####
+
+- function:
+    name: NewControl
+    return: ControlHandle
+    args:
+      - name: wst
+        type: WindowPtr
+      - name: r
+        type: const Rect*
+      - name: title
+        type: ConstStringPtr
+      - name: vis
+        type: Boolean
+      - name: value
+        type: INTEGER
+      - name: min
+        type: INTEGER
+      - name: max
+        type: INTEGER
+      - name: procid
+        type: INTEGER
+      - name: rc
+        type: LONGINT
+    trap: 0xA954
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewControl
+    return: ControlHandle
+    args:
+      - name: cid
+        type: INTEGER
+      - name: wst
+        type: WindowPtr
+    trap: 0xA9BE
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeControl
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA955
+    executor: C_
+
+# ####
+
+- function:
+    name: KillControls
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA956
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlReference
+    args:
+      - name: c
+        type: ControlHandle
+      - name: data
+        type: LONGINT
+    trap: 0xA95B
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlReference
+    return: LONGINT
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA95A
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlAction
+    args:
+      - name: c
+        type: ControlHandle
+      - name: a
+        type: ControlActionUPP
+    trap: 0xA96B
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlAction
+    return: ControlActionUPP
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA96A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlVariant
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA809
+    executor: C_
+
+# ####
+
+- function:
+    name: GetAuxiliaryControlRecord
+    return: Boolean
+    args:
+      - name: c
+        type: ControlHandle
+      - name: acHndl
+        type: AuxCtlHandle*
+    trap: 0xAA44
+    executor: C_
+
+# ####
+
+- function:
+    name: FindControl
+    return: INTEGER
+    args:
+      - name: p
+        type: Point
+      - name: w
+        type: WindowPtr
+      - name: cp
+        type: ControlHandle*
+    trap: 0xA96C
+    executor: C_
+
+# ####
+
+- function:
+    name: TrackControl
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+      - name: p
+        type: Point
+      - name: a
+        type: ControlActionUPP
+    trap: 0xA968
+    executor: C_
+
+# ####
+
+- function:
+    name: TestControl
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+      - name: p
+        type: Point
+    trap: 0xA966
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlValue
+    args:
+      - name: c
+        type: ControlHandle
+      - name: v
+        type: INTEGER
+    trap: 0xA963
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlValue
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA960
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlMinimum
+    args:
+      - name: c
+        type: ControlHandle
+      - name: v
+        type: INTEGER
+    trap: 0xA964
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlMinimum
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA961
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlMaximum
+    args:
+      - name: c
+        type: ControlHandle
+      - name: v
+        type: INTEGER
+    trap: 0xA965
+    executor: C_
+
+# ####
+
+- function:
+    name: GetControlMaximum
+    return: INTEGER
+    args:
+      - name: c
+        type: ControlHandle
+    trap: 0xA962
+    executor: C_
+
+# ####
+
+- function:
+    name: MoveControl
+    args:
+      - name: c
+        type: ControlHandle
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+    trap: 0xA959
+    executor: C_
+
+# ####
+
+- function:
+    name: DragControl
+    args:
+      - name: c
+        type: ControlHandle
+      - name: p
+        type: Point
+      - name: limit
+        type: const Rect*
+      - name: slop
+        type: const Rect*
+      - name: axis
+        type: INTEGER
+    trap: 0xA967
+    executor: C_
+
+# ####
+
+- function:
+    name: SizeControl
+    args:
+      - name: c
+        type: ControlHandle
+      - name: width
+        type: INTEGER
+      - name: height
+        type: INTEGER
+    trap: 0xA95C
+    executor: C_
+
+# ####
+
+- function:
+    name: SetControlColor
+    args:
+      - name: ctl
+        type: ControlHandle
+      - name: ctab
+        type: CCTabHandle
+    trap: 0xAA43
+    executor: C_
+
+# ####
+
+- typedef:
+    name: ControlRef
+    type: ControlPtr

@@ -1,0 +1,104 @@
+- enum:
+    values:
+      - name: firstDskErr
+        value: -84
+      - name: sectNFErr
+        value: -81
+      - name: seekErr
+        value: -80
+      - name: spdAdjErr
+        value: -79
+      - name: twoSideErr
+        value: -78
+      - name: initIWMErr
+        value: -77
+      - name: tk0BadErr
+        value: -76
+      - name: cantStepErr
+        value: -75
+      - name: wrUnderrun
+        value: -74
+      - name: badDBtSlp
+        value: -73
+      - name: badDCksum
+        value: -72
+      - name: noDtaMkErr
+        value: -71
+      - name: badBtSlpErr
+        value: -70
+      - name: badCksmErr
+        value: -69
+      - name: dataVerErr
+        value: -68
+      - name: noAdrMkErr
+        value: -67
+      - name: noNybErr
+        value: -66
+      - name: offLinErr
+        value: -65
+      - name: noDriveErr
+        value: -64
+      - name: lastDskErr
+        value: -64
+
+# ####
+
+- struct:
+    name: DrvSts
+    members:
+      - name: track
+        type: INTEGER
+      - name: writeProt
+        type: SignedByte
+      - name: diskInPlace
+        type: SignedByte
+      - name: installed
+        type: SignedByte
+      - name: sides
+        type: SignedByte
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: dQDrive
+        type: INTEGER
+      - name: dQRefNum
+        type: INTEGER
+      - name: dQFSID
+        type: INTEGER
+      - name: twoSideFmt
+        type: SignedByte
+      - name: needsFlush
+        type: SignedByte
+      - name: diskErrs
+        type: INTEGER
+    size: 22
+
+# ####
+
+- function:
+    name: DiskEject
+    return: OSErr
+    args:
+      - name: rn
+        type: INTEGER
+
+# ####
+
+- function:
+    name: SetTagBuffer
+    return: OSErr
+    args:
+      - name: bp
+        type: Ptr
+
+# ####
+
+- function:
+    name: DriveStatus
+    return: OSErr
+    args:
+      - name: dn
+        type: INTEGER
+      - name: statp
+        type: DrvSts*

@@ -1,0 +1,387 @@
+- executor_only:
+    code: |
+      const std::nullptr_t kUnresolvedCFragSymbolAddress = nullptr;
+
+# ####
+
+- struct:
+    name: cfrg_resource_t
+    members:
+      - name: reserved0
+        type: uint32_t
+      - name: reserved1
+        type: uint32_t
+      - name: version
+        type: uint32_t
+      - name: reserved2
+        type: uint32_t
+      - name: reserved3
+        type: uint32_t
+      - name: reserved4
+        type: uint32_t
+      - name: reserved5
+        type: uint32_t
+      - name: n_descripts
+        type: int32_t
+    size: 32
+
+# ####
+
+- executor_only:
+    code: |
+      #define CFRG_VERSION(cfrg) ((cfgr)->version)
+      #define CFRG_N_DESCRIPTS(cfrg) ((cfrg)->n_descripts)
+
+# ####
+
+- struct:
+    name: cfir_t
+    members:
+      - name: isa
+        type: OSType
+      - name: update_level
+        type: uint32_t
+      - name: current_version
+        type: uint32_t
+      - name: oldest_definition_version
+        type: uint32_t
+      - name: stack_size
+        type: uint32_t
+      - name: appl_library_dir
+        type: int16_t
+      - name: fragment_type
+        type: uint8_t
+      - name: fragment_location
+        type: uint8_t
+      - name: offset_to_fragment
+        type: int32_t
+      - name: fragment_length
+        type: int32_t
+      - name: reserved0
+        type: uint32_t
+      - name: reserved1
+        type: uint32_t
+      - name: cfir_length
+        type: uint16_t
+      - name: name
+        type: uint8_t[1]
+    size: 44
+
+# ####
+
+- executor_only:
+    code: |
+      #define CFIR_ISA(cfir) ((cfir)->isa)
+      #define CFIR_TYPE(cfir) ((cfir)->fragment_type)
+      #define CFIR_LOCATION(cfir) ((cfir)->fragment_location)
+      #define CFIR_LENGTH(cfir) ((cfir)->cfir_length)
+      #define CFIR_OFFSET_TO_FRAGMENT(cfir) ((cfir)->offset_to_fragment)
+      #define CFIR_FRAGMENT_LENGTH(cfir) ((cfir)->fragment_length)
+      #define CFIR_NAME(cfir) ((cfir)->name)
+
+# ####
+
+- enum:
+    values:
+      - name: kImportLibraryCFrag
+      - name: kApplicationCFrag
+      - name: kDropInAdditionCFrag
+      - name: kStubLibraryCFrag
+      - name: kWeakStubLibraryCFrag
+
+# ####
+
+- enum:
+    values:
+      - name: kWholeFork
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: kInMem
+      - name: kOnDiskFlat
+      - name: kOnDiskSegmented
+
+# ####
+
+- enum:
+    values:
+      - name: kPowerPCArch
+        value: "'pwpc'"
+      - name: kMotorola68KArch
+        value: "'m68k'"
+
+# ####
+
+- enum:
+    values:
+      - name: kLoadLib
+        value: 1
+        comment: |
+          deprecated
+      - name: kReferenceCFrag
+        value: 1
+      - name: kFindLib
+        value: 2
+      - name: kLoadNewCopy
+        value: 5
+
+# ####
+
+- typedef:
+    name: LoadFlags
+    type: uint32_t
+
+# ####
+
+- struct:
+    name: MemFragment
+    members:
+      - name: address
+        type: Ptr
+      - name: length
+        type: uint32_t
+      - name: inPlace
+        type: Boolean
+      - name: reservedA
+        type: uint8_t
+      - name: reservedB
+        type: uint16_t
+    size: 12
+
+# ####
+
+- struct:
+    name: DiskFragment
+    members:
+      - name: fileSpec
+        type: FSSpecPtr
+      - name: offset
+        type: uint32_t
+      - name: length
+        type: uint32_t
+    size: 12
+
+# ####
+
+- struct:
+    name: SegmentedFragment
+    members:
+      - name: fileSpec
+        type: FSSpecPtr
+      - name: rsrcType
+        type: OSType
+      - name: rsrcID
+        type: INTEGER
+      - name: reservedA
+        type: uint16_t
+    size: 12
+
+# ####
+
+- struct:
+    name: FragmentLocator
+    members:
+      - name: where
+        type: uint32_t
+      - name: u
+        union:
+          - name: inMem
+            type: MemFragment
+          - name: onDisk
+            type: DiskFragment
+          - name: inSegs
+            type: SegmentedFragment
+    size: 16
+
+# ####
+
+- struct:
+    name: InitBlock
+    members:
+      - name: contextID
+        type: uint32_t
+      - name: closureID
+        type: uint32_t
+      - name: connectionID
+        type: uint32_t
+      - name: fragLocator
+        type: FragmentLocator
+      - name: libName
+        type: StringPtr
+      - name: reserved4
+        type: uint32_t
+    size: 36
+
+# ####
+
+- struct:
+    name: CFragConnection
+
+# ####
+
+- typedef:
+    name: ConnectionID
+    type: CFragConnection*
+
+# ####
+
+- struct:
+    name: CFragClosure
+
+# ####
+
+- typedef:
+    name: CFragClosureID
+    type: CFragClosure*
+
+# ####
+
+- dispatcher:
+    name: CodeFragmentDispatch
+    trap: 0xAA5A
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: GetDiskFragment
+    return: OSErr
+    args:
+      - name: fsp
+        type: FSSpecPtr
+      - name: offset
+        type: LONGINT
+      - name: length
+        type: LONGINT
+      - name: fragname
+        type: Str63
+      - name: flags
+        type: LoadFlags
+      - name: connp
+        type: ConnectionID*
+      - name: mainAddrp
+        type: Ptr*
+      - name: errname
+        type: Str255
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- typedef:
+    name: SymClass
+    type: uint8_t
+
+# ####
+
+- function:
+    name: FindSymbol
+    return: OSErr
+    args:
+      - name: connID
+        type: ConnectionID
+      - name: symName
+        type: Str255
+      - name: symAddr
+        type: Ptr*
+      - name: symClass
+        type: SymClass*
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseConnection
+    return: OSErr
+    args:
+      - name: cidp
+        type: ConnectionID*
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSharedLibrary
+    return: OSErr
+    args:
+      - name: library
+        type: Str63
+      - name: arch
+        type: OSType
+      - name: loadflags
+        type: LoadFlags
+      - name: cidp
+        type: ConnectionID*
+      - name: mainaddrp
+        type: Ptr*
+      - name: errName
+        type: Str255
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMemFragment
+    return: OSErr
+    args:
+      - name: addr
+        type: void*
+      - name: length
+        type: uint32_t
+      - name: fragname
+        type: Str63
+      - name: flags
+        type: LoadFlags
+      - name: connp
+        type: ConnectionID*
+      - name: mainAddrp
+        type: Ptr*
+      - name: errname
+        type: Str255
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: CountSymbols
+    return: OSErr
+    args:
+      - name: id
+        type: ConnectionID
+      - name: countp
+        type: LONGINT*
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndSymbol
+    return: OSErr
+    args:
+      - name: id
+        type: ConnectionID
+      - name: index
+        type: LONGINT
+      - name: name
+        type: Str255
+      - name: addrp
+        type: Ptr*
+      - name: classp
+        type: SymClass*
+    dispatcher: CodeFragmentDispatch
+    selector: 0x0007
+    executor: C_

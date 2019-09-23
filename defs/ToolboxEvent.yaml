@@ -1,0 +1,182 @@
+- lowmem:
+    name: KeyThresh
+    type: INTEGER
+    address: 0x18E
+    comment: |
+      ToolboxEvent IMI-246 (true);
+
+# ####
+
+- lowmem:
+    name: KeyRepThresh
+    type: INTEGER
+    address: 0x190
+    comment: |
+      ToolboxEvent IMI-246 (true);
+
+# ####
+
+- lowmem:
+    name: DoubleTime
+    type: LONGINT
+    address: 0x2F0
+    comment: |
+      ToolboxEvent IMI-260 (true);
+
+# ####
+
+- lowmem:
+    name: CaretTime
+    type: LONGINT
+    address: 0x2F4
+    comment: |
+      ToolboxEvent IMI-260 (true);
+
+# ####
+
+- lowmem:
+    name: ScrDmpEnb
+    type: Byte
+    address: 0x2F8
+    comment: |
+      ToolboxEvent IMI-258 (true);
+
+# ####
+
+- lowmem:
+    name: JournalFlag
+    type: INTEGER
+    address: 0x8DE
+    comment: |
+      ToolboxEvent IMI-261 (false);
+
+# ####
+
+- lowmem:
+    name: JournalRef
+    type: INTEGER
+    address: 0x8E8
+    comment: |
+      ToolboxEvent IMI-261 (false);
+
+# ####
+
+- function:
+    name: KeyTranslate
+    return: LONGINT
+    args:
+      - name: mapp
+        type: Ptr
+      - name: code
+        type: uint16_t
+      - name: state
+        type: LONGINT*
+    trap: 0xA9C3
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNextEvent
+    return: Boolean
+    args:
+      - name: em
+        type: INTEGER
+      - name: evt
+        type: EventRecord*
+    trap: 0xA970
+    executor: C_
+
+# ####
+
+- function:
+    name: WaitNextEvent
+    return: Boolean
+    args:
+      - name: mask
+        type: INTEGER
+      - name: evp
+        type: EventRecord*
+      - name: sleep
+        type: LONGINT
+      - name: mousergn
+        type: RgnHandle
+    trap: 0xA860
+    executor: C_
+
+# ####
+
+- function:
+    name: EventAvail
+    return: Boolean
+    args:
+      - name: em
+        type: INTEGER
+      - name: evt
+        type: EventRecord*
+    trap: 0xA971
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMouse
+    args:
+      - name: p
+        type: Point*
+    trap: 0xA972
+    executor: C_
+
+# ####
+
+- function:
+    name: Button
+    return: Boolean
+    trap: 0xA974
+    executor: C_
+
+# ####
+
+- function:
+    name: StillDown
+    return: Boolean
+    trap: 0xA973
+    executor: C_
+
+# ####
+
+- function:
+    name: WaitMouseUp
+    return: Boolean
+    trap: 0xA977
+    executor: C_
+
+# ####
+
+- function:
+    name: GetKeys
+    args:
+      - name: keys
+        type: uint8_t*
+    trap: 0xA976
+    executor: C_
+
+# ####
+
+- function:
+    name: TickCount
+    return: LONGINT
+    trap: 0xA975
+    executor: C_
+
+# ####
+
+- function:
+    name: GetDblTime
+    return: LONGINT
+
+# ####
+
+- function:
+    name: GetCaretTime
+    return: LONGINT

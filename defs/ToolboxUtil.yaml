@@ -1,0 +1,553 @@
+- enum:
+    values:
+      - name: sysPatListID
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: iBeamCursor
+        value: 1
+      - name: crossCursor
+        value: 2
+      - name: plusCursor
+        value: 3
+      - name: watchCursor
+        value: 4
+
+# ####
+
+- struct:
+    name: Int64Bit
+    members:
+      - name: hiLong
+        type: LONGINT
+      - name: loLong
+        type: LONGINT
+    size: 8
+
+# ####
+
+- typedef:
+    name: PatPtr
+    type: Pattern*
+
+# ####
+
+- typedef:
+    name: PatHandle
+    type: PatPtr*
+
+# ####
+
+- function:
+    name: FracSqrt
+    return: Fract
+    args:
+      - name: x
+        type: Fract
+    trap: 0xA849
+    executor: C_
+
+# ####
+
+- function:
+    name: FracSin
+    return: Fract
+    args:
+      - name: x
+        type: Fixed
+    trap: 0xA848
+    executor: C_
+
+# ####
+
+- function:
+    name: FixATan2
+    return: Fixed
+    args:
+      - name: x
+        type: LONGINT
+      - name: y
+        type: LONGINT
+    trap: 0xA818
+    executor: C_
+
+# ####
+
+- function:
+    name: FracCos
+    return: Fract
+    args:
+      - name: x
+        type: Fixed
+    trap: 0xA847
+    executor: C_
+
+# ####
+
+- function:
+    name: FixRatio
+    return: Fixed
+    args:
+      - name: n
+        type: INTEGER
+      - name: d
+        type: INTEGER
+    trap: 0xA869
+    executor: C_
+
+# ####
+
+- function:
+    name: FixMul
+    return: Fixed
+    args:
+      - name: a
+        type: Fixed
+      - name: b
+        type: Fixed
+    trap: 0xA868
+    executor: C_
+
+# ####
+
+- function:
+    name: FixRound
+    return: INTEGER
+    args:
+      - name: x
+        type: Fixed
+    trap: 0xA86C
+    executor: C_
+
+# ####
+
+- function:
+    name: NewString
+    return: StringHandle
+    args:
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA906
+    executor: C_
+
+# ####
+
+- function:
+    name: SetString
+    args:
+      - name: h
+        type: StringHandle
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA907
+    executor: C_
+
+# ####
+
+- function:
+    name: GetString
+    return: StringHandle
+    args:
+      - name: i
+        type: INTEGER
+    trap: 0xA9BA
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndString
+    args:
+      - name: s
+        type: StringPtr
+      - name: sid
+        type: INTEGER
+      - name: index
+        type: INTEGER
+    executor: C_
+
+# ####
+
+- function:
+    name: Munger
+    return: LONGINT
+    args:
+      - name: h
+        type: Handle
+      - name: "off"
+        type: LONGINT
+      - name: p1
+        type: Ptr
+      - name: len1
+        type: LONGINT
+      - name: p2
+        type: Ptr
+      - name: len2
+        type: LONGINT
+    trap: 0xA9E0
+    executor: C_
+
+# ####
+
+- function:
+    name: PackBits
+    args:
+      - name: sp
+        type: Ptr*
+      - name: dp
+        type: Ptr*
+      - name: len
+        type: INTEGER
+    trap: 0xA8CF
+    executor: C_
+
+# ####
+
+- function:
+    name: UnpackBits
+    args:
+      - name: sp
+        type: Ptr*
+      - name: dp
+        type: Ptr*
+      - name: len
+        type: INTEGER
+    trap: 0xA8D0
+    executor: C_
+
+# ####
+
+- function:
+    name: BitTst
+    return: Boolean
+    args:
+      - name: bp
+        type: Ptr
+      - name: bn
+        type: LONGINT
+    trap: 0xA85D
+    executor: C_
+
+# ####
+
+- function:
+    name: BitSet
+    args:
+      - name: bp
+        type: Ptr
+      - name: bn
+        type: LONGINT
+    trap: 0xA85E
+    executor: C_
+
+# ####
+
+- function:
+    name: BitClr
+    args:
+      - name: bp
+        type: Ptr
+      - name: bn
+        type: LONGINT
+    trap: 0xA85F
+    executor: C_
+
+# ####
+
+- function:
+    name: BitAnd
+    return: LONGINT
+    args:
+      - name: a
+        type: LONGINT
+      - name: b
+        type: LONGINT
+    trap: 0xA858
+    executor: C_
+
+# ####
+
+- function:
+    name: BitOr
+    return: LONGINT
+    args:
+      - name: a
+        type: LONGINT
+      - name: b
+        type: LONGINT
+    trap: 0xA85B
+    executor: C_
+
+# ####
+
+- function:
+    name: BitXor
+    return: LONGINT
+    args:
+      - name: a
+        type: LONGINT
+      - name: b
+        type: LONGINT
+    trap: 0xA859
+    executor: C_
+
+# ####
+
+- function:
+    name: BitNot
+    return: LONGINT
+    args:
+      - name: a
+        type: LONGINT
+    trap: 0xA85A
+    executor: C_
+
+# ####
+
+- function:
+    name: BitShift
+    return: LONGINT
+    args:
+      - name: a
+        type: LONGINT
+      - name: n
+        type: INTEGER
+    trap: 0xA85C
+    executor: C_
+
+# ####
+
+- function:
+    name: HiWord
+    return: INTEGER
+    args:
+      - name: a
+        type: LONGINT
+    trap: 0xA86A
+    executor: C_
+
+# ####
+
+- function:
+    name: LoWord
+    return: INTEGER
+    args:
+      - name: a
+        type: LONGINT
+    trap: 0xA86B
+    executor: C_
+
+# ####
+
+- function:
+    name: LongMul
+    args:
+      - name: a
+        type: LONGINT
+      - name: b
+        type: LONGINT
+      - name: c
+        type: Int64Bit*
+    trap: 0xA867
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPattern
+    return: PatHandle
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA9B8
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndPattern
+    args:
+      - name: op
+        type: Byte*
+      - name: plistid
+        type: INTEGER
+      - name: index
+        type: INTEGER
+
+# ####
+
+- function:
+    name: GetCursor
+    return: CursHandle
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA9B9
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPicture
+    return: PicHandle
+    args:
+      - name: id
+        type: INTEGER
+    trap: 0xA9BC
+    executor: C_
+
+# ####
+
+- function:
+    name: DeltaPoint
+    return: LONGINT
+    args:
+      - name: a
+        type: Point
+      - name: b
+        type: Point
+    trap: 0xA94F
+    executor: C_
+
+# ####
+
+- function:
+    name: SlopeFromAngle
+    return: Fixed
+    args:
+      - name: a
+        type: INTEGER
+    trap: 0xA8BC
+    executor: C_
+
+# ####
+
+- function:
+    name: AngleFromSlope
+    return: INTEGER
+    args:
+      - name: s
+        type: Fixed
+    trap: 0xA8C4
+    executor: C_
+
+# ####
+
+- function:
+    name: FracMul
+    return: Fract
+    args:
+      - name: x
+        type: Fract
+      - name: y
+        type: Fract
+    trap: 0xA84A
+    executor: C_
+
+# ####
+
+- function:
+    name: FixDiv
+    return: Fixed
+    args:
+      - name: x
+        type: Fixed
+      - name: y
+        type: Fixed
+    trap: 0xA84D
+    executor: C_
+
+# ####
+
+- function:
+    name: FracDiv
+    return: Fract
+    args:
+      - name: x
+        type: Fract
+      - name: y
+        type: Fract
+    trap: 0xA84B
+    executor: C_
+
+# ####
+
+- function:
+    name: Long2Fix
+    return: Fixed
+    args:
+      - name: x
+        type: LONGINT
+    trap: 0xA83F
+    executor: C_
+
+# ####
+
+- function:
+    name: Fix2Long
+    return: LONGINT
+    args:
+      - name: x
+        type: Fixed
+    trap: 0xA840
+    executor: C_
+
+# ####
+
+- function:
+    name: Fix2Frac
+    return: Fract
+    args:
+      - name: x
+        type: Fixed
+    trap: 0xA841
+    executor: C_
+
+# ####
+
+- function:
+    name: Frac2Fix
+    return: Fixed
+    args:
+      - name: x
+        type: Fract
+    trap: 0xA842
+    executor: C_
+
+# ####
+
+- executor_only:
+    code: |
+      // TODO:
+      // Executor will need to provide both 80-bit extended versions as trap
+      // and 64-bit double versions for PPC.
+      // Multiversal Interfaces might also need to declare a 96-bit extended version for 68881.
+      extern Extended Fix2X(Fixed x);
+      extern Fixed X2Fix(Extended *xp);
+      extern Extended Frac2X(Fract x);
+      extern Fract X2Frac(Extended *xp);
+
+# ####
+
+- function:
+    name: R_X2Fix
+    return: Fixed
+    args:
+      - name: x
+        type: extended80*
+    trap: 0xA844
+    executor: C_
+
+# ####
+
+- function:
+    name: R_X2Frac
+    return: Fract
+    args:
+      - name: x
+        type: extended80*
+    trap: 0xA846
+    executor: C_

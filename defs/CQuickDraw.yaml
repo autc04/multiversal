@@ -1,0 +1,2133 @@
+- executor_only:
+    code: |
+      #define theCPort  (**(GUEST<GUEST<CGrafPtr> *> *)SYN68K_TO_US(EM_A5))
+      #define theCPortX (**(GUEST<GUEST<CGrafPtr> *> *)SYN68K_TO_US(EM_A5))
+
+# ####
+
+- enum:
+    values:
+      - name: minSeed
+        value: 1024
+
+# ####
+
+- struct:
+    name: ITab
+    members:
+      - name: iTabSeed
+        type: LONGINT
+      - name: iTabRes
+        type: INTEGER
+      - name: iTTable
+        type: uint8_t[1]
+    size: 8
+
+# ####
+
+- typedef:
+    name: ITabPtr
+    type: ITab*
+    comment: |
+      can't use [0];
+           make this an unsigned char even tho the mac has SignedByte;
+           it is treated as unsigned
+
+# ####
+
+- typedef:
+    name: ITabHandle
+    type: ITabPtr*
+
+# ####
+
+- struct:
+    name: GDevice
+
+# ####
+
+- typedef:
+    name: GDPtr
+    type: GDevice*
+
+# ####
+
+- typedef:
+    name: GDevicePtr
+    type: GDPtr
+
+# ####
+
+- typedef:
+    name: GDHandle
+    type: GDevicePtr*
+
+# ####
+
+- struct:
+    name: SProcRec
+
+# ####
+
+- typedef:
+    name: SProcPtr
+    type: SProcRec*
+
+# ####
+
+- typedef:
+    name: SProcHndl
+    type: SProcPtr*
+
+# ####
+
+- struct:
+    name: SProcRec
+    members:
+      - name: nxtSrch
+        type: SProcHndl
+      - name: srchProc
+        type: ProcPtr
+    size: 8
+
+# ####
+
+- struct:
+    name: CProcRec
+
+# ####
+
+- typedef:
+    name: CProcPtr
+    type: CProcRec*
+
+# ####
+
+- typedef:
+    name: CProcHndl
+    type: CProcPtr*
+
+# ####
+
+- struct:
+    name: CProcRec
+    members:
+      - name: nxtComp
+        type: CProcHndl
+      - name: compProc
+        type: ProcPtr
+    size: 8
+
+# ####
+
+- funptr:
+    args:
+      - name: depth
+        type: INTEGER
+      - name: deviceFlags
+        type: INTEGER
+      - name: targetDevice
+        type: GDHandle
+      - name: userData
+        type: LONGINT
+    name: DeviceLoopDrawingUPP
+
+# ####
+
+- struct:
+    name: GDevice
+    members:
+      - name: gdRefNum
+        type: INTEGER
+      - name: gdID
+        type: INTEGER
+      - name: gdType
+        type: INTEGER
+      - name: gdITable
+        type: ITabHandle
+      - name: gdResPref
+        type: INTEGER
+      - name: gdSearchProc
+        type: SProcHndl
+      - name: gdCompProc
+        type: CProcHndl
+      - name: gdFlags
+        type: INTEGER
+      - name: gdPMap
+        type: PixMapHandle
+      - name: gdRefCon
+        type: LONGINT
+      - name: gdNextGD
+        type: GDHandle
+      - name: gdRect
+        type: Rect
+      - name: gdMode
+        type: LONGINT
+      - name: gdCCBytes
+        type: INTEGER
+      - name: gdCCDepth
+        type: INTEGER
+      - name: gdCCXData
+        type: Handle
+      - name: gdCCXMask
+        type: Handle
+      - name: gdReserved
+        type: LONGINT
+    size: 62
+
+# ####
+
+- typedef:
+    name: DeviceLoopFlags
+    type: uint32_t
+
+# ####
+
+- enum:
+    values:
+      - name: singleDevices
+        value: 1 << 0
+      - name: dontMatchSeeds
+        value: 1 << 1
+      - name: allDevices
+        value: 1 << 2
+    comment: |
+      DeviceLoop flags.
+
+# ####
+
+- struct:
+    name: ColorInfo
+    members:
+      - name: ciRGB
+        type: RGBColor
+      - name: ciUsage
+        type: INTEGER
+      - name: ciTolerance
+        type: INTEGER
+      - name: ciFlags
+        type: INTEGER
+      - name: ciPrivate
+        type: LONGINT
+    size: 16
+
+# ####
+
+- struct:
+    name: Palette
+    members:
+      - name: pmEntries
+        type: INTEGER
+      - name: pmWindow
+        type: GrafPtr
+      - name: pmPrivate
+        type: INTEGER
+      - name: pmDevices
+        type: LONGINT
+        comment: |
+          Handle?
+      - name: pmSeeds
+        type: Handle
+      - name: pmInfo
+        type: ColorInfo[1]
+    size: 32
+
+# ####
+
+- typedef:
+    name: PalettePtr
+    type: Palette*
+
+# ####
+
+- enum:
+    values:
+      - name: CI_USAGE_TYPE_BITS
+        value: 0xF
+
+# ####
+
+- enum:
+    values:
+      - name: pmCourteous
+        value: 0
+      - name: pmDithered
+        value: 1
+      - name: pmTolerant
+        value: 2
+      - name: pmAnimated
+        value: 4
+      - name: pmExplicit
+        value: 8
+      - name: pmInhibitG2
+        value: 0x0100
+      - name: pmInhibitC2
+        value: 0x0200
+      - name: pmInhibitG4
+        value: 0x0400
+      - name: pmInhibitC4
+        value: 0x0800
+      - name: pmInhibitG8
+        value: 0x1000
+      - name: pmInhibitC8
+        value: 0x2000
+    name: pmColorUsage
+
+# ####
+
+- enum:
+    values:
+      - name: pmNoUpdates
+        value: 0x8000
+      - name: pmBkUpdates
+        value: 0xA000
+      - name: pmFgUpdates
+        value: 0xC000
+      - name: pmAllUpdates
+        value: 0xE000
+    name: pmUpdates
+
+# ####
+
+- typedef:
+    name: PaletteHandle
+    type: PalettePtr*
+
+# ####
+
+- executor_only:
+    code: |
+      /* return true if `maybe_graphics_world' points to a graphics world,
+         and not a graf port or cgraf port */
+      #define GRAPHICS_WORLD_P(maybe_graphics_world) \
+          (CGrafPort_p(maybe_graphics_world)         \
+           && CPORT_VERSION(maybe_graphics_world) & GW_FLAG_BIT)
+      #define GW_CPORT(graphics_world) ((CGrafPtr)(graphics_world))
+
+# ####
+
+- typedef:
+    name: GWorldFlags
+    type: LONGINT
+
+# ####
+
+- typedef:
+    name: GWorld
+    type: CGrafPort
+
+# ####
+
+- typedef:
+    name: GWorldPtr
+    type: CGrafPort*
+
+# ####
+
+- struct:
+    name: ReqListRec
+    members:
+      - name: reqLSize
+        type: INTEGER
+      - name: reqLData
+        type: INTEGER[1]
+    size: 4
+
+# ####
+
+- struct:
+    name: OpenCPicParams
+    members:
+      - name: srcRect
+        type: Rect
+      - name: hRes
+        type: Fixed
+      - name: vRes
+        type: Fixed
+      - name: version
+        type: int16_t
+      - name: reserved1
+        type: int16_t
+      - name: reserved2
+        type: int32_t
+    comment: |
+      extended version 2 picture datastructures
+    size: 24
+
+# ####
+
+- struct:
+    name: CommonSpec
+    members:
+      - name: count
+        type: int16_t
+      - name: ID
+        type: int16_t
+
+# ####
+
+- typedef:
+    name: CommentSpec
+    type: CommonSpec
+    size: 4
+
+# ####
+
+- typedef:
+    name: CommentSpecPtr
+    type: CommentSpec*
+
+# ####
+
+- typedef:
+    name: CommentSpecHandle
+    type: CommentSpecPtr*
+
+# ####
+
+- struct:
+    name: FontSpec
+    members:
+      - name: pictFontID
+        type: int16_t
+      - name: sysFontID
+        type: int16_t
+      - name: size
+        type: int32_t[4]
+      - name: style
+        type: int16_t
+      - name: nameOffset
+        type: int32_t
+    size: 26
+
+# ####
+
+- typedef:
+    name: FontSpecPtr
+    type: FontSpec*
+
+# ####
+
+- typedef:
+    name: FontSpecHandle
+    type: FontSpecPtr*
+
+# ####
+
+- struct:
+    name: PictInfo
+    members:
+      - name: version
+        type: int16_t
+        comment: |
+          0
+      - name: uniqueColors
+        type: int32_t
+        comment: |
+          2
+      - name: thePalette
+        type: PaletteHandle
+        comment: |
+          6
+      - name: theColorTable
+        type: CTabHandle
+        comment: |
+          10
+      - name: hRes
+        type: Fixed
+        comment: |
+          14
+      - name: vRes
+        type: Fixed
+        comment: |
+          18
+      - name: depth
+        type: INTEGER
+        comment: |
+          22
+      - name: sourceRect
+        type: Rect
+        comment: |
+          top24, left26, bottom28, right30
+      - name: textCount
+        type: int32_t
+        comment: |
+          32
+      - name: lineCount
+        type: int32_t
+      - name: rectCount
+        type: int32_t
+      - name: rRectCount
+        type: int32_t
+      - name: ovalCount
+        type: int32_t
+      - name: arcCount
+        type: int32_t
+      - name: polyCount
+        type: int32_t
+      - name: regionCount
+        type: int32_t
+      - name: bitMapCount
+        type: int32_t
+      - name: pixMapCount
+        type: int32_t
+      - name: commentCount
+        type: int32_t
+      - name: uniqueComments
+        type: int32_t
+      - name: commentHandle
+        type: CommentSpecHandle
+      - name: uniqueFonts
+        type: int32_t
+      - name: fontHandle
+        type: FontSpecHandle
+      - name: fontNamesHandle
+        type: Handle
+      - name: reserved1
+        type: int32_t
+      - name: reserved2
+        type: int32_t
+    size: 104
+
+# ####
+
+- typedef:
+    name: PictInfoPtr
+    type: PictInfo*
+
+# ####
+
+- typedef:
+    name: PictInfoHandle
+    type: PictInfoPtr*
+
+# ####
+
+- typedef:
+    name: PictInfoID
+    type: int32_t
+
+# ####
+
+- enum:
+    values:
+      - name: RGBDirect
+        value: 0x10
+      - name: Indirect
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: vdriver_rgb_pixel_type
+        value: 0xB9
+    comment: |
+      a pixmap pixelType of `native_rgb_pixel_type' means that the format
+         of the pixmap is the same as that of the screen
+
+# ####
+
+- enum:
+    values:
+      - name: pixPurge
+        value: 1 << 0
+      - name: noNewDevice
+        value: 1 << 1
+      - name: useTempMem
+        value: 1 << 2
+      - name: keepLocal
+        value: 1 << 3
+      - name: pixelsPurgeable
+        value: 1 << 6
+      - name: pixelsLocked
+        value: 1 << 7
+      - name: mapPix
+        value: 1 << 16
+      - name: newDepth
+        value: 1 << 17
+      - name: alignPix
+        value: 1 << 18
+      - name: newRowBytes
+        value: 1 << 19
+      - name: reallocPix
+        value: 1 << 20
+      - name: clipPix
+        value: 1 << 28
+      - name: stretchPix
+        value: 1 << 29
+      - name: ditherPix
+        value: 1 << 30
+      - name: gwFlagErr
+        value: 1 << 31
+
+# ####
+
+- typedef:
+    name: QDErr
+    type: int16_t
+
+# ####
+
+- enum:
+    values:
+      - name: noMemForPictPlaybackErr
+        value: -145
+      - name: regionTooBigErr
+        value: -147
+      - name: pixmapTooDeepErr
+        value: -148
+      - name: nsStackErr
+        value: -149
+      - name: cMatchErr
+        value: -150
+      - name: cTempMemErr
+        value: -151
+      - name: cNoMemErr
+        value: -152
+      - name: cRangeErr
+        value: -153
+      - name: cProtectErr
+        value: -154
+      - name: cDevErr
+        value: -155
+      - name: cResErr
+        value: -156
+      - name: cDepthErr
+        value: -157
+      - name: rgnTooBigErr
+        value: -500
+    comment: |
+      error codes returned by QDError
+
+# ####
+
+- enum:
+    values:
+      - name: colReqErr
+        value: -158
+    comment: |
+      TODO:  FIXME -- #warning find out correct value for colReqErr
+      -158 is just a guess
+
+# ####
+
+- lowmem:
+    name: TheGDevice
+    type: GDHandle
+    address: 0xCC8
+    comment: |
+      QuickDraw IMV (true);
+
+# ####
+
+- lowmem:
+    name: MainDevice
+    type: GDHandle
+    address: 0x8A4
+    comment: |
+      QuickDraw IMV (true);
+
+# ####
+
+- lowmem:
+    name: DeviceList
+    type: GDHandle
+    address: 0x8A8
+    comment: |
+      QuickDraw IMV (true);
+
+# ####
+
+- lowmem:
+    name: HiliteRGB
+    type: RGBColor
+    address: 0xDA0
+    comment: |
+      QuickDraw IMV-62 (true);
+
+# ####
+
+- dispatcher:
+    name: PaletteDispatch
+    trap: 0xAAA2
+    selector-location: D0<0xFF>
+    comment: |
+      D0W? D0<0xFF> ###
+
+# ####
+
+- dispatcher:
+    name: Pack12
+    trap: 0xA82E
+    selector-location: StackW
+
+# ####
+
+- dispatcher:
+    name: QDExtensions
+    trap: 0xAB1D
+    selector-location: D0L
+
+# ####
+
+- dispatcher:
+    name: Pack15
+    trap: 0xA831
+    selector-location: D0W
+    comment: |
+      D0<0xFF>? ###
+
+# ####
+
+- function:
+    name: SetStdCProcs
+    args:
+      - name: cProcs
+        type: CQDProcs*
+    trap: 0xAA4E
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenCPort
+    args:
+      - type: CGrafPtr
+    trap: 0xAA00
+    executor: C_
+
+# ####
+
+- function:
+    name: InitCPort
+    args:
+      - type: CGrafPtr
+    trap: 0xAA01
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseCPort
+    args:
+      - type: CGrafPtr
+    trap: 0xAA02
+    executor: C_
+
+# ####
+
+- function:
+    name: RGBForeColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA14
+    executor: C_
+
+# ####
+
+- function:
+    name: RGBBackColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA15
+    executor: C_
+
+# ####
+
+- function:
+    name: GetForeColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA19
+    executor: C_
+
+# ####
+
+- function:
+    name: GetBackColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA1A
+    executor: C_
+
+# ####
+
+- function:
+    name: PenPixPat
+    args:
+      - type: PixPatHandle
+    trap: 0xAA0A
+    executor: C_
+
+# ####
+
+- function:
+    name: BackPixPat
+    args:
+      - type: PixPatHandle
+    trap: 0xAA0B
+    executor: C_
+
+# ####
+
+- function:
+    name: OpColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA21
+    executor: C_
+
+# ####
+
+- function:
+    name: HiliteColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA22
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPixMap
+    return: PixMapHandle
+    trap: 0xAA03
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposePixMap
+    args:
+      - type: PixMapHandle
+    trap: 0xAA04
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyPixMap
+    args:
+      - type: PixMapHandle
+      - type: PixMapHandle
+    trap: 0xAA05
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPixPat
+    return: PixPatHandle
+    trap: 0xAA07
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposePixPat
+    args:
+      - type: PixPatHandle
+    trap: 0xAA08
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyPixPat
+    args:
+      - type: PixPatHandle
+      - type: PixPatHandle
+    trap: 0xAA09
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPortPix
+    args:
+      - type: PixMapHandle
+    trap: 0xAA06
+    executor: C_
+
+# ####
+
+- function:
+    name: NewGDevice
+    return: GDHandle
+    args:
+      - type: INTEGER
+      - type: LONGINT
+    trap: 0xAA2F
+    executor: C_
+
+# ####
+
+- function:
+    name: InitGDevice
+    args:
+      - type: INTEGER
+      - type: LONGINT
+      - type: GDHandle
+    trap: 0xAA2E
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDeviceAttribute
+    args:
+      - type: GDHandle
+      - type: INTEGER
+      - type: Boolean
+    trap: 0xAA2D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetGDevice
+    args:
+      - type: GDHandle
+    trap: 0xAA31
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeGDevice
+    args:
+      - type: GDHandle
+    trap: 0xAA30
+    executor: C_
+
+# ####
+
+- function:
+    name: GetGDevice
+    return: GDHandle
+    trap: 0xAA32
+    executor: C_
+
+# ####
+
+- function:
+    name: GetDeviceList
+    return: GDHandle
+    trap: 0xAA29
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMainDevice
+    return: GDHandle
+    trap: 0xAA2A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMaxDevice
+    return: GDHandle
+    args:
+      - type: const Rect*
+    trap: 0xAA27
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNextDevice
+    return: GDHandle
+    args:
+      - type: GDHandle
+    trap: 0xAA2B
+    executor: C_
+
+# ####
+
+- function:
+    name: DeviceLoop
+    args:
+      - type: RgnHandle
+      - type: DeviceLoopDrawingUPP
+      - type: LONGINT
+      - type: DeviceLoopFlags
+    trap: 0xABCA
+    executor: C_
+
+# ####
+
+- function:
+    name: TestDeviceAttribute
+    return: Boolean
+    args:
+      - type: GDHandle
+      - type: INTEGER
+    trap: 0xAA2C
+    executor: C_
+
+# ####
+
+- function:
+    name: ScreenRes
+    args:
+      - type: INTEGER*
+      - type: INTEGER*
+    executor: C_
+
+# ####
+
+- function:
+    name: HasDepth
+    return: INTEGER
+    args:
+      - type: GDHandle
+      - type: INTEGER
+      - type: INTEGER
+      - type: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0A14
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDepth
+    return: OSErr
+    args:
+      - type: GDHandle
+      - type: INTEGER
+      - type: INTEGER
+      - type: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0A13
+    executor: C_
+
+# ####
+
+- function:
+    name: MakeITable
+    args:
+      - type: CTabHandle
+      - type: ITabHandle
+      - type: INTEGER
+    trap: 0xAA39
+    executor: C_
+
+# ####
+
+- function:
+    name: Color2Index
+    return: LONGINT
+    args:
+      - type: RGBColor*
+    trap: 0xAA33
+    executor: C_
+
+# ####
+
+- function:
+    name: Index2Color
+    args:
+      - type: LONGINT
+      - type: RGBColor*
+    trap: 0xAA34
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCTSeed
+    return: LONGINT
+    trap: 0xAA28
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSubTable
+    args:
+      - type: CTabHandle
+      - type: INTEGER
+      - type: CTabHandle
+    trap: 0xAA37
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCRoundRect
+    args:
+      - type: const Rect*
+      - type: int16_t
+      - type: int16_t
+      - type: PixPatHandle
+    trap: 0xAA10
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCRect
+    args:
+      - type: const Rect*
+      - type: PixPatHandle
+    trap: 0xAA0E
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCOval
+    args:
+      - type: const Rect*
+      - type: PixPatHandle
+    trap: 0xAA0F
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCArc
+    args:
+      - type: const Rect*
+      - type: int16_t
+      - type: int16_t
+      - type: PixPatHandle
+    trap: 0xAA11
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCPoly
+    args:
+      - type: PolyHandle
+      - type: PixPatHandle
+    trap: 0xAA13
+    executor: C_
+
+# ####
+
+- function:
+    name: FillCRgn
+    args:
+      - type: RgnHandle
+      - type: PixPatHandle
+    trap: 0xAA12
+    executor: C_
+
+# ####
+
+- function:
+    name: InvertColor
+    args:
+      - type: RGBColor*
+    trap: 0xAA35
+    executor: C_
+
+# ####
+
+- function:
+    name: RealColor
+    return: Boolean
+    args:
+      - type: RGBColor*
+    trap: 0xAA36
+    executor: C_
+
+# ####
+
+- function:
+    name: ProtectEntry
+    args:
+      - type: INTEGER
+      - type: Boolean
+    trap: 0xAA3D
+    executor: C_
+
+# ####
+
+- function:
+    name: ReserveEntry
+    args:
+      - type: INTEGER
+      - type: Boolean
+    trap: 0xAA3E
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEntries
+    args:
+      - type: INTEGER
+      - type: INTEGER
+      - name: cSpecArray
+        type: ColorSpec*
+    trap: 0xAA3F
+    executor: C_
+
+# ####
+
+- function:
+    name: AddSearch
+    args:
+      - type: ProcPtr
+    trap: 0xAA3A
+    executor: C_
+
+# ####
+
+- function:
+    name: AddComp
+    args:
+      - type: ProcPtr
+    trap: 0xAA3B
+    executor: C_
+
+# ####
+
+- function:
+    name: DelSearch
+    args:
+      - type: ProcPtr
+    trap: 0xAA4C
+    executor: C_
+
+# ####
+
+- function:
+    name: DelComp
+    args:
+      - type: ProcPtr
+    trap: 0xAA4D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetClientID
+    args:
+      - type: INTEGER
+    trap: 0xAA3C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetGray
+    return: Boolean
+    args:
+      - type: GDHandle
+      - type: RGBColor*
+      - type: RGBColor*
+    dispatcher: PaletteDispatch
+    selector: 0x0C19
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPixPat
+    return: PixPatHandle
+    args:
+      - type: INTEGER
+    trap: 0xAA0C
+    executor: C_
+
+# ####
+
+- function:
+    name: QDError
+    return: INTEGER
+    trap: 0xAA40
+    executor: C_
+
+# ####
+
+- function:
+    name: CMY2RGB
+    args:
+      - type: CMYColor*
+      - type: RGBColor*
+    dispatcher: Pack12
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: RGB2CMY
+    args:
+      - type: RGBColor*
+      - type: CMYColor*
+    dispatcher: Pack12
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: HSL2RGB
+    args:
+      - type: HSLColor*
+      - type: RGBColor*
+    dispatcher: Pack12
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: RGB2HSL
+    args:
+      - type: RGBColor*
+      - type: HSLColor*
+    dispatcher: Pack12
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: HSV2RGB
+    args:
+      - type: HSVColor*
+      - type: RGBColor*
+    dispatcher: Pack12
+    selector: 0x0007
+    executor: C_
+
+# ####
+
+- function:
+    name: RGB2HSV
+    args:
+      - type: RGBColor*
+      - type: HSVColor*
+    dispatcher: Pack12
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: Fix2SmallFract
+    return: SmallFract
+    args:
+      - type: Fixed
+    dispatcher: Pack12
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: SmallFract2Fix
+    return: Fixed
+    args:
+      - type: SmallFract
+    dispatcher: Pack12
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: GetColor
+    return: Boolean
+    args:
+      - type: Point
+      - type: Str255
+      - type: RGBColor*
+      - type: RGBColor*
+    dispatcher: Pack12
+    selector: 0x0009
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCTable
+    return: CTabHandle
+    args:
+      - type: INTEGER
+    trap: 0xAA18
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeCTable
+    args:
+      - type: CTabHandle
+    trap: 0xAA24
+    executor: C_
+
+# ####
+
+- function:
+    name: InitPalettes
+    trap: 0xAA90
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPalette
+    return: PaletteHandle
+    args:
+      - type: INTEGER
+      - type: CTabHandle
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA91
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewPalette
+    return: PaletteHandle
+    args:
+      - type: INTEGER
+    trap: 0xAA92
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposePalette
+    args:
+      - type: PaletteHandle
+    trap: 0xAA93
+    executor: C_
+
+# ####
+
+- function:
+    name: ActivatePalette
+    args:
+      - type: WindowPtr
+    trap: 0xAA94
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPalette
+    args:
+      - type: WindowPtr
+      - type: PaletteHandle
+      - type: Boolean
+    executor: C_
+
+# ####
+
+- function:
+    name: NSetPalette
+    args:
+      - type: WindowPtr
+      - type: PaletteHandle
+      - name: updates
+        type: INTEGER
+    trap: 0xAA95
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPalette
+    return: PaletteHandle
+    args:
+      - type: WindowPtr
+    trap: 0xAA96
+    executor: C_
+
+# ####
+
+- function:
+    name: PmForeColor
+    args:
+      - type: INTEGER
+    trap: 0xAA97
+    executor: C_
+
+# ####
+
+- function:
+    name: PmBackColor
+    args:
+      - type: INTEGER
+    trap: 0xAA98
+    executor: C_
+
+# ####
+
+- function:
+    name: AnimateEntry
+    args:
+      - type: WindowPtr
+      - type: INTEGER
+      - type: RGBColor*
+    trap: 0xAA99
+    executor: C_
+
+# ####
+
+- function:
+    name: AnimatePalette
+    args:
+      - type: WindowPtr
+      - type: CTabHandle
+      - type: INTEGER
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA9A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetEntryColor
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+      - type: RGBColor*
+    trap: 0xAA9B
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEntryColor
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+      - type: RGBColor*
+    trap: 0xAA9C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetEntryUsage
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+      - type: INTEGER*
+      - type: INTEGER*
+    trap: 0xAA9D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEntryUsage
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA9E
+    executor: C_
+
+# ####
+
+- function:
+    name: CTab2Palette
+    args:
+      - type: CTabHandle
+      - type: PaletteHandle
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA9F
+    executor: C_
+
+# ####
+
+- function:
+    name: Palette2CTab
+    args:
+      - type: PaletteHandle
+      - type: CTabHandle
+    trap: 0xAAA0
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCCursor
+    return: CCrsrHandle
+    args:
+      - type: INTEGER
+    trap: 0xAA1B
+    executor: C_
+
+# ####
+
+- function:
+    name: SetCCursor
+    args:
+      - type: CCrsrHandle
+    trap: 0xAA1C
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeCCursor
+    args:
+      - type: CCrsrHandle
+    trap: 0xAA26
+    executor: C_
+
+# ####
+
+- function:
+    name: AllocCursor
+    trap: 0xAA1D
+    executor: C_
+
+# ####
+
+- function:
+    name: RestoreDeviceClut
+    args:
+      - type: GDHandle
+    dispatcher: PaletteDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: ResizePalette
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: PMgrVersion
+    return: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0015
+    executor: C_
+
+# ####
+
+- function:
+    name: SaveFore
+    args:
+      - type: ColorSpec*
+    dispatcher: PaletteDispatch
+    selector: 0x040D
+    executor: C_
+
+# ####
+
+- function:
+    name: RestoreFore
+    args:
+      - type: ColorSpec*
+    dispatcher: PaletteDispatch
+    selector: 0x040F
+    executor: C_
+
+# ####
+
+- function:
+    name: SaveBack
+    args:
+      - type: ColorSpec*
+    dispatcher: PaletteDispatch
+    selector: 0x040E
+    executor: C_
+
+# ####
+
+- function:
+    name: RestoreBack
+    args:
+      - type: ColorSpec*
+    dispatcher: PaletteDispatch
+    selector: 0x0410
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPaletteUpdates
+    args:
+      - type: PaletteHandle
+      - type: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0616
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPaletteUpdates
+    return: INTEGER
+    args:
+      - type: PaletteHandle
+    dispatcher: PaletteDispatch
+    selector: 0x0417
+    executor: C_
+
+# ####
+
+- function:
+    name: CopyPalette
+    args:
+      - name: src_palette
+        type: PaletteHandle
+      - name: dst_palette
+        type: PaletteHandle
+      - name: src_start
+        type: int16_t
+      - name: dst_start
+        type: int16_t
+      - name: n_entries
+        type: int16_t
+    trap: 0xAAA1
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCWMgrPort
+    args:
+      - type: CGrafPtr*
+    trap: 0xAA48
+    executor: C_
+
+# ####
+
+- function:
+    name: NewGWorld
+    return: QDErr
+    args:
+      - type: GWorldPtr*
+      - type: INTEGER
+      - type: const Rect*
+      - type: CTabHandle
+      - type: GDHandle
+      - type: GWorldFlags
+    comment: |
+      QDExtensions trap
+    dispatcher: QDExtensions
+    selector: 0x00160000
+    executor: C_
+
+# ####
+
+- function:
+    name: LockPixels
+    return: Boolean
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x00040001
+    executor: C_
+
+# ####
+
+- function:
+    name: UnlockPixels
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x00040002
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateGWorld
+    return: GWorldFlags
+    args:
+      - type: GWorldPtr*
+      - type: INTEGER
+      - type: const Rect*
+      - type: CTabHandle
+      - type: GDHandle
+      - type: GWorldFlags
+    dispatcher: QDExtensions
+    selector: 0x00160003
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeGWorld
+    args:
+      - type: GWorldPtr
+    dispatcher: QDExtensions
+    selector: 0x00040004
+    executor: C_
+
+# ####
+
+- function:
+    name: GetGWorld
+    args:
+      - type: CGrafPtr*
+      - type: GDHandle*
+    dispatcher: QDExtensions
+    selector: 0x00080005
+    executor: C_
+
+# ####
+
+- function:
+    name: SetGWorld
+    args:
+      - type: CGrafPtr
+      - type: GDHandle
+    dispatcher: QDExtensions
+    selector: 0x00080006
+    executor: C_
+
+# ####
+
+- function:
+    name: AllowPurgePixels
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x0004000B
+    executor: C_
+
+# ####
+
+- function:
+    name: NoPurgePixels
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x0004000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPixelsState
+    return: GWorldFlags
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x0004000D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPixelsState
+    args:
+      - type: PixMapHandle
+      - type: GWorldFlags
+    dispatcher: QDExtensions
+    selector: 0x0008000E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPixBaseAddr
+    return: Ptr
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x0004000F
+    executor: C_
+
+# ####
+
+- function:
+    name: NewScreenBuffer
+    return: QDErr
+    args:
+      - type: const Rect*
+      - type: Boolean
+      - type: GDHandle*
+      - type: PixMapHandle*
+    dispatcher: QDExtensions
+    selector: 0x000E0010
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeScreenBuffer
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x00040011
+    executor: C_
+
+# ####
+
+- function:
+    name: GetGWorldDevice
+    return: GDHandle
+    args:
+      - type: GWorldPtr
+    dispatcher: QDExtensions
+    selector: 0x00040012
+    executor: C_
+
+# ####
+
+- function:
+    name: PixMap32Bit
+    return: Boolean
+    args:
+      - type: PixMapHandle
+    dispatcher: QDExtensions
+    selector: 0x00040016
+    executor: C_
+
+# ####
+
+- function:
+    name: GetGWorldPixMap
+    return: PixMapHandle
+    args:
+      - type: GWorldPtr
+    dispatcher: QDExtensions
+    selector: 0x00040017
+    executor: C_
+
+# ####
+
+- function:
+    name: NewTempScreenBuffer
+    return: QDErr
+    args:
+      - type: const Rect*
+      - type: Boolean
+      - type: GDHandle*
+      - type: PixMapHandle*
+    dispatcher: QDExtensions
+    selector: 0x000E0015
+    executor: C_
+
+# ####
+
+- function:
+    name: GDeviceChanged
+    args:
+      - type: GDHandle
+    dispatcher: QDExtensions
+    selector: 0x0004000A
+    executor: C_
+
+# ####
+
+- function:
+    name: PortChanged
+    args:
+      - type: GrafPtr
+    dispatcher: QDExtensions
+    selector: 0x00040009
+    executor: C_
+
+# ####
+
+- function:
+    name: PixPatChanged
+    args:
+      - type: PixPatHandle
+    dispatcher: QDExtensions
+    selector: 0x00040008
+    executor: C_
+
+# ####
+
+- function:
+    name: CTabChanged
+    args:
+      - type: CTabHandle
+    dispatcher: QDExtensions
+    selector: 0x00040007
+    executor: C_
+
+# ####
+
+- function:
+    name: QDDone
+    return: Boolean
+    args:
+      - type: GrafPtr
+    dispatcher: QDExtensions
+    selector: 0x00040013
+    executor: C_
+
+# ####
+
+- function:
+    name: OffscreenVersion
+    return: LONGINT
+    dispatcher: QDExtensions
+    selector: 0x0014
+    executor: C_
+
+# ####
+
+- function:
+    name: BitMapToRegion
+    return: OSErr
+    args:
+      - type: RgnHandle
+      - type: const BitMap*
+    trap: 0xA8D7
+    executor: C_
+
+# ####
+
+- function:
+    name: Entry2Index
+    return: LONGINT
+    args:
+      - type: INTEGER
+    dispatcher: PaletteDispatch
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: SaveEntries
+    args:
+      - type: CTabHandle
+      - type: CTabHandle
+      - type: ReqListRec*
+    trap: 0xAA49
+    executor: C_
+
+# ####
+
+- function:
+    name: RestoreEntries
+    args:
+      - type: CTabHandle
+      - type: CTabHandle
+      - type: ReqListRec*
+    trap: 0xAA4A
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposePictInfo
+    return: OSErr
+    args:
+      - type: PictInfoID
+    dispatcher: Pack15
+    selector: 0x0206
+    executor: C_
+
+# ####
+
+- function:
+    name: RecordPictInfo
+    return: OSErr
+    args:
+      - type: PictInfoID
+      - type: PicHandle
+    dispatcher: Pack15
+    selector: 0x0403
+    executor: C_
+
+# ####
+
+- function:
+    name: RecordPixMapInfo
+    return: OSErr
+    args:
+      - type: PictInfoID
+      - type: PixMapHandle
+    dispatcher: Pack15
+    selector: 0x0404
+    executor: C_
+
+# ####
+
+- function:
+    name: RetrievePictInfo
+    return: OSErr
+    args:
+      - type: PictInfoID
+      - type: PictInfo*
+      - type: int16_t
+    dispatcher: Pack15
+    selector: 0x0505
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPictInfo
+    return: OSErr
+    args:
+      - type: PictInfoID*
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+    dispatcher: Pack15
+    selector: 0x0602
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPictInfo
+    return: OSErr
+    args:
+      - type: PicHandle
+      - type: PictInfo*
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+    dispatcher: Pack15
+    selector: 0x0800
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPixMapInfo
+    return: OSErr
+    args:
+      - type: PixMapHandle
+      - type: PictInfo*
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+      - type: int16_t
+    dispatcher: Pack15
+    selector: 0x0801
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenCPicture
+    return: PicHandle
+    args:
+      - name: newheaderp
+        type: OpenCPicParams*
+    trap: 0xAA20
+    executor: C_

@@ -1,0 +1,120 @@
+- struct:
+    name: ADBDataBlock
+    members:
+      - name: devType
+        type: SignedByte
+      - name: origADBAddr
+        type: SignedByte
+      - name: dbServiceRtPtr
+        type: ProcPtr
+      - name: dbDataAreaAddr
+        type: Ptr
+    size: 10
+
+# ####
+
+- struct:
+    name: ADBSetInfoBlock
+    members:
+      - name: siServiceRtPtr
+        type: ProcPtr
+      - name: siDataAreaAddr
+        type: Ptr
+    size: 8
+
+# ####
+
+- lowmem:
+    name: KbdLast
+    type: Byte
+    address: 0x218
+    comment: |
+      QuickDraw IMV-367 (false);
+
+# ####
+
+- lowmem:
+    name: KbdType
+    type: Byte
+    address: 0x21E
+    comment: |
+      QuickDraw IMV-367 (false);
+
+# ####
+
+- function:
+    name: ADBReInit
+    executor: true
+    trap: 0xA07B
+
+# ####
+
+- function:
+    name: ADBOp
+    return: OSErr
+    args:
+      - name: data
+        type: Ptr
+      - name: procp
+        type: ProcPtr
+      - name: buffer
+        type: Ptr
+      - name: command
+        type: INTEGER
+
+# ####
+
+- function:
+    name: CountADBs
+    return: INTEGER
+    executor: true
+    trap: 0xA077
+    returnreg: D0
+
+# ####
+
+- function:
+    name: GetIndADB
+    return: OSErr
+    args:
+      - name: adbp
+        type: ADBDataBlock*
+        register: A0
+      - name: index
+        type: INTEGER
+        register: D0
+    executor: true
+    trap: 0xA078
+    returnreg: D0
+
+# ####
+
+- function:
+    name: GetADBInfo
+    return: OSErr
+    args:
+      - name: adbp
+        type: ADBDataBlock*
+        register: A0
+      - name: address
+        type: INTEGER
+        register: D0
+    executor: true
+    trap: 0xA079
+    returnreg: D0
+
+# ####
+
+- function:
+    name: SetADBInfo
+    return: OSErr
+    args:
+      - name: adbp
+        type: ADBSetInfoBlock*
+        register: A0
+      - name: address
+        type: INTEGER
+        register: D0
+    executor: true
+    trap: 0xA07A
+    returnreg: D0

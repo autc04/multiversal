@@ -1,0 +1,394 @@
+- struct:
+    name: DTPBRec
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: ioTrap
+        type: INTEGER
+      - name: ioCmdAddr
+        type: Ptr
+      - name: ioCompletion
+        type: ProcPtr
+      - name: ioResult
+        type: OSErr
+      - name: ioNamePtr
+        type: StringPtr
+      - name: ioVRefNum
+        type: INTEGER
+      - name: ioDTRefNum
+        type: INTEGER
+      - name: ioIndex
+        type: INTEGER
+      - name: ioTagInfo
+        type: LONGINT
+      - name: ioDTBuffer
+        type: Ptr
+      - name: ioDTReqCount
+        type: LONGINT
+      - name: ioDTActCount
+        type: LONGINT
+      - name: filler1
+        type: SignedByte
+      - name: ioIconType
+        type: SignedByte
+      - name: filler2
+        type: INTEGER
+      - name: ioDirID
+        type: LONGINT
+      - name: ioFileCreator
+        type: OSType
+      - name: ioFileType
+        type: OSType
+      - name: ioFiller3
+        type: LONGINT
+      - name: ioDTLgLen
+        type: LONGINT
+      - name: ioDTPyLen
+        type: LONGINT
+      - name: ioFiller4
+        type: INTEGER[14]
+      - name: ioAPPLParID
+        type: LONGINT
+    size: 104
+
+# ####
+
+- typedef:
+    name: DTPBRecPtr
+    type: DTPBRec*
+
+# ####
+
+- typedef:
+    name: DTPBPtr
+    type: DTPBRec*
+
+# ####
+
+- function:
+    name: PBDTGetPath
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+    executor: true
+    dispatcher: FSDispatch
+    selector: 0x20
+    returnreg: D0
+
+# ####
+
+- function:
+    name: PBDTCloseDown
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+    executor: true
+    dispatcher: FSDispatch
+    selector: 0x21
+    returnreg: D0
+
+# ####
+
+- function:
+    name: PBDTAddIcon
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x22
+    returnreg: D0
+    variants:
+      - PBDTAddIconSync
+      - PBDTAddIconAsync
+
+# ####
+
+- function:
+    name: PBDTGetIcon
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x23
+    returnreg: D0
+    variants:
+      - PBDTGetIconSync
+      - PBDTGetIconAsync
+
+# ####
+
+- function:
+    name: PBDTGetIconInfo
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x24
+    returnreg: D0
+    variants:
+      - PBDTGetIconInfoSync
+      - PBDTGetIconInfoAsync
+
+# ####
+
+- function:
+    name: PBDTAddAPPL
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x25
+    returnreg: D0
+    variants:
+      - PBDTAddAPPLSync
+      - PBDTAddAPPLAsync
+
+# ####
+
+- function:
+    name: PBDTRemoveAPPL
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x26
+    returnreg: D0
+    variants:
+      - PBDTRemoveAPPLSync
+      - PBDTRemoveAPPLAsync
+
+# ####
+
+- function:
+    name: PBDTGetAPPL
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x27
+    returnreg: D0
+    variants:
+      - PBDTGetAPPLSync
+      - PBDTGetAPPLAsync
+
+# ####
+
+- function:
+    name: PBDTSetComment
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x28
+    returnreg: D0
+    variants:
+      - PBDTSetCommentSync
+      - PBDTSetCommentAsync
+
+# ####
+
+- function:
+    name: PBDTRemoveComment
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x29
+    returnreg: D0
+    variants:
+      - PBDTRemoveCommentSync
+      - PBDTRemoveCommentAsync
+
+# ####
+
+- function:
+    name: PBDTGetComment
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x2A
+    returnreg: D0
+    variants:
+      - PBDTGetCommentSync
+      - PBDTGetCommentAsync
+
+# ####
+
+- function:
+    name: PBDTFlush
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x2B
+    returnreg: D0
+    variants:
+      - PBDTFlushSync
+      - PBDTFlushAsync
+
+# ####
+
+- function:
+    name: PBDTReset
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x2C
+    returnreg: D0
+    variants:
+      - PBDTResetSync
+      - PBDTResetAsync
+
+# ####
+
+- function:
+    name: PBDTGetInfo
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x2D
+    returnreg: D0
+    variants:
+      - PBDTGetInfoSync
+      - PBDTGetInfoAsync
+
+# ####
+
+- function:
+    name: PBDTOpenInform
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+    executor: true
+    dispatcher: FSDispatch
+    selector: 0x2E
+    returnreg: D0
+
+# ####
+
+- function:
+    name: PBDTDelete
+    return: OSErr
+    args:
+      - name: dtp
+        type: DTPBPtr
+        register: A0
+      - name: async
+        type: Boolean
+        register: TrapBit<0x400>
+    executor: true
+    file_trap: true
+    trap: 0xA260
+    dispatcher: FSDispatch
+    selector: 0x2F
+    returnreg: D0
+    variants:
+      - PBDTDeleteSync
+      - PBDTDeleteAsync

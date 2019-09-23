@@ -1,0 +1,739 @@
+- enum:
+    values:
+      - name: resSysHeap
+        value: 64
+      - name: resPurgeable
+        value: 32
+      - name: resLocked
+        value: 16
+      - name: resProtected
+        value: 8
+      - name: resPreload
+        value: 4
+      - name: resChanged
+        value: 2
+    comment: |
+      resource attribute masks
+
+# ####
+
+- enum:
+    values:
+      - name: resCompressed
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: CantDecompress
+        value: -186
+    comment: |
+      resource manager return codes
+
+# ####
+
+- enum:
+    values:
+      - name: resNotFound
+        value: -192
+      - name: resFNotFound
+        value: -193
+      - name: addResFailed
+        value: -194
+      - name: rmvResFailed
+        value: -196
+
+# ####
+
+- enum:
+    values:
+      - name: resAttrErr
+        value: -198
+      - name: mapReadErr
+        value: -199
+    comment: |
+      IMIV
+
+# ####
+
+- enum:
+    values:
+      - name: resourceInMemory
+        value: -188
+      - name: inputOutOfBounds
+        value: -190
+    comment: |
+      IMVI
+
+# ####
+
+- enum:
+    values:
+      - name: mapReadOnly
+        value: 128
+      - name: mapCompact
+        value: 64
+      - name: mapChanged
+        value: 32
+    comment: |
+      resource file attribute masks
+
+# ####
+
+- lowmem:
+    name: TopMapHndl
+    type: Handle
+    address: 0xA50
+    comment: |
+      ResourceMgr IMI-115 (true);
+
+# ####
+
+- lowmem:
+    name: SysMapHndl
+    type: Handle
+    address: 0xA54
+    comment: |
+      ResourceMgr IMI-114 (true);
+
+# ####
+
+- lowmem:
+    name: SysMap
+    type: INTEGER
+    address: 0xA58
+    comment: |
+      ResourceMgr IMI-114 (true);
+
+# ####
+
+- lowmem:
+    name: CurMap
+    type: INTEGER
+    address: 0xA5A
+    comment: |
+      ResourceMgr IMI-117 (true);
+
+# ####
+
+- lowmem:
+    name: resreadonly
+    type: INTEGER
+    address: 0xA5C
+    comment: |
+      ResourceMgr ToolEqu.a (false);
+
+# ####
+
+- lowmem:
+    name: ResLoad
+    type: Boolean
+    address: 0xA5E
+    comment: |
+      ResourceMgr IMI-118 (true);
+
+# ####
+
+- lowmem:
+    name: ResErr
+    type: INTEGER
+    address: 0xA60
+    comment: |
+      ResourceMgr IMI-118 (true);
+
+# ####
+
+- lowmem:
+    name: ResErrProc
+    type: ProcPtr
+    address: 0xAF2
+    comment: |
+      ResourceMgr IMI-116 (true);
+
+# ####
+
+- lowmem:
+    name: SysResName
+    type: Byte[20]
+    address: 0xAD8
+    comment: |
+      ResourceMgr IMI-114 (true);
+
+# ####
+
+- lowmem:
+    name: RomMapInsert
+    type: Byte
+    address: 0xB9E
+    comment: |
+      ResourceMgr IMIV-19 (false);
+
+# ####
+
+- lowmem:
+    name: TmpResLoad
+    type: Byte
+    address: 0xB9F
+    comment: |
+      ResourceMgr IMIV-19 (false);
+
+# ####
+
+- dispatcher:
+    name: ResourceDispatch
+    trap: 0xA822
+    selector-location: D0<0xF>
+
+# ####
+
+- executor_only:
+    code: |
+      RAW_68K_TRAP(ResourceStub, 0xA0FC); // defined in emustubs.cpp
+
+# ####
+
+- function:
+    name: SetResLoad
+    args:
+      - name: load
+        type: Boolean
+    trap: 0xA99B
+    executor: C_
+
+# ####
+
+- function:
+    name: CountResources
+    return: INTEGER
+    args:
+      - name: typ
+        type: ResType
+    trap: 0xA99C
+    executor: C_
+
+# ####
+
+- function:
+    name: Count1Resources
+    return: INTEGER
+    args:
+      - name: typ
+        type: ResType
+    trap: 0xA80D
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: indx
+        type: INTEGER
+    trap: 0xA99D
+    executor: C_
+
+# ####
+
+- function:
+    name: Get1IndResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: i
+        type: INTEGER
+    trap: 0xA80E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: id
+        type: INTEGER
+    trap: 0xA9A0
+    executor: C_
+
+# ####
+
+- function:
+    name: Get1Resource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: id
+        type: INTEGER
+    trap: 0xA81F
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNamedResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: nam
+        type: ConstStringPtr
+    trap: 0xA9A1
+    executor: C_
+
+# ####
+
+- function:
+    name: Get1NamedResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: s
+        type: ConstStringPtr
+    trap: 0xA820
+    executor: C_
+
+# ####
+
+- function:
+    name: LoadResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9A2
+    executor: C_
+
+# ####
+
+- function:
+    name: ReleaseResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9A3
+    executor: C_
+
+# ####
+
+- function:
+    name: DetachResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA992
+    executor: C_
+
+# ####
+
+- function:
+    name: UniqueID
+    return: INTEGER
+    args:
+      - name: typ
+        type: ResType
+    trap: 0xA9C1
+    executor: C_
+
+# ####
+
+- function:
+    name: Unique1ID
+    return: INTEGER
+    args:
+      - name: typ
+        type: ResType
+    trap: 0xA810
+    executor: C_
+
+# ####
+
+- function:
+    name: GetResInfo
+    args:
+      - name: res
+        type: Handle
+      - name: id1
+        type: INTEGER*
+      - name: typ
+        type: ResType*
+      - name: name
+        type: StringPtr
+    trap: 0xA9A8
+    executor: C_
+
+# ####
+
+- function:
+    name: GetResAttrs
+    return: INTEGER
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9A6
+    executor: C_
+
+# ####
+
+- function:
+    name: GetResourceSizeOnDisk
+    return: LONGINT
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9A5
+    executor: C_
+
+# ####
+
+- function:
+    name: CountTypes
+    return: INTEGER
+    trap: 0xA99E
+    executor: C_
+
+# ####
+
+- function:
+    name: Count1Types
+    return: INTEGER
+    trap: 0xA81C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndType
+    args:
+      - name: typ
+        type: ResType*
+      - name: indx
+        type: INTEGER
+    trap: 0xA99F
+    executor: C_
+
+# ####
+
+- function:
+    name: Get1IndType
+    args:
+      - name: typ
+        type: ResType*
+      - name: indx
+        type: INTEGER
+    trap: 0xA80F
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMaxResourceSize
+    return: LONGINT
+    args:
+      - name: h
+        type: Handle
+    trap: 0xA821
+    executor: C_
+
+# ####
+
+- function:
+    name: RsrcMapEntry
+    return: LONGINT
+    args:
+      - name: h
+        type: Handle
+    trap: 0xA9C5
+    executor: C_
+
+# ####
+
+- function:
+    name: RGetResource
+    return: Handle
+    args:
+      - name: typ
+        type: ResType
+      - name: id
+        type: INTEGER
+    trap: 0xA80C
+    executor: C_
+
+# ####
+
+- function:
+    name: InitResources
+    return: INTEGER
+    trap: 0xA995
+    executor: C_
+
+# ####
+
+- function:
+    name: RsrcZoneInit
+    trap: 0xA996
+    executor: C_
+
+# ####
+
+- function:
+    name: ResError
+    return: INTEGER
+    trap: 0xA9AF
+    executor: C_
+
+# ####
+
+- function:
+    name: GetResFileAttrs
+    return: INTEGER
+    args:
+      - name: rn
+        type: INTEGER
+    trap: 0xA9F6
+    executor: C_
+
+# ####
+
+- function:
+    name: SetResFileAttrs
+    args:
+      - name: rn
+        type: INTEGER
+      - name: attrs
+        type: INTEGER
+    trap: 0xA9F7
+    executor: C_
+
+# ####
+
+- function:
+    name: SetResInfo
+    args:
+      - name: res
+        type: Handle
+      - name: id
+        type: INTEGER
+      - name: name
+        type: ConstStringPtr
+    trap: 0xA9A9
+    executor: C_
+
+# ####
+
+- function:
+    name: SetResAttrs
+    args:
+      - name: res
+        type: Handle
+      - name: attrs
+        type: INTEGER
+    trap: 0xA9A7
+    executor: C_
+
+# ####
+
+- function:
+    name: ChangedResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9AA
+    executor: C_
+
+# ####
+
+- function:
+    name: AddResource
+    args:
+      - name: data
+        type: Handle
+      - name: typ
+        type: ResType
+      - name: id
+        type: INTEGER
+      - name: name
+        type: ConstStringPtr
+    trap: 0xA9AB
+    executor: C_
+
+# ####
+
+- function:
+    name: RemoveResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9AD
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateResFile
+    args:
+      - name: rn
+        type: INTEGER
+    trap: 0xA999
+    executor: C_
+
+# ####
+
+- function:
+    name: WriteResource
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9B0
+    executor: C_
+
+# ####
+
+- function:
+    name: SetResPurge
+    args:
+      - name: install
+        type: Boolean
+    trap: 0xA993
+    executor: C_
+
+# ####
+
+- function:
+    name: CreateResFile
+    args:
+      - name: fn
+        type: ConstStringPtr
+    trap: 0xA9B1
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenRFPerm
+    return: INTEGER
+    args:
+      - name: fn
+        type: ConstStringPtr
+      - name: vref
+        type: INTEGER
+      - name: perm
+        type: Byte
+    trap: 0xA9C4
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenResFile
+    return: INTEGER
+    args:
+      - name: fn
+        type: ConstStringPtr
+    trap: 0xA997
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseResFile
+    args:
+      - name: rn
+        type: INTEGER
+    trap: 0xA99A
+    executor: C_
+
+# ####
+
+- function:
+    name: CurResFile
+    return: INTEGER
+    trap: 0xA994
+    executor: C_
+
+# ####
+
+- function:
+    name: HomeResFile
+    return: INTEGER
+    args:
+      - name: res
+        type: Handle
+    trap: 0xA9A4
+    executor: C_
+
+# ####
+
+- function:
+    name: UseResFile
+    args:
+      - name: rn
+        type: INTEGER
+    trap: 0xA998
+    executor: C_
+
+# ####
+
+- function:
+    name: ReadPartialResource
+    args:
+      - name: resource
+        type: Handle
+      - name: offset
+        type: int32_t
+      - name: buffer
+        type: Ptr
+      - name: count
+        type: int32_t
+    dispatcher: ResourceDispatch
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: WritePartialResource
+    args:
+      - name: resource
+        type: Handle
+      - name: offset
+        type: int32_t
+      - name: buffer
+        type: Ptr
+      - name: count
+        type: int32_t
+    dispatcher: ResourceDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: SetResourceSize
+    args:
+      - name: resource
+        type: Handle
+      - name: size
+        type: int32_t
+    dispatcher: ResourceDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNextFOND
+    return: Handle
+    args:
+      - name: fondHandle
+        type: Handle
+    dispatcher: ResourceDispatch
+    selector: 0x000A
+    executor: C_

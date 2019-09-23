@@ -1,0 +1,987 @@
+- enum:
+    values:
+      - name: macXLMachine
+        value: 0
+      - name: macMachine
+        value: 1
+      - name: UNIXMachine
+        value: 1127
+
+# ####
+
+- enum:
+    values:
+      - name: clkRdErr
+        value: -85
+      - name: clkWrErr
+        value: -86
+      - name: prInitErr
+        value: -88
+      - name: prWrErr
+        value: -87
+      - name: hwParamErr
+        value: -502
+
+# ####
+
+- struct:
+    name: SysParmType
+    members:
+      - name: valid
+        type: Byte
+      - name: aTalkA
+        type: Byte
+      - name: aTalkB
+        type: Byte
+      - name: config
+        type: Byte
+      - name: portA
+        type: INTEGER
+      - name: portB
+        type: INTEGER
+      - name: alarm
+        type: LONGINT
+      - name: font
+        type: INTEGER
+      - name: kbdPrint
+        type: INTEGER
+      - name: volClik
+        type: INTEGER
+      - name: misc
+        type: INTEGER
+    size: 20
+
+# ####
+
+- typedef:
+    name: SysPPtr
+    type: SysParmType*
+
+# ####
+
+- enum:
+    values:
+      - name: dummyType
+      - name: vType
+      - name: ioQType
+      - name: drvQType
+      - name: evType
+      - name: fsQType
+    name: QTypes
+
+# ####
+
+- union:
+    name: QElem
+    members:
+      - name: vblQElem
+        type: VBLTask
+      - name: ioQElem
+        type: ParamBlockRec
+      - name: drvQElem
+        type: DrvQEl
+      - name: evQElem
+        type: EvQEl
+      - name: vcbQElem
+        type: VCB
+    size: 178
+
+# ####
+
+- struct:
+    name: DateTimeRec
+    members:
+      - name: year
+        type: INTEGER
+      - name: month
+        type: INTEGER
+      - name: day
+        type: INTEGER
+      - name: hour
+        type: INTEGER
+      - name: minute
+        type: INTEGER
+      - name: second
+        type: INTEGER
+      - name: dayOfWeek
+        type: INTEGER
+    size: 14
+
+# ####
+
+- struct:
+    name: SysEnvRec
+    members:
+      - name: environsVersion
+        type: INTEGER
+      - name: machineType
+        type: INTEGER
+      - name: systemVersion
+        type: INTEGER
+      - name: processor
+        type: INTEGER
+      - name: hasFPU
+        type: Boolean
+      - name: hasColorQD
+        type: Boolean
+      - name: keyBoardType
+        type: INTEGER
+      - name: atDrvrVersNum
+        type: INTEGER
+      - name: sysVRefNum
+        type: INTEGER
+    size: 16
+
+# ####
+
+- typedef:
+    name: SysEnvRecPtr
+    type: SysEnvRec*
+
+# ####
+
+- enum:
+    values:
+      - name: curSysEnvVers
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: envMachUnknown
+        value: 0
+      - name: env512KE
+        value: 1
+      - name: envMacPlus
+        value: 2
+      - name: envSE
+        value: 3
+      - name: envMacII
+        value: 4
+      - name: envMac
+        value: -1
+      - name: envXL
+        value: -2
+    comment: |
+      sysEnv machine types
+
+# ####
+
+- enum:
+    values:
+      - name: envCPUUnknown
+        value: 0
+      - name: env68000
+        value: 1
+      - name: env68020
+        value: 3
+      - name: env68030
+        value: 4
+      - name: env68040
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: envUnknownKbd
+        value: 0
+      - name: envMacKbd
+        value: 1
+      - name: envMacAndPad
+        value: 2
+      - name: envMacPlusKbd
+        value: 3
+      - name: envAExtendKbd
+        value: 4
+      - name: envStandADBKbd
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: envBadVers
+        value: -5501
+      - name: envVersTooBig
+        value: -5502
+
+# ####
+
+- typedef:
+    name: TrapType
+    type: SignedByte
+
+# ####
+
+- enum:
+    values:
+      - name: kOSTrapType
+      - name: kToolboxTrapType
+
+# ####
+
+- lowmem:
+    name: SysVersion
+    type: INTEGER
+    address: 0x15A
+    comment: |
+      OSUtil ThinkC (true);
+
+# ####
+
+- lowmem:
+    name: SPValid
+    type: Byte
+    address: 0x1F8
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPATalkA
+    type: Byte
+    address: 0x1F9
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPATalkB
+    type: Byte
+    address: 0x1FA
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPConfig
+    type: Byte
+    address: 0x1FB
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPPortA
+    type: INTEGER
+    address: 0x1FC
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPPortB
+    type: INTEGER
+    address: 0x1FE
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPAlarm
+    type: LONGINT
+    address: 0x200
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPFont
+    type: INTEGER
+    address: 0x204
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPKbd
+    type: Byte
+    address: 0x206
+    comment: |
+      OSUtil IMII-369 (true);
+
+# ####
+
+- lowmem:
+    name: SPPrint
+    type: Byte
+    address: 0x207
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPVolCtl
+    type: Byte
+    address: 0x208
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPClikCaret
+    type: Byte
+    address: 0x209
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: SPMisc2
+    type: Byte
+    address: 0x20B
+    comment: |
+      OSUtil IMII-392 (true);
+
+# ####
+
+- lowmem:
+    name: Time
+    type: ULONGINT
+    address: 0x20C
+    comment: |
+      OSUtil IMI-260 (true);
+
+# ####
+
+- lowmem:
+    name: CrsrThresh
+    type: INTEGER
+    address: 0x8EC
+    comment: |
+      OSUtil IMII-372 (false);
+
+# ####
+
+- lowmem:
+    name: MMUType
+    type: Byte
+    address: 0xCB1
+    comment: |
+      OSUtil MPW (false);
+
+# ####
+
+- lowmem:
+    name: MMU32Bit
+    type: Byte
+    address: 0xCB2
+    comment: |
+      OSUtil IMV-592 (true-b);
+
+# ####
+
+- lowmem:
+    name: DTQueue
+    type: QHdr
+    address: 0xD92
+    comment: |
+      OSUtil IMV-466 (false);
+
+# ####
+
+- lowmem:
+    name: JDTInstall
+    type: ProcPtr
+    address: 0xD9C
+    comment: |
+      OSUtil IMV (false);
+
+# ####
+
+- function:
+    name: HandToHand
+    return: OSErr
+    args:
+      - name: h
+        type: Handle*
+        register: InOut<A0>
+    executor: true
+    trap: 0xA9E1
+    returnreg: D0
+    executor_extras: SaveA1D1D2, CCFromD0
+
+# ####
+
+- function:
+    name: PtrToHand
+    return: OSErr
+    args:
+      - name: p
+        type: const void*
+        register: A0
+      - name: h
+        type: Handle*
+        register: Out<A0>
+      - name: s
+        type: LONGINT
+        register: D0
+    executor: true
+    trap: 0xA9E3
+    returnreg: D0
+    executor_extras: SaveA1D1D2, CCFromD0
+
+# ####
+
+- function:
+    name: PtrToXHand
+    return: OSErr
+    args:
+      - name: p
+        type: const void*
+        register: A0
+      - name: h
+        type: Handle
+        register: A1
+      - name: s
+        type: LONGINT
+        register: D0
+    executor: true
+    trap: 0xA9E2
+    returnreg: D0
+    executor_extras: MoveA1ToA0, SaveA1D1D2, CCFromD0
+
+# ####
+
+- function:
+    name: HandAndHand
+    return: OSErr
+    args:
+      - name: h1
+        type: Handle
+        register: A0
+      - name: h2
+        type: Handle
+        register: A1
+    executor: true
+    trap: 0xA9E4
+    returnreg: D0
+    executor_extras: MoveA1ToA0, SaveA1D1D2, CCFromD0
+
+# ####
+
+- function:
+    name: PtrAndHand
+    return: OSErr
+    args:
+      - name: p
+        type: const void*
+        register: A0
+      - name: h
+        type: Handle
+        register: A1
+      - name: s1
+        type: LONGINT
+        register: D0
+    executor: true
+    trap: 0xA9EF
+    returnreg: D0
+    executor_extras: MoveA1ToA0, SaveA1D1D2, CCFromD0
+
+# ####
+
+- function:
+    name: ROMlib_RelString
+    return: LONGINT
+    args:
+      - name: s1
+        type: const uint8_t*
+      - name: s2
+        type: const uint8_t*
+      - name: casesig
+        type: Boolean
+      - name: diacsig
+        type: Boolean
+      - name: d0
+        type: LONGINT
+
+# ####
+
+- function:
+    name: RelString
+    return: INTEGER
+    args:
+      - name: s1
+        type: ConstStringPtr
+      - name: s2
+        type: ConstStringPtr
+      - name: casesig
+        type: Boolean
+      - name: diacsig
+        type: Boolean
+
+# ####
+
+- function:
+    name: EqualString
+    return: Boolean
+    args:
+      - name: s1
+        type: ConstStringPtr
+      - name: s2
+        type: ConstStringPtr
+      - name: casesig
+        type: Boolean
+      - name: diacsig
+        type: Boolean
+
+# ####
+
+- function:
+    name: ROMlib_UprString
+    args:
+      - name: s
+        type: StringPtr
+      - name: diac
+        type: Boolean
+      - name: len
+        type: INTEGER
+
+# ####
+
+- function:
+    name: UpperString
+    args:
+      - name: s
+        type: StringPtr
+      - name: diac
+        type: Boolean
+
+# ####
+
+- function:
+    name: GetDateTime
+    args:
+      - name: mactimepointer
+        type: ULONGINT*
+    inline: "*(ULONGINT*)0x020C = (mactimepointer)"
+
+# ####
+
+- function:
+    name: ReadDateTime
+    return: OSErr
+    args:
+      - name: secs
+        type: ULONGINT*
+        register: A0
+    executor: true
+    trap: 0xA039
+    returnreg: D0
+
+# ####
+
+- function:
+    name: SetDateTime
+    return: OSErr
+    args:
+      - name: mactime
+        type: ULONGINT
+        register: D0
+    executor: true
+    trap: 0xA03A
+    returnreg: D0
+
+# ####
+
+- function:
+    name: DateToSeconds
+    args:
+      - name: d
+        type: DateTimeRec*
+        register: A0
+      - name: s
+        type: ULONGINT*
+        register: Out<D0>
+    executor: true
+    trap: 0xA9C7
+    executor_extras: SaveA1D1D2
+
+# ####
+
+- function:
+    name: SecondsToDate
+    args:
+      - name: mactime
+        type: ULONGINT
+        register: D0
+      - name: d
+        type: DateTimeRec*
+        register: A0
+    executor: true
+    trap: 0xA9C6
+    executor_extras: SaveA1D1D2
+
+# ####
+
+- function:
+    name: GetTime
+    args:
+      - name: d
+        type: DateTimeRec*
+
+# ####
+
+- function:
+    name: SetTime
+    args:
+      - name: d
+        type: DateTimeRec*
+
+# ####
+
+- function:
+    name: InitUtil
+    return: OSErr
+    executor: true
+    trap: 0xA03F
+    returnreg: D0
+
+# ####
+
+- function:
+    name: GetSysPPtr
+    return: SysPPtr
+
+# ####
+
+- function:
+    name: WriteParam
+    return: OSErr
+    executor: true
+    trap: 0xA038
+    returnreg: D0
+
+# ####
+
+- function:
+    name: Enqueue
+    args:
+      - name: e
+        type: QElemPtr
+        register: A0
+      - name: h
+        type: QHdrPtr
+        register: A1
+    executor: true
+    trap: 0xA96F
+    executor_extras: SaveA1D1D2
+
+# ####
+
+- function:
+    name: Dequeue
+    return: OSErr
+    args:
+      - name: e
+        type: QElemPtr
+        register: A0
+      - name: h
+        type: QHdrPtr
+        register: A1
+    executor: true
+    trap: 0xA96E
+    returnreg: D0
+    executor_extras: SaveA1D1D2
+
+# ####
+
+- function:
+    name: NGetTrapAddress
+    return: ProcPtr
+    args:
+      - name: n
+        type: uint16_t
+      - name: ttype
+        type: TrapType
+    comment: |
+      extern LONGINT GetTrapAddress(INTEGER n); // 68K in emustubs, not supported on ppc
+      extern void SetTrapAddress(LONGINT addr,
+      INTEGER n);
+    executor: C_
+
+# ####
+
+- function:
+    name: NSetTrapAddress
+    args:
+      - name: addr
+        type: ProcPtr
+      - name: n
+        type: uint16_t
+      - name: ttype
+        type: TrapType
+    executor: C_
+
+# ####
+
+- function:
+    name: GetTrapAddress
+    return: ProcPtr
+    args:
+      - name: n
+        type: uint16_t
+        register: D0
+      - name: newTraps
+        type: bool
+        register: TrapBit<0x200>
+      - name: tool
+        type: bool
+        register: TrapBit<0x400>
+    executor: _GetTrapAddress_flags
+    trap: 0xA146
+    returnreg: A0
+    variants:
+      - GetTrapAddress
+      - INVALID_GetTrapAddress
+      - GetOSTrapAddress
+      - GetToolTrapAddress
+    executor_extras: ClearD0
+
+# ####
+
+- function:
+    name: SetTrapAddress
+    args:
+      - name: addr
+        type: ProcPtr
+        register: A0
+      - name: n
+        type: uint16_t
+        register: D0
+      - name: newTraps
+        type: bool
+        register: TrapBit<0x200>
+      - name: tool
+        type: bool
+        register: TrapBit<0x400>
+    executor: _SetTrapAddress_flags
+    trap: 0xA047
+    variants:
+      - SetTrapAddress
+      - INVALID_SetTrapAddress
+      - SetOSTrapAddress
+      - SetToolTrapAddress
+    executor_extras: ClearD0
+
+# ####
+
+- function:
+    name: GetToolboxTrapAddress
+    return: ProcPtr
+    args:
+      - name: n
+        type: uint16_t
+    inline: GetToolTrapAddress(n)
+    executor: C_
+
+# ####
+
+- function:
+    name: SetToolboxTrapAddress
+    args:
+      - name: addr
+        type: ProcPtr
+      - name: n
+        type: uint16_t
+    inline: SetToolTrapAddress(addr,n)
+    executor: C_
+
+# ####
+
+- enum:
+    values:
+      - name: _Unimplemented
+        value: 0xA89F
+
+# ####
+
+- function:
+    name: Delay
+    args:
+      - name: n
+        type: LONGINT
+        register: A0
+      - name: ftp
+        type: LONGINT*
+        register: Out<D0>
+    executor: true
+    trap: 0xA03B
+
+# ####
+
+- function:
+    name: SysBeep
+    args:
+      - name: i
+        type: INTEGER
+    trap: 0xA9C8
+    executor: C_
+
+# ####
+
+- function:
+    name: Environs
+    args:
+      - name: rom
+        type: INTEGER*
+      - name: machine
+        type: INTEGER*
+
+# ####
+
+- function:
+    name: SysEnvirons
+    return: OSErr
+    args:
+      - name: vers
+        type: INTEGER
+        register: D0
+      - name: p
+        type: SysEnvRecPtr
+        register: A0
+    executor: true
+    trap: 0xA090
+    returnreg: D0
+
+# ####
+
+- function:
+    name: Restart
+
+# ####
+
+- function:
+    name: SetUpA5
+
+# ####
+
+- function:
+    name: RestoreA5
+
+# ####
+
+- executor_only:
+    code: |
+      #undef GetMMUMode
+      #undef SwapMMUMode
+
+# ####
+
+- function:
+    name: GetMMUMode
+    return: Byte
+
+# ####
+
+- function:
+    name: SwapMMUMode
+    args:
+      - name: bp
+        type: Byte*
+
+# ####
+
+- only-for: executor
+  function:
+    name: StripAddress
+    return: uint32_t
+    args:
+      - name: l
+        type: uint32_t
+        register: D0
+    trap: 0xA055
+    returnreg: D0
+    executor: true
+- not-for: executor
+  function:
+    name: StripAddress
+    return: Ptr
+    args:
+      - name: p
+        type: Ptr
+        register: D0
+    trap: 0xA055
+    returnreg: D0
+
+# ####
+
+- function:
+    name: DebugStr
+    args:
+      - name: p
+        type: ConstStringPtr
+    trap: 0xABFF
+    executor: C_
+
+# ####
+
+- function:
+    name: Debugger
+    trap: 0xA9FF
+    executor: C_
+
+# ####
+
+- function:
+    name: MakeDataExecutable
+    args:
+      - name: ptr
+        type: void*
+      - name: sz
+        type: uint32_t
+    executor: C_
+
+# ####
+
+- function:
+    name: FlushCodeCache
+    trap: 0xA0BD
+    executor: C_
+
+# ####
+
+- function:
+    name: HWPriv
+    args:
+      - name: d0
+        type: LONGINT
+        register: D0
+      - name: a0
+        type: LONGINT
+        register: A0
+    executor: true
+    trap: 0xA198
+
+# ####
+
+- function:
+    name: SetCurrentA5
+    return: LONGINT
+    returnreg: D0
+    m68k-inline: [0x200D, 0x2A78, 0x0904]
+
+# ####
+
+- function:
+    name: SetA5
+    return: LONGINT
+    returnreg: D0
+    args:
+      - name: a5
+        type: LONGINT
+        register: D0
+    m68k-inline: [0xC18D]

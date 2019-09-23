@@ -1,0 +1,814 @@
+- enum:
+    values:
+      - name: large1BitMask
+        value: "'ICN#'"
+      - name: large4BitData
+        value: "'icl4'"
+      - name: large8BitData
+        value: "'icl8'"
+      - name: small1BitMask
+        value: "'ics#'"
+      - name: small4BitData
+        value: "'ics4'"
+      - name: small8BitData
+        value: "'ics8'"
+      - name: mini1BitMask
+        value: "'icm#'"
+      - name: mini4BitData
+        value: "'icm4'"
+      - name: mini8BitData
+        value: "'icm8'"
+
+# ####
+
+- enum:
+    values:
+      - name: atNone
+        value: 0
+      - name: atVerticalCenter
+        value: 1
+      - name: atTop
+        value: 2
+      - name: atBottom
+        value: 3
+      - name: atHorizontalCenter
+        value: 4
+      - name: atAbsoluteCenter
+        value: atVerticalCenter | atHorizontalCenter
+        comment: |
+          5
+      - name: atCenterTop
+        value: atTop | atHorizontalCenter
+        comment: |
+          6
+      - name: atCenterBottom
+        value: atBottom | atHorizontalCenter
+        comment: |
+          7
+      - name: atLeft
+        value: 8
+      - name: atCenterLeft
+        value: atVerticalCenter | atLeft
+        comment: |
+          9
+      - name: atTopLeft
+        value: atTop | atLeft
+        comment: |
+          10
+      - name: atBottomLeft
+        value: atBottom | atLeft
+        comment: |
+          11
+      - name: atRight
+        value: 12
+      - name: atCenterRight
+        value: atVerticalCenter | atRight
+        comment: |
+          13
+      - name: atTopRight
+        value: atTop | atRight
+        comment: |
+          14
+      - name: atBottomRight
+        value: atBottom | atRight
+        comment: |
+          15
+    comment: |
+      IconAlignmentType values
+
+# ####
+
+- enum:
+    values:
+      - name: kAlignNode
+        value: 0
+      - name: kAlignVerticalCenter
+        value: 1
+      - name: kAlignTop
+        value: 2
+      - name: kAlignBottom
+        value: 3
+      - name: kAlignHorizontalCenter
+        value: 4
+      - name: kAlignAbsoluteCenter
+        value: kAlignVerticalCenter | kAlignHorizontalCenter
+        comment: |
+          5
+
+# ####
+
+- enum:
+    values:
+      - name: ttNone
+        value: 0
+      - name: ttDisabled
+        value: 1
+      - name: ttOffline
+        value: 2
+      - name: ttOpen
+        value: 3
+      - name: ttLabel1
+        value: 0x0100
+      - name: ttLabel2
+        value: 0x0200
+      - name: ttLabel3
+        value: 0x0300
+      - name: ttLabel4
+        value: 0x0400
+      - name: ttLabel5
+        value: 0x0500
+      - name: ttLabel6
+        value: 0x0600
+      - name: ttLabel7
+        value: 0x0700
+      - name: ttSelected
+        value: 0x4000
+      - name: ttSelectedDisabled
+        value: ttSelected | ttDisabled
+      - name: ttSelectedOffline
+        value: ttSelected | ttOffline
+      - name: ttSelectedOpen
+        value: ttSelected | ttOpen
+    comment: |
+      IconTranformType values
+
+# ####
+
+- enum:
+    values:
+      - name: kTransformNone
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: svLarge1Bit
+        value: 0x01
+      - name: svLarge4Bit
+        value: 0x02
+      - name: svLarge8Bit
+        value: 0x04
+      - name: svSmall1Bit
+        value: 0x0100
+      - name: svSmall4Bit
+        value: 0x0200
+      - name: svSmall8Bit
+        value: 0x0400
+      - name: svMini1Bit
+        value: 0x010000
+      - name: svMini4Bit
+        value: 0x020000
+      - name: svMini8Bit
+        value: 0x040000
+      - name: svAllLargeData
+        value: 0xFF
+      - name: svAllSmallData
+        value: 0xFF00
+      - name: svAllMiniData
+        value: 0xFF0000
+      - name: svAll1BitData
+        value: 0x010101
+      - name: svAll4BitData
+        value: 0x020202
+      - name: svAll8BitData
+        value: 0x040404
+      - name: svAllAvailableData
+        value: 0xFFFFFF
+    comment: |
+      IconSelectorValue values
+      #### what kind of eediot at apple named all the other icon flag
+         types *Type, except this one?
+
+# ####
+
+- enum:
+    values:
+      - name: noMaskFoundErr
+        value: -1000
+
+# ####
+
+- typedef:
+    name: IconActionUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: IconGetterUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: IconSelectorValue
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: IconAlignmentType
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: IconTransformType
+    type: int16_t
+
+# ####
+
+- struct:
+    name: CIcon
+    members:
+      - name: iconPMap
+        type: PixMap
+      - name: iconMask
+        type: BitMap
+      - name: iconBMap
+        type: BitMap
+      - name: iconData
+        type: Handle
+      - name: iconMaskData
+        type: int16_t[1]
+    size: 84
+
+# ####
+
+- typedef:
+    name: CIconPtr
+    type: CIcon*
+
+# ####
+
+- typedef:
+    name: CIconHandle
+    type: CIconPtr*
+
+# ####
+
+- dispatcher:
+    name: IconDispatch
+    trap: 0xABC9
+    selector-location: D0W
+    comment: |
+      icon utility function prototypes
+
+# ####
+
+- function:
+    name: PlotIconID
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: tranform
+        type: IconTransformType
+      - name: res_id
+        type: int16_t
+    dispatcher: IconDispatch
+    selector: 0x0500
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotIconMethod
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: method
+        type: IconGetterUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x0805
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotCIcon
+    args:
+      - name: rect
+        type: const Rect*
+      - name: icon
+        type: CIconHandle
+    trap: 0xAA1F
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotIcon
+    args:
+      - name: rect
+        type: const Rect*
+      - name: icon
+        type: Handle
+    trap: 0xA94B
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotIconHandle
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: icon
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x061D
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotCIconHandle
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: icon
+        type: CIconHandle
+    dispatcher: IconDispatch
+    selector: 0x061F
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotSICNHandle
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: icon
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x061E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIcon
+    return: Handle
+    args:
+      - name: icon_id
+        type: int16_t
+    trap: 0xA9BB
+    executor: C_
+
+# ####
+
+- function:
+    name: GetCIcon
+    return: CIconHandle
+    args:
+      - name: icon_id
+        type: int16_t
+    trap: 0xAA1E
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeCIcon
+    args:
+      - name: icon
+        type: CIconHandle
+    trap: 0xAA25
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIconSuite
+    return: OSErr
+    args:
+      - name: suite
+        type: Handle*
+      - name: res_id
+        type: int16_t
+      - name: selector
+        type: IconSelectorValue
+    dispatcher: IconDispatch
+    selector: 0x0501
+    executor: C_
+
+# ####
+
+- function:
+    name: NewIconSuite
+    return: OSErr
+    args:
+      - name: suite
+        type: Handle*
+    dispatcher: IconDispatch
+    selector: 0x0207
+    executor: C_
+
+# ####
+
+- function:
+    name: AddIconToSuite
+    return: OSErr
+    args:
+      - name: icon_data
+        type: Handle
+      - name: suite
+        type: Handle
+      - name: type
+        type: ResType
+    dispatcher: IconDispatch
+    selector: 0x0608
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIconFromSuite
+    return: OSErr
+    args:
+      - name: icon_data
+        type: Handle*
+      - name: suite
+        type: Handle
+      - name: type
+        type: ResType
+    dispatcher: IconDispatch
+    selector: 0x0609
+    executor: C_
+
+# ####
+
+- function:
+    name: PlotIconSuite
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: suite
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x0603
+    executor: C_
+
+# ####
+
+- function:
+    name: ForEachIconDo
+    return: OSErr
+    args:
+      - name: suite
+        type: Handle
+      - name: selector
+        type: IconSelectorValue
+      - name: action
+        type: IconActionUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x080A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSuiteLabel
+    return: int16_t
+    args:
+      - name: suite
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x0217
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSuiteLabel
+    return: OSErr
+    args:
+      - name: suite
+        type: Handle
+      - name: label
+        type: int16_t
+    dispatcher: IconDispatch
+    selector: 0x0316
+    executor: C_
+
+# ####
+
+- function:
+    name: GetLabel
+    return: OSErr
+    args:
+      - name: label
+        type: int16_t
+      - name: label_color
+        type: RGBColor*
+      - name: label_string
+        type: Str255
+    dispatcher: IconDispatch
+    selector: 0x050B
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeIconSuite
+    return: OSErr
+    args:
+      - name: suite
+        type: Handle
+      - name: dispose_data_p
+        type: Boolean
+    dispatcher: IconDispatch
+    selector: 0x0302
+    executor: C_
+
+# ####
+
+- function:
+    name: IconSuiteToRgn
+    return: OSErr
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: suite
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x0714
+    executor: C_
+
+# ####
+
+- function:
+    name: IconIDToRgn
+    return: OSErr
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: icon_id
+        type: int16_t
+    dispatcher: IconDispatch
+    selector: 0x0613
+    executor: C_
+
+# ####
+
+- function:
+    name: IconMethodToRgn
+    return: OSErr
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: method
+        type: IconGetterUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x0915
+    executor: C_
+
+# ####
+
+- function:
+    name: PtInIconSuite
+    return: Boolean
+    args:
+      - name: test_pt
+        type: Point
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: suite
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x070E
+    executor: C_
+
+# ####
+
+- function:
+    name: PtInIconID
+    return: Boolean
+    args:
+      - name: test_pt
+        type: Point
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: icon_id
+        type: int16_t
+    dispatcher: IconDispatch
+    selector: 0x060D
+    executor: C_
+
+# ####
+
+- function:
+    name: PtInIconMethod
+    return: Boolean
+    args:
+      - name: test_pt
+        type: Point
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: method
+        type: IconGetterUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x090F
+    executor: C_
+
+# ####
+
+- function:
+    name: RectInIconSuite
+    return: Boolean
+    args:
+      - name: test_rect
+        type: const Rect*
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: suite
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x0711
+    executor: C_
+
+# ####
+
+- function:
+    name: RectInIconID
+    return: Boolean
+    args:
+      - name: test_rect
+        type: const Rect*
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: icon_id
+        type: int16_t
+    dispatcher: IconDispatch
+    selector: 0x0610
+    executor: C_
+
+# ####
+
+- function:
+    name: RectInIconMethod
+    return: Boolean
+    args:
+      - name: test_rect
+        type: const Rect*
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: method
+        type: IconGetterUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x0912
+    executor: C_
+
+# ####
+
+- function:
+    name: MakeIconCache
+    return: OSErr
+    args:
+      - name: cache
+        type: Handle*
+      - name: make_icon
+        type: IconGetterUPP
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x0604
+    executor: C_
+
+# ####
+
+- function:
+    name: LoadIconCache
+    return: OSErr
+    args:
+      - name: rect
+        type: const Rect*
+      - name: align
+        type: IconAlignmentType
+      - name: transform
+        type: IconTransformType
+      - name: cache
+        type: Handle
+    dispatcher: IconDispatch
+    selector: 0x0606
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIconCacheData
+    return: OSErr
+    args:
+      - name: cache
+        type: Handle
+      - name: data
+        type: void**
+    dispatcher: IconDispatch
+    selector: 0x0419
+    executor: C_
+
+# ####
+
+- function:
+    name: SetIconCacheData
+    return: OSErr
+    args:
+      - name: cache
+        type: Handle
+      - name: data
+        type: void*
+    dispatcher: IconDispatch
+    selector: 0x041A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIconCacheProc
+    return: OSErr
+    args:
+      - name: cache
+        type: Handle
+      - name: proc
+        type: IconGetterUPP*
+    dispatcher: IconDispatch
+    selector: 0x041B
+    executor: C_
+
+# ####
+
+- function:
+    name: SetIconCacheProc
+    return: OSErr
+    args:
+      - name: cache
+        type: Handle
+      - name: proc
+        type: IconGetterUPP
+    dispatcher: IconDispatch
+    selector: 0x041C
+    executor: C_

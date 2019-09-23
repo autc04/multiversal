@@ -1,0 +1,839 @@
+- struct:
+    name: comp_t
+    members:
+      - name: val
+        type: int64_t
+    comment: |
+      Big-endian 64 bit "comp" data type.  Note that this has a NaN value!
+      typedef union {
+          struct
+          {
+              ULONGINT hi;
+              ULONGINT lo;
+          } hilo;
+          signed long long val;
+      } comp_t;
+    size: 8
+
+# ####
+
+- struct:
+    name: x80_t
+    members:
+      - name: sgn_and_exp
+        type: uint16_t
+      - name: mantissa
+        type: uint64_t
+    comment: |
+      "Packed" IEEE 80 bit FP representation (zero field omitted).
+    size: 10
+
+# ####
+
+- typedef:
+    name: extended80
+    type: x80_t
+    comment: |
+      For backwards compatibility with old stuff.
+
+# ####
+
+- typedef:
+    name: comp
+    type: comp_t
+
+# ####
+
+- executor_only:
+    code: |
+      /* Begin old stuff:
+      This only makes sense on the 68k. */
+      #if defined(mc68000)
+
+# ####
+
+- struct:
+    name: extended96
+    members:
+      - name: exp
+        type: INTEGER
+      - name: zero
+        type: INTEGER
+      - name: man
+        type: INTEGER[4]
+
+# ####
+
+- executor_only:
+    code: |
+      #endif
+
+# ####
+
+- enum:
+    values:
+      - name: SIGDIGLEN
+        value: 20
+
+# ####
+
+- struct:
+    name: Decimal
+    members:
+      - name: sgn
+        type: uint8_t
+      - name: unused_filler
+        type: uint8_t
+      - name: exp
+        type: INTEGER
+      - name: sig
+        type: uint8_t[SIGDIGLEN]
+    size: 24
+
+# ####
+
+- enum:
+    values:
+      - name: FloatDecimal
+      - name: FixedDecimal
+        value: 256
+    name: toobigdecformstyle_t
+
+# ####
+
+- typedef:
+    name: DecFormStyle
+    type: INTEGER
+
+# ####
+
+- enum:
+    values:
+      - name: DECIMALTYPEMASK
+        value: 0x0100
+
+# ####
+
+- enum:
+    values:
+      - name: SNaN
+        value: 1
+      - name: QNaN
+      - name: Infinite
+      - name: ZeroNum
+      - name: NormalNum
+      - name: DenormalNum
+    name: NumClass
+
+# ####
+
+- struct:
+    name: DecForm
+    members:
+      - name: style
+        type: DecFormStyle
+      - name: digits
+        type: INTEGER
+    size: 4
+
+# ####
+
+- typedef:
+    name: Decstr
+    type: char*
+
+# ####
+
+- enum:
+    values:
+      - name: FX_OPERAND
+        value: 0x0000
+      - name: FD_OPERAND
+        value: 0x0800
+      - name: FS_OPERAND
+        value: 0x1000
+      - name: FC_OPERAND
+        value: 0x3000
+      - name: FI_OPERAND
+        value: 0x2000
+      - name: FL_OPERAND
+        value: 0x2800
+
+# ####
+
+- enum:
+    values:
+      - name: Fx2X_OPCODE
+        value: 0x000E
+
+# ####
+
+- enum:
+    values:
+      - name: FI2X
+        value: FI_OPERAND | Fx2X_OPCODE
+
+# ####
+
+- dispatcher:
+    name: Pack4
+    trap: 0xA9EB
+    selector-location: StackWLookahead<0xFF>
+
+# ####
+
+- dispatcher:
+    name: Pack5
+    trap: 0xA9EC
+    selector-location: StackWMasked<0xFF>
+
+# ####
+
+- dispatcher:
+    name: Pack7
+    trap: 0xA9EE
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: ROMlib_Fsetenv
+    args:
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: INTEGER
+    dispatcher: Pack4
+    selector: 0x01
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fgetenv
+    args:
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: INTEGER
+    dispatcher: Pack4
+    selector: 0x03
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fprocentry
+    args:
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: INTEGER
+    dispatcher: Pack4
+    selector: 0x17
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fprocexit
+    args:
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: INTEGER
+    dispatcher: Pack4
+    selector: 0x19
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Ftestxcp
+    args:
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: INTEGER
+    dispatcher: Pack4
+    selector: 0x1B
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FsqrtX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x12
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FscalbX
+    args:
+      - name: sp
+        type: INTEGER*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x18
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FlogbX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x1A
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FabsX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0F
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FnegX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0D
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FrintX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x14
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FtintX
+    args:
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x16
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fcpysgnx
+    args:
+      - name: sp
+        type: x80_t*
+      - name: dp
+        type: x80_t*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x11
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Faddx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x00
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fsubx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x02
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fmulx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x04
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fdivx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x06
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fremx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0C
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fcmpx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x08
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FcpXx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0A
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FX2x
+    args:
+      - name: sp
+        type: extended80*
+      - name: dp
+        type: void*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x10
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fx2X
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: extended80*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0E
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fx2dec
+    args:
+      - name: sp2
+        type: DecForm*
+      - name: sp
+        type: void*
+      - name: dp
+        type: Decimal*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x0B
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fdec2x
+    args:
+      - name: sp
+        type: Decimal*
+      - name: dp
+        type: void*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x09
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fclassx
+    args:
+      - name: sp
+        type: void*
+      - name: dp
+        type: INTEGER*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x1C
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FlnX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x00
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Flog2X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x02
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fln1X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x04
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Flog21X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x06
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FexpX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x08
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fexp2X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x0A
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fexp1X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x0C
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fexp21X
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x0E
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fxpwri
+    args:
+      - name: sp
+        type: INTEGER*
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x10
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fxpwry
+    args:
+      - name: sp
+        type: extended80*
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x12
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fcompound
+    args:
+      - name: sp2
+        type: extended80*
+      - name: sp
+        type: extended80*
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x14
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fannuity
+    args:
+      - name: sp2
+        type: extended80*
+      - name: sp
+        type: extended80*
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x16
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FsinX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x18
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FcosX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x1A
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FtanX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x1C
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FatanX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x1E
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FrandX
+    args:
+      - name: dp
+        type: extended80*
+    dispatcher: Pack5
+    selector: 0x20
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fdec2str
+    args:
+      - name: sp2
+        type: DecForm*
+      - name: sp
+        type: Decimal*
+      - name: dp
+        type: Decstr
+    dispatcher: Pack7
+    selector: 0x03
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fcstr2dec
+    args:
+      - name: sp2
+        type: Decstr
+      - name: sp
+        type: INTEGER*
+      - name: dp2
+        type: Decimal*
+      - name: dp
+        type: Byte*
+    dispatcher: Pack7
+    selector: 0x04
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fpstr2dec
+    args:
+      - name: sp2
+        type: Decstr
+      - name: sp
+        type: INTEGER*
+      - name: dp2
+        type: Decimal*
+      - name: dp
+        type: Byte*
+    dispatcher: Pack7
+    selector: 0x02
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fsethv
+    args:
+      - name: hvp
+        type: LONGINT*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x05
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_Fgethv
+    args:
+      - name: hvp
+        type: LONGINT*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x07
+    executor: C_
+
+# ####
+
+- function:
+    name: ROMlib_FnextX
+    args:
+      - name: x
+        type: uint8_t*
+      - name: y
+        type: uint8_t*
+      - name: sel
+        type: uint16_t
+    dispatcher: Pack4
+    selector: 0x13
+    executor: C_

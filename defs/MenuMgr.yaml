@@ -1,0 +1,767 @@
+- enum:
+    values:
+      - name: noMark
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: mDrawMsg
+        value: 0
+      - name: mChooseMsg
+        value: 1
+      - name: mSizeMsg
+        value: 2
+      - name: mPopUpRect
+        value: 3
+
+# ####
+
+- enum:
+    values:
+      - name: textMenuProc
+        value: 0
+
+# ####
+
+- struct:
+    name: MenuInfo
+    members:
+      - name: menuID
+        type: INTEGER
+      - name: menuWidth
+        type: INTEGER
+      - name: menuHeight
+        type: INTEGER
+      - name: menuProc
+        type: Handle
+      - name: enableFlags
+        type: LONGINT
+      - name: menuData
+        type: Str255
+    size: 270
+
+# ####
+
+- typedef:
+    name: MenuPtr
+    type: MenuInfo*
+
+# ####
+
+- typedef:
+    name: MenuHandle
+    type: MenuPtr*
+
+# ####
+
+- struct:
+    name: MCEntry
+    members:
+      - name: mctID
+        type: INTEGER
+      - name: mctItem
+        type: INTEGER
+      - name: mctRGB1
+        type: RGBColor
+      - name: mctRGB2
+        type: RGBColor
+      - name: mctRGB3
+        type: RGBColor
+      - name: mctRGB4
+        type: RGBColor
+      - name: mctReserved
+        type: INTEGER
+    size: 30
+
+# ####
+
+- typedef:
+    name: MCEntryPtr
+    type: MCEntry*
+
+# ####
+
+- typedef:
+    name: MCTable
+    type: MCEntry[1]
+
+# ####
+
+- typedef:
+    name: MCTablePtr
+    type: MCEntry*
+
+# ####
+
+- typedef:
+    name: MCTableHandle
+    type: MCTablePtr*
+
+# ####
+
+- lowmem:
+    name: TopMenuItem
+    type: INTEGER
+    address: 0xA0A
+    comment: |
+      MenuMgr IMV-249 (true);
+
+# ####
+
+- lowmem:
+    name: AtMenuBottom
+    type: INTEGER
+    address: 0xA0C
+    comment: |
+      MenuMgr IMV-249 (true);
+
+# ####
+
+- lowmem:
+    name: MenuList
+    type: Handle
+    address: 0xA1C
+    comment: |
+      MenuMgr IMI-346 (true);
+
+# ####
+
+- lowmem:
+    name: MBarEnable
+    type: INTEGER
+    address: 0xA20
+    comment: |
+      MenuMgr IMI-356 (true);
+
+# ####
+
+- lowmem:
+    name: MenuFlash
+    type: INTEGER
+    address: 0xA24
+    comment: |
+      MenuMgr IMI-361 (true);
+
+# ####
+
+- lowmem:
+    name: TheMenu
+    type: INTEGER
+    address: 0xA26
+    comment: |
+      MenuMgr IMI-357 (true);
+
+# ####
+
+- lowmem:
+    name: MBarHook
+    type: ProcPtr
+    address: 0xA2C
+    comment: |
+      MenuMgr IMI-356 (true);
+
+# ####
+
+- lowmem:
+    name: MenuHook
+    type: ProcPtr
+    address: 0xA30
+    comment: |
+      MenuMgr IMI-356 (true);
+
+# ####
+
+- lowmem:
+    name: MenuDisable
+    type: LONGINT
+    address: 0xB54
+    comment: |
+      MenuMgr IMV-249 (true);
+
+# ####
+
+- lowmem:
+    name: MBDFHndl
+    type: Handle
+    address: 0xB58
+    comment: |
+      MenuMgr Private.a (true);
+
+# ####
+
+- lowmem:
+    name: MBSaveLoc
+    type: Handle
+    address: 0xB5C
+    comment: |
+      MenuMgr Private.a (true);
+
+# ####
+
+- lowmem:
+    name: MBarHeight
+    type: INTEGER
+    address: 0xBAA
+    comment: |
+      MenuMgr IMV-253 (true);
+
+# ####
+
+- lowmem:
+    name: MenuCInfo
+    type: MCTableHandle
+    address: 0xD50
+    comment: |
+      QuickDraw IMV-242 (true);
+
+# ####
+
+- function:
+    name: DrawMenuBar
+    trap: 0xA937
+    executor: C_
+
+# ####
+
+- function:
+    name: ClearMenuBar
+    trap: 0xA934
+    executor: C_
+
+# ####
+
+- function:
+    name: InitMenus
+    trap: 0xA930
+    executor: C_
+
+# ####
+
+- function:
+    name: NewMenu
+    return: MenuHandle
+    args:
+      - name: mid
+        type: INTEGER
+      - name: str
+        type: ConstStringPtr
+    trap: 0xA931
+    executor: C_
+
+# ####
+
+- function:
+    name: CalcMenuSize
+    args:
+      - name: mh
+        type: MenuHandle
+    trap: 0xA948
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMenu
+    return: MenuHandle
+    args:
+      - name: rid
+        type: INTEGER
+    trap: 0xA9BF
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeMenu
+    args:
+      - name: mh
+        type: MenuHandle
+    trap: 0xA932
+    executor: C_
+
+# ####
+
+- function:
+    name: AppendMenu
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: str
+        type: ConstStringPtr
+    trap: 0xA933
+    executor: C_
+
+# ####
+
+- function:
+    name: AppendResMenu
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: restype
+        type: ResType
+    trap: 0xA94D
+    executor: C_
+
+# ####
+
+- function:
+    name: DeleteMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+    trap: 0xA952
+    executor: C_
+
+# ####
+
+- function:
+    name: InsertResMenu
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: restype
+        type: ResType
+      - name: after
+        type: INTEGER
+    trap: 0xA951
+    executor: C_
+
+# ####
+
+- function:
+    name: InsertMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: str
+        type: ConstStringPtr
+      - name: after
+        type: INTEGER
+    trap: 0xA826
+    executor: C_
+
+# ####
+
+- function:
+    name: InsertMenu
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: before
+        type: INTEGER
+    trap: 0xA935
+    executor: C_
+
+# ####
+
+- function:
+    name: DeleteMenu
+    args:
+      - name: mid
+        type: INTEGER
+    trap: 0xA936
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewMBar
+    return: Handle
+    args:
+      - name: mbarid
+        type: INTEGER
+    trap: 0xA9C0
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMenuBar
+    return: Handle
+    trap: 0xA93B
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMenuBar
+    args:
+      - name: ml
+        type: Handle
+    trap: 0xA93C
+    executor: C_
+
+# ####
+
+- function:
+    name: HiliteMenu
+    args:
+      - name: mid
+        type: INTEGER
+    trap: 0xA938
+    executor: C_
+
+# ####
+
+- function:
+    name: MenuSelect
+    return: LONGINT
+    args:
+      - name: p
+        type: Point
+    trap: 0xA93D
+    executor: C_
+
+# ####
+
+- function:
+    name: FlashMenuBar
+    args:
+      - name: mid
+        type: INTEGER
+    trap: 0xA94C
+    executor: C_
+
+# ####
+
+- function:
+    name: MenuKey
+    return: LONGINT
+    args:
+      - name: thec
+        type: CharParameter
+    trap: 0xA93E
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMenuItemText
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: str
+        type: ConstStringPtr
+    trap: 0xA947
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMenuItemText
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: str
+        type: StringPtr
+    trap: 0xA946
+    executor: C_
+
+# ####
+
+- function:
+    name: DisableItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+    trap: 0xA93A
+    executor: C_
+
+# ####
+
+- function:
+    name: EnableItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+    trap: 0xA939
+    executor: C_
+
+# ####
+
+- function:
+    name: CheckItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: cflag
+        type: Boolean
+    trap: 0xA945
+    executor: C_
+
+# ####
+
+- function:
+    name: SetItemMark
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: mark
+        type: CharParameter
+    trap: 0xA944
+    executor: C_
+
+# ####
+
+- function:
+    name: GetItemMark
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: markp
+        type: INTEGER*
+    trap: 0xA943
+    executor: C_
+
+# ####
+
+- function:
+    name: SetItemIcon
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: icon
+        type: Byte
+    trap: 0xA940
+    executor: C_
+
+# ####
+
+- function:
+    name: GetItemIcon
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: iconp
+        type: INTEGER*
+    trap: 0xA93F
+    executor: C_
+
+# ####
+
+- function:
+    name: SetItemStyle
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: style
+        type: INTEGER
+    trap: 0xA942
+    executor: C_
+
+# ####
+
+- function:
+    name: GetItemStyle
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: stylep
+        type: INTEGER*
+    trap: 0xA941
+    executor: C_
+
+# ####
+
+- function:
+    name: CountMItems
+    return: INTEGER
+    args:
+      - name: mh
+        type: MenuHandle
+    trap: 0xA950
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMenuHandle
+    return: MenuHandle
+    args:
+      - name: mid
+        type: INTEGER
+    trap: 0xA949
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMenuFlash
+    args:
+      - name: i
+        type: INTEGER
+    trap: 0xA94A
+    executor: C_
+
+# ####
+
+- function:
+    name: InitProcMenu
+    args:
+      - name: mbid
+        type: INTEGER
+    trap: 0xA808
+    executor: C_
+
+# ####
+
+- function:
+    name: MenuChoice
+    return: LONGINT
+    trap: 0xAA66
+    executor: C_
+
+# ####
+
+- function:
+    name: GetItemCmd
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: cmdp
+        type: CharParameter*
+    trap: 0xA84E
+    executor: C_
+
+# ####
+
+- function:
+    name: SetItemCmd
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: cmd
+        type: CharParameter
+    trap: 0xA84F
+    executor: C_
+
+# ####
+
+- function:
+    name: PopUpMenuSelect
+    return: LONGINT
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: top
+        type: INTEGER
+      - name: left
+        type: INTEGER
+      - name: item
+        type: INTEGER
+    trap: 0xA80B
+    executor: C_
+
+# ####
+
+- function:
+    name: DeleteMCEntries
+    args:
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA60
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMCInfo
+    return: MCTableHandle
+    trap: 0xAA61
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMCInfo
+    args:
+      - type: MCTableHandle
+    trap: 0xAA62
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeMCInfo
+    args:
+      - type: MCTableHandle
+    trap: 0xAA63
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMCEntry
+    return: MCEntryPtr
+    args:
+      - type: INTEGER
+      - type: INTEGER
+    trap: 0xAA64
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMCEntries
+    args:
+      - type: INTEGER
+      - type: MCTablePtr
+    trap: 0xAA65
+    executor: C_
+
+# ####
+
+- function:
+    name: InvalMenuBar
+    trap: 0xA81D
+    executor: C_
+
+# ####
+
+- typedef:
+    name: MenuRef
+    type: MenuHandle
+
+# ####
+
+- function:
+    name: CheckMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+      - name: cflag
+        type: Boolean
+    inline: CheckItem(mh, item, cflag)

@@ -1,0 +1,89 @@
+- typedef:
+    name: PPCPortKinds
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: PPCLocationKind
+    type: int16_t
+
+# ####
+
+- struct:
+    name: EntityName
+    members:
+      - name: objStr
+        type: Str32
+      - name: typeStr
+        type: Str32
+      - name: zoneStr
+        type: Str32
+
+# ####
+
+- struct:
+    name: PPCXTIAddress
+    members:
+      - name: fAddressType
+        type: int16_t
+      - name: fAddress
+        type: uint8_t[96]
+
+# ####
+
+- struct:
+    name: PPCAddrRec
+    members:
+      - name: Reserved
+        type: uint8_t[3]
+      - name: xtiAddrLen
+        type: uint8_t
+      - name: xtiAddr
+        type: PPCXTIAddress
+
+# ####
+
+- struct:
+    name: LocationNameRec
+    members:
+      - name: locationKindSelector
+        type: PPCLocationKind
+      - name: u
+        union:
+          - name: npbEntity
+            type: EntityName
+          - name: npbType
+            type: Str32
+          - name: xtiType
+            type: PPCAddrRec
+    size: 104
+
+# ####
+
+- struct:
+    name: PPCPortRec
+    members:
+      - name: nameScript
+        type: ScriptCode
+      - name: name
+        type: Str32
+      - name: portKindsSelector
+        type: PPCPortKinds
+      - name: u
+        union:
+          - name: portTypeStr
+            type: Str32
+          - name: port
+            struct:
+              - name: creator
+                type: OSType
+              - name: type
+                type: OSType
+    size: 72
+
+# ####
+
+- typedef:
+    name: PPCPortPtr
+    type: PPCPortRec*

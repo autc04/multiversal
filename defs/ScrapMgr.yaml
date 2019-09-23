@@ -1,0 +1,136 @@
+- enum:
+    values:
+      - name: noScrapErr
+        value: -100
+      - name: noTypeErr
+        value: -102
+
+# ####
+
+- struct:
+    name: ScrapStuff
+    members:
+      - name: scrapSize
+        type: LONGINT
+      - name: scrapHandle
+        type: Handle
+      - name: scrapCount
+        type: INTEGER
+      - name: scrapState
+        type: INTEGER
+      - name: scrapName
+        type: StringPtr
+    size: 16
+
+# ####
+
+- typedef:
+    name: PScrapStuff
+    type: ScrapStuff*
+
+# ####
+
+- lowmem:
+    name: ScrapSize
+    type: LONGINT
+    address: 0x960
+    comment: |
+      ScrapMgr IMI-457 (true);
+
+# ####
+
+- lowmem:
+    name: ScrapHandle
+    type: Handle
+    address: 0x964
+    comment: |
+      ScrapMgr IMI-457 (true);
+
+# ####
+
+- lowmem:
+    name: ScrapCount
+    type: INTEGER
+    address: 0x968
+    comment: |
+      ScrapMgr IMI-457 (true);
+
+# ####
+
+- lowmem:
+    name: ScrapState
+    type: INTEGER
+    address: 0x96A
+    comment: |
+      ScrapMgr IMI-457 (true);
+
+# ####
+
+- lowmem:
+    name: ScrapName
+    type: StringPtr
+    address: 0x96C
+    comment: |
+      ScrapMgr IMI-457 (true);
+
+# ####
+
+- function:
+    name: InfoScrap
+    return: PScrapStuff
+    trap: 0xA9F9
+    executor: C_
+
+# ####
+
+- function:
+    name: UnloadScrap
+    return: LONGINT
+    trap: 0xA9FA
+    executor: C_
+
+# ####
+
+- function:
+    name: LoadScrap
+    return: LONGINT
+    trap: 0xA9FB
+    executor: C_
+
+# ####
+
+- function:
+    name: ZeroScrap
+    return: LONGINT
+    trap: 0xA9FC
+    executor: C_
+
+# ####
+
+- function:
+    name: PutScrap
+    return: LONGINT
+    args:
+      - name: len
+        type: LONGINT
+      - name: rest
+        type: ResType
+      - name: p
+        type: Ptr
+    trap: 0xA9FE
+    executor: C_
+
+# ####
+
+- function:
+    name: GetScrap
+    return: LONGINT
+    args:
+      - name: h
+        type: Handle
+      - name: rest
+        type: ResType
+      - name: "off"
+        type: LONGINT*
+    trap: 0xA9FD
+    executor: C_

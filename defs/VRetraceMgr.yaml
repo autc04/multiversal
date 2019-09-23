@@ -1,0 +1,111 @@
+- enum:
+    values:
+      - name: qErr
+        value: -1
+      - name: vTypErr
+        value: -2
+
+# ####
+
+- struct:
+    name: VBLTask
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: vblAddr
+        type: ProcPtr
+      - name: vblCount
+        type: INTEGER
+      - name: vblPhase
+        type: INTEGER
+    size: 14
+
+# ####
+
+- typedef:
+    name: VBLTaskPtr
+    type: VBLTask*
+
+# ####
+
+- lowmem:
+    name: VBLQueue
+    type: QHdr
+    address: 0x160
+    comment: |
+      VRetraceMgr IMII-352 (true);
+
+# ####
+
+- lowmem:
+    name: JVBLTask
+    type: ProcPtr
+    address: 0xD28
+    comment: |
+      VRetraceMgr IMV (false);
+
+# ####
+
+- function:
+    name: VInstall
+    return: OSErr
+    args:
+      - name: vtaskp
+        type: VBLTaskPtr
+        register: A0
+    executor: true
+    trap: 0xA033
+    returnreg: D0
+
+# ####
+
+- function:
+    name: VRemove
+    return: OSErr
+    args:
+      - name: vtaskp
+        type: VBLTaskPtr
+        register: A0
+    executor: true
+    trap: 0xA034
+    returnreg: D0
+
+# ####
+
+- function:
+    name: GetVBLQHdr
+    return: QHdrPtr
+
+# ####
+
+- function:
+    name: SlotVInstall
+    return: OSErr
+    args:
+      - name: vtaskp
+        type: VBLTaskPtr
+        register: A0
+      - name: slot
+        type: INTEGER
+        register: D0
+    executor: true
+    trap: 0xA06F
+    returnreg: D0
+
+# ####
+
+- function:
+    name: SlotVRemove
+    return: OSErr
+    args:
+      - name: vtaskp
+        type: VBLTaskPtr
+        register: A0
+      - name: slot
+        type: INTEGER
+        register: D0
+    executor: true
+    trap: 0xA070
+    returnreg: D0

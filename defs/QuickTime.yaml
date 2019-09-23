@@ -1,0 +1,294 @@
+- struct:
+    name: MovieRecord
+    members:
+      - name: data
+        type: LONGINT[1]
+    size: 4
+
+# ####
+
+- typedef:
+    name: Movie
+    type: MovieRecord*
+
+# ####
+
+- typedef:
+    name: TimeValue
+    type: LONGINT
+
+# ####
+
+- dispatcher:
+    name: QuickTime
+    trap: 0xAAAA
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: EnterMovies
+    return: OSErr
+    dispatcher: QuickTime
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: ExitMovies
+    dispatcher: QuickTime
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: MoviesTask
+    args:
+      - name: movie
+        type: Movie
+      - name: maxmillisecs
+        type: LONGINT
+    dispatcher: QuickTime
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: PrerollMovie
+    return: OSErr
+    args:
+      - name: movie
+        type: Movie
+      - name: time
+        type: TimeValue
+      - name: rate
+        type: Fixed
+    dispatcher: QuickTime
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMovieActive
+    args:
+      - name: movie
+        type: Movie
+      - name: active
+        type: Boolean
+    dispatcher: QuickTime
+    selector: 0x0009
+    executor: C_
+
+# ####
+
+- function:
+    name: StartMovie
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x000B
+    executor: C_
+
+# ####
+
+- function:
+    name: StopMovie
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GoToBeginningOfMovie
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x000D
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMovieGWorld
+    args:
+      - name: movie
+        type: Movie
+      - name: cgrafp
+        type: CGrafPtr
+      - name: gdh
+        type: GDHandle
+    dispatcher: QuickTime
+    selector: 0x0016
+    executor: C_
+
+# ####
+
+- function:
+    name: UpdateMovie
+    return: OSErr
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x001F
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeMovie
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x0023
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMovieVolume
+    return: INTEGER
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x002E
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseMovieFile
+    return: OSErr
+    args:
+      - name: refnum
+        type: INTEGER
+    dispatcher: QuickTime
+    selector: 0x00D5
+    executor: C_
+
+# ####
+
+- function:
+    name: IsMovieDone
+    return: Boolean
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x00DD
+    executor: C_
+
+# ####
+
+- function:
+    name: NewMovieFromFile
+    return: OSErr
+    args:
+      - name: moviep
+        type: Movie*
+      - name: refnum
+        type: INTEGER
+      - name: residp
+        type: INTEGER*
+      - name: resnamep
+        type: StringPtr
+      - name: flags
+        type: INTEGER
+      - name: datarefwaschangedp
+        type: Boolean*
+    dispatcher: QuickTime
+    selector: 0x00F0
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMoviePreferredRate
+    return: Fixed
+    args:
+      - name: movie
+        type: Movie
+    dispatcher: QuickTime
+    selector: 0x00F3
+    executor: C_
+
+# ####
+
+- function:
+    name: GetMovieBox
+    args:
+      - name: movie
+        type: Movie
+      - name: boxp
+        type: Rect*
+    dispatcher: QuickTime
+    selector: 0x00F9
+    executor: C_
+
+# ####
+
+- function:
+    name: SetMovieBox
+    args:
+      - name: movie
+        type: Movie
+      - name: boxp
+        type: const Rect*
+    dispatcher: QuickTime
+    selector: 0x00FA
+    executor: C_
+
+# ####
+
+- function:
+    name: NewMovieController
+    return: ComponentInstance
+    args:
+      - name: movie
+        type: Movie
+      - name: mrectp
+        type: const Rect*
+      - name: flags
+        type: LONGINT
+    dispatcher: QuickTime
+    selector: 0x018A
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeMovieController
+    args:
+      - name: cntrller
+        type: ComponentInstance
+    dispatcher: QuickTime
+    selector: 0x018B
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenMovieFile
+    return: OSErr
+    args:
+      - name: filespecp
+        type: const FSSpec*
+      - name: refnump
+        type: INTEGER*
+      - name: perm
+        type: uint8_t
+    dispatcher: QuickTime
+    selector: 0x0192
+    executor: C_

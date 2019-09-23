@@ -1,0 +1,580 @@
+- enum:
+    values:
+      - name: currSymLead
+        value: 16
+      - name: currNegSym
+        value: 32
+      - name: currTrailingZ
+        value: 64
+      - name: currLeadingZ
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: mdy
+        value: 0
+      - name: dmy
+        value: 1
+      - name: ymd
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: dayLdingZ
+        value: 32
+      - name: mntLdingZ
+        value: 64
+      - name: century
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: secLeadingZ
+        value: 32
+      - name: minLeadingZ
+        value: 64
+      - name: hrLeadingZ
+        value: 128
+
+# ####
+
+- enum:
+    values:
+      - name: verUS
+        value: 0
+      - name: verFrance
+        value: 1
+      - name: verBritain
+        value: 2
+      - name: verGermany
+        value: 3
+      - name: verItaly
+        value: 4
+      - name: verNetherlands
+        value: 5
+      - name: verBelgiumLux
+        value: 6
+      - name: verSweden
+        value: 7
+      - name: verSpain
+        value: 8
+      - name: verDenmark
+        value: 9
+      - name: verPortugal
+        value: 10
+      - name: verFrCanada
+        value: 11
+      - name: verNorway
+        value: 12
+      - name: verIsreal
+        value: 13
+      - name: verJapan
+        value: 14
+      - name: verAustralia
+        value: 15
+      - name: verArabia
+        value: 16
+      - name: verFinland
+        value: 17
+      - name: verFrSwiss
+        value: 18
+      - name: verGrSwiss
+        value: 19
+      - name: verGreece
+        value: 20
+      - name: verIceland
+        value: 21
+      - name: verMalta
+        value: 22
+      - name: verCyprus
+        value: 23
+      - name: verTurkey
+        value: 24
+      - name: verYugoslavia
+        value: 25
+
+# ####
+
+- struct:
+    name: Intl0Rec
+    members:
+      - name: decimalPt
+        type: Byte
+      - name: thousSep
+        type: Byte
+      - name: listSep
+        type: Byte
+      - name: currSym1
+        type: Byte
+      - name: currSym2
+        type: Byte
+      - name: currSym3
+        type: Byte
+      - name: currFmt
+        type: Byte
+      - name: dateOrder
+        type: Byte
+      - name: shrtDateFmt
+        type: Byte
+      - name: dateSep
+        type: Byte
+      - name: timeCycle
+        type: Byte
+      - name: timeFmt
+        type: Byte
+      - name: mornStr
+        type: LONGINT
+      - name: eveStr
+        type: LONGINT
+      - name: timeSep
+        type: Byte
+      - name: time1Suff
+        type: Byte
+      - name: time2Suff
+        type: Byte
+      - name: time3Suff
+        type: Byte
+      - name: time4Suff
+        type: Byte
+      - name: time5Suff
+        type: Byte
+      - name: time6Suff
+        type: Byte
+      - name: time7Suff
+        type: Byte
+      - name: time8Suff
+        type: Byte
+      - name: metricSys
+        type: Byte
+      - name: intl0Vers
+        type: INTEGER
+    size: 32
+
+# ####
+
+- typedef:
+    name: Intl0Ptr
+    type: Intl0Rec*
+
+# ####
+
+- typedef:
+    name: Intl0Hndl
+    type: Intl0Ptr*
+
+# ####
+
+- typedef:
+    name: STRING15
+    type: Byte[16]
+
+# ####
+
+- struct:
+    name: Intl1Rec
+    members:
+      - name: days
+        type: STRING15[7]
+      - name: months
+        type: STRING15[12]
+      - name: suppressDay
+        type: Byte
+      - name: lngDateFmt
+        type: Byte
+      - name: dayLeading0
+        type: Byte
+      - name: abbrLen
+        type: Byte
+      - name: st0
+        type: LONGINT
+      - name: st1
+        type: LONGINT
+      - name: st2
+        type: LONGINT
+      - name: st3
+        type: LONGINT
+      - name: st4
+        type: LONGINT
+      - name: intl1Vers
+        type: INTEGER
+      - name: localRtn
+        type: INTEGER
+    size: 332
+
+# ####
+
+- typedef:
+    name: Intl1Ptr
+    type: Intl1Rec*
+
+# ####
+
+- typedef:
+    name: Intl1Hndl
+    type: Intl1Ptr*
+
+# ####
+
+- typedef:
+    name: LongDateTime
+    type: comp
+
+# ####
+
+- typedef:
+    name: DateForm
+    type: SignedByte
+
+# ####
+
+- enum:
+    values:
+      - name: shortDate
+        value: 0
+      - name: longDate
+        value: 1
+      - name: abbrevDate
+        value: 2
+
+# ####
+
+- dispatcher:
+    name: Pack6
+    trap: 0xA9ED
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: IUDatePString
+    args:
+      - name: date
+        type: LONGINT
+      - name: form
+        type: DateForm
+      - name: p
+        type: StringPtr
+      - name: h
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x000E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIntlResource
+    return: Handle
+    args:
+      - name: id
+        type: INTEGER
+    dispatcher: Pack6
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: IUDateString
+    args:
+      - name: date
+        type: LONGINT
+      - name: form
+        type: DateForm
+      - name: p
+        type: StringPtr
+    dispatcher: Pack6
+    selector: 0x0
+    executor: C_
+
+# ####
+
+- function:
+    name: IUTimePString
+    args:
+      - name: date
+        type: LONGINT
+      - name: secs
+        type: Boolean
+      - name: p
+        type: StringPtr
+      - name: h
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x0010
+    executor: C_
+
+# ####
+
+- function:
+    name: IUTimeString
+    args:
+      - name: date
+        type: LONGINT
+      - name: secs
+        type: Boolean
+      - name: p
+        type: StringPtr
+    dispatcher: Pack6
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: IsMetric
+    return: Boolean
+    dispatcher: Pack6
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: SetIntlResource
+    args:
+      - name: rn
+        type: INTEGER
+      - name: id
+        type: INTEGER
+      - name: newh
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: IUMagString
+    return: INTEGER
+    args:
+      - name: ptr1
+        type: Ptr
+      - name: ptr2
+        type: Ptr
+      - name: len1
+        type: INTEGER
+      - name: len2
+        type: INTEGER
+    dispatcher: Pack6
+    selector: 0x000A
+    executor: C_
+
+# ####
+
+- function:
+    name: IUCompString
+    return: INTEGER
+    args:
+      - name: str1
+        type: ConstStringPtr
+      - name: str2
+        type: ConstStringPtr
+
+# ####
+
+- function:
+    name: IUMagIDString
+    return: INTEGER
+    args:
+      - name: ptr1
+        type: Ptr
+      - name: ptr2
+        type: Ptr
+      - name: len1
+        type: INTEGER
+      - name: len2
+        type: INTEGER
+    dispatcher: Pack6
+    selector: 0x000C
+    executor: C_
+
+# ####
+
+- function:
+    name: IUEqualString
+    return: INTEGER
+    args:
+      - name: str1
+        type: ConstStringPtr
+      - name: str2
+        type: ConstStringPtr
+
+# ####
+
+- function:
+    name: IUMystery
+    args:
+      - name: arg1
+        type: Ptr
+      - name: arg2
+        type: Ptr
+      - name: arg3
+        type: INTEGER
+      - name: arg4
+        type: INTEGER
+    dispatcher: Pack6
+    selector: 0x0012
+    executor: C_
+
+# ####
+
+- function:
+    name: IULDateString
+    args:
+      - name: datetimep
+        type: LongDateTime*
+      - name: longflag
+        type: DateForm
+      - name: result
+        type: Str255
+      - name: intlhand
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x0014
+    executor: C_
+
+# ####
+
+- function:
+    name: IULTimeString
+    args:
+      - name: datetimep
+        type: LongDateTime*
+      - name: wantseconds
+        type: Boolean
+      - name: result
+        type: Str255
+      - name: intlhand
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x0016
+    executor: C_
+
+# ####
+
+- function:
+    name: ClearIntlResourceCache
+    dispatcher: Pack6
+    selector: 0x0018
+    executor: C_
+
+# ####
+
+- function:
+    name: IUMagPString
+    return: INTEGER
+    args:
+      - name: ptra
+        type: Ptr
+      - name: ptrb
+        type: Ptr
+      - name: lena
+        type: INTEGER
+      - name: lenb
+        type: INTEGER
+      - name: itl2hand
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x001A
+    executor: C_
+
+# ####
+
+- function:
+    name: IUMagIDPString
+    return: INTEGER
+    args:
+      - name: ptra
+        type: Ptr
+      - name: ptrb
+        type: Ptr
+      - name: lena
+        type: INTEGER
+      - name: lenb
+        type: INTEGER
+      - name: itl2hand
+        type: Handle
+    dispatcher: Pack6
+    selector: 0x001C
+    executor: C_
+
+# ####
+
+- function:
+    name: IUScriptOrder
+    return: INTEGER
+    args:
+      - name: script1
+        type: ScriptCode
+      - name: script2
+        type: ScriptCode
+    dispatcher: Pack6
+    selector: 0x001E
+    executor: C_
+
+# ####
+
+- function:
+    name: IULangOrder
+    return: INTEGER
+    args:
+      - name: l1
+        type: LangCode
+      - name: l2
+        type: LangCode
+    dispatcher: Pack6
+    selector: 0x0020
+    executor: C_
+
+# ####
+
+- function:
+    name: IUTextOrder
+    return: INTEGER
+    args:
+      - name: ptra
+        type: Ptr
+      - name: ptrb
+        type: Ptr
+      - name: lena
+        type: INTEGER
+      - name: lenb
+        type: INTEGER
+      - name: scripta
+        type: ScriptCode
+      - name: bscript
+        type: ScriptCode
+      - name: langa
+        type: LangCode
+      - name: langb
+        type: LangCode
+    dispatcher: Pack6
+    selector: 0x0022
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIntlResourceTable
+    args:
+      - name: script
+        type: ScriptCode
+      - name: tablecode
+        type: INTEGER
+      - name: itlhandlep
+        type: Handle*
+      - name: offsetp
+        type: LONGINT*
+      - name: lengthp
+        type: LONGINT*
+    dispatcher: Pack6
+    selector: 0x0024
+    executor: C_

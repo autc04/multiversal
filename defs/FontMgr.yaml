@@ -1,0 +1,720 @@
+- enum:
+    values:
+      - name: systemFont
+        value: 0
+      - name: applFont
+        value: 1
+      - name: newYork
+        value: 2
+      - name: geneva
+        value: 3
+      - name: monaco
+        value: 4
+      - name: venice
+        value: 5
+      - name: london
+        value: 6
+      - name: athens
+        value: 7
+      - name: sanFran
+        value: 8
+      - name: toronto
+        value: 9
+      - name: cairo
+        value: 11
+      - name: losAngeles
+        value: 12
+      - name: times
+        value: 20
+
+# ####
+
+- enum:
+    values:
+      - name: helvetica
+        value: 21
+      - name: courier
+        value: 22
+      - name: symbol
+        value: 23
+      - name: taliesin
+        value: 24
+
+# ####
+
+- enum:
+    values:
+      - name: kFontIDNewYork
+        value: newYork
+      - name: kFontIDGeneva
+        value: geneva
+      - name: kFontIDMonaco
+        value: monaco
+      - name: kFontIDVenice
+        value: venice
+      - name: kFontIDLondon
+        value: london
+      - name: kFontIDAthens
+        value: athens
+      - name: kFontIDSanFrancisco
+        value: sanFran
+      - name: kFontIDToronto
+        value: toronto
+      - name: kFontIDCairo
+        value: cairo
+      - name: kFontIDLosAngeles
+        value: losAngeles
+      - name: kFontIDTimes
+        value: times
+      - name: kFontIDHelvetica
+        value: helvetica
+      - name: kFontIDCourier
+        value: courier
+      - name: kFontIDSymbol
+        value: symbol
+      - name: kFontIDTaliesin
+        value: taliesin
+
+# ####
+
+- enum:
+    values:
+      - name: commandMark
+        value: 0x11
+      - name: checkMark
+        value: 0x12
+      - name: diamondMark
+        value: 0x13
+      - name: appleMark
+        value: 0x14
+
+# ####
+
+- enum:
+    values:
+      - name: propFont
+        value: 0x9000
+      - name: prpFntH
+        value: 0x9001
+      - name: prpFntW
+        value: 0x9002
+      - name: prpFntHW
+        value: 0x9003
+
+# ####
+
+- enum:
+    values:
+      - name: fixedFont
+        value: 0xB000
+      - name: fxdFntH
+        value: 0xB001
+      - name: fxdFntW
+        value: 0xB002
+      - name: fxdFntHW
+        value: 0xB003
+
+# ####
+
+- enum:
+    values:
+      - name: fontWid
+        value: 0xACB0
+
+# ####
+
+- struct:
+    name: FMetricRec
+    members:
+      - name: ascent
+        type: Fixed
+      - name: descent
+        type: Fixed
+      - name: leading
+        type: Fixed
+      - name: widMax
+        type: Fixed
+      - name: wTabHandle
+        type: Handle
+    size: 20
+
+# ####
+
+- struct:
+    name: FamRec
+    members:
+      - name: ffFlags
+        type: INTEGER
+      - name: ffFamID
+        type: INTEGER
+      - name: ffFirstChar
+        type: INTEGER
+      - name: ffLastChar
+        type: INTEGER
+      - name: ffAscent
+        type: INTEGER
+      - name: ffDescent
+        type: INTEGER
+      - name: ffLeading
+        type: INTEGER
+      - name: ffWidMax
+        type: INTEGER
+      - name: ffWTabOff
+        type: LONGINT
+      - name: ffKernOff
+        type: LONGINT
+      - name: ffStylOff
+        type: LONGINT
+      - name: ffProperty
+        type: INTEGER[9]
+      - name: ffIntl
+        type: INTEGER[2]
+      - name: ffVersion
+        type: INTEGER
+    comment: |
+      FontAssoc ffAssoc;
+      WidTable ffWidthTab;
+      StyleTable ffStyTab;
+      KernTable ffKernTab;
+    size: 52
+
+# ####
+
+- struct:
+    name: WidthTable
+    members:
+      - name: tabData
+        type: Fixed[256]
+      - name: tabFont
+        type: Handle
+      - name: sExtra
+        type: LONGINT
+      - name: style
+        type: LONGINT
+      - name: fID
+        type: INTEGER
+      - name: fSize
+        type: INTEGER
+      - name: face
+        type: INTEGER
+      - name: device
+        type: INTEGER
+      - name: inNumer
+        type: Point
+      - name: inDenom
+        type: Point
+      - name: aFID
+        type: INTEGER
+      - name: fHand
+        type: Handle
+      - name: usedFam
+        type: Boolean
+      - name: aFace
+        type: Byte
+      - name: vOutput
+        type: INTEGER
+      - name: hOutput
+        type: INTEGER
+      - name: vFactor
+        type: INTEGER
+      - name: hFactor
+        type: INTEGER
+      - name: aSize
+        type: INTEGER
+      - name: tabSize
+        type: INTEGER
+    size: 1072
+
+# ####
+
+- struct:
+    name: FMInput
+    members:
+      - name: family
+        type: INTEGER
+      - name: size
+        type: INTEGER
+      - name: face
+        type: Style
+      - name: needBits
+        type: Boolean
+      - name: device
+        type: INTEGER
+      - name: numer
+        type: Point
+      - name: denom
+        type: Point
+    size: 16
+
+# ####
+
+- struct:
+    name: FMOutput
+    members:
+      - name: errNum
+        type: INTEGER
+        comment: |
+          0x00
+      - name: fontHandle
+        type: Handle
+        comment: |
+          0x02
+      - name: bold
+        type: Byte
+        comment: |
+          0x06
+      - name: italic
+        type: Byte
+        comment: |
+          0x07
+      - name: ulOffset
+        type: Byte
+        comment: |
+          0x08
+      - name: ulShadow
+        type: Byte
+        comment: |
+          0x09
+      - name: ulThick
+        type: Byte
+        comment: |
+          0x0A
+      - name: shadow
+        type: Byte
+        comment: |
+          0x0B
+      - name: extra
+        type: SignedByte
+        comment: |
+          0x0C
+      - name: ascent
+        type: Byte
+        comment: |
+          0x0D
+      - name: descent
+        type: Byte
+        comment: |
+          0x0E
+      - name: widMax
+        type: Byte
+        comment: |
+          0x0F
+      - name: leading
+        type: SignedByte
+        comment: |
+          0x10
+      - name: unused
+        type: Byte
+        comment: |
+          0x11
+      - name: numer
+        type: Point
+        comment: |
+          0x12
+      - name: denom
+        type: Point
+        comment: |
+          0x16
+    size: 26
+
+# ####
+
+- typedef:
+    name: FMOutPtr
+    type: FMOutput*
+
+# ####
+
+- struct:
+    name: FontRec
+    members:
+      - name: fontType
+        type: INTEGER
+      - name: firstChar
+        type: INTEGER
+      - name: lastChar
+        type: INTEGER
+      - name: widMax
+        type: INTEGER
+      - name: kernMax
+        type: INTEGER
+      - name: nDescent
+        type: INTEGER
+      - name: fRectWidth
+        type: INTEGER
+      - name: fRectHeight
+        type: INTEGER
+      - name: owTLoc
+        type: INTEGER
+      - name: ascent
+        type: INTEGER
+      - name: descent
+        type: INTEGER
+      - name: leading
+        type: INTEGER
+      - name: rowWords
+        type: INTEGER
+    comment: |
+      more stuff is usually appended here ... bitImage, locTable, owTable
+    size: 26
+
+# ####
+
+- typedef:
+    name: FamRecPtr
+    type: FamRec*
+
+# ####
+
+- typedef:
+    name: FamRecHandle
+    type: FamRecPtr*
+
+# ####
+
+- typedef:
+    name: WidthTablePtr
+    type: WidthTable*
+
+# ####
+
+- typedef:
+    name: WidthTableHandle
+    type: WidthTablePtr*
+
+# ####
+
+- lowmem:
+    name: JSwapFont
+    type: ProcPtr
+    address: 0x8E0
+    comment: |
+      FontMgr Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: WidthListHand
+    type: Handle
+    address: 0x8E4
+    comment: |
+      FontMgr IMIV-42 (true);
+
+# ####
+
+- lowmem:
+    name: ROMFont0
+    type: Handle
+    address: 0x980
+    comment: |
+      FontMgr IMI-233 (true);
+
+# ####
+
+- lowmem:
+    name: ApFontID
+    type: INTEGER
+    address: 0x984
+    comment: |
+      FontMgr IMIV-31 (true);
+
+# ####
+
+- lowmem:
+    name: ROMlib_myfmi
+    type: FMInput
+    address: 0x988
+    comment: |
+      FontMgr ToolEqu.a (true);
+
+# ####
+
+- lowmem:
+    name: ROMlib_fmo
+    type: FMOutput
+    address: 0x998
+    comment: |
+      FontMgr Private.a (true);
+
+# ####
+
+- lowmem:
+    name: FScaleDisable
+    type: Byte
+    address: 0xA63
+    comment: |
+      FontMgr IMI-222 (true);
+
+# ####
+
+- lowmem:
+    name: WidthPtr
+    type: WidthTablePtr
+    address: 0xB10
+    comment: |
+      FontMgr IMIV-42 (true);
+
+# ####
+
+- lowmem:
+    name: WidthTabHandle
+    type: WidthTableHandle
+    address: 0xB2A
+    comment: |
+      FontMgr IMIV-42 (true);
+
+# ####
+
+- lowmem:
+    name: IntlSpec
+    type: LONGINT
+    address: 0xBA0
+    comment: |
+      FontMgr IMIV-42 (true);
+
+# ####
+
+- lowmem:
+    name: SysFontFam
+    type: INTEGER
+    address: 0xBA6
+    comment: |
+      FontMgr IMIV-31 (true);
+
+# ####
+
+- lowmem:
+    name: SysFontSiz
+    type: INTEGER
+    address: 0xBA8
+    comment: |
+      FontMgr IMIV-31 (true);
+
+# ####
+
+- lowmem:
+    name: LastFOND
+    type: FamRecHandle
+    address: 0xBC2
+    comment: |
+      FontMgr IMIV-36 (true);
+
+# ####
+
+- lowmem:
+    name: fondid
+    type: INTEGER
+    address: 0xBC6
+    comment: |
+      FontMgr ToolEqu.a (true-b);
+
+# ####
+
+- lowmem:
+    name: FractEnable
+    type: Byte
+    address: 0xBF4
+    comment: |
+      FontMgr IMIV-32 (true);
+
+# ####
+
+- lowmem:
+    name: SynListHandle
+    type: Handle
+    address: 0xD32
+    comment: |
+      FontMgr IMV-182 (false);
+
+# ####
+
+- dispatcher:
+    name: FontDispatch
+    trap: 0xA854
+    selector-location: D0<0xF>
+
+# ####
+
+- function:
+    name: InitFonts
+    trap: 0xA8FE
+    executor: C_
+
+# ####
+
+- function:
+    name: GetFontName
+    args:
+      - name: fnum
+        type: INTEGER
+      - name: fnam
+        type: StringPtr
+    trap: 0xA8FF
+    executor: C_
+
+# ####
+
+- function:
+    name: GetFNum
+    args:
+      - name: fnam
+        type: ConstStringPtr
+      - name: fnum
+        type: INTEGER*
+    trap: 0xA900
+    executor: C_
+
+# ####
+
+- function:
+    name: RealFont
+    return: Boolean
+    args:
+      - name: fnum
+        type: INTEGER
+      - name: sz
+        type: INTEGER
+    trap: 0xA902
+    executor: C_
+
+# ####
+
+- function:
+    name: SetFontLock
+    args:
+      - name: lflag
+        type: Boolean
+    trap: 0xA903
+    executor: C_
+
+# ####
+
+- function:
+    name: FMSwapFont
+    return: FMOutPtr
+    args:
+      - name: fmip
+        type: FMInput*
+    trap: 0xA901
+    executor: C_
+
+# ####
+
+- function:
+    name: FontMetrics
+    args:
+      - name: metrp
+        type: FMetricRec*
+    trap: 0xA835
+    executor: C_
+
+# ####
+
+- function:
+    name: SetFScaleDisable
+    args:
+      - name: disable
+        type: Boolean
+    trap: 0xA834
+    executor: C_
+
+# ####
+
+- function:
+    name: SetFractEnable
+    args:
+      - name: enable
+        type: Boolean
+    trap: 0xA814
+    executor: C_
+
+# ####
+
+- function:
+    name: SetOutlinePreferred
+    args:
+      - name: _outline_perferred_p
+        type: Boolean
+    dispatcher: FontDispatch
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: GetOutlinePreferred
+    return: Boolean
+    dispatcher: FontDispatch
+    selector: 0x0009
+    executor: C_
+
+# ####
+
+- function:
+    name: IsOutline
+    return: Boolean
+    args:
+      - name: numer
+        type: Point
+      - name: denom
+        type: Point
+    dispatcher: FontDispatch
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: OutlineMetrics
+    return: OSErr
+    args:
+      - name: byte_count
+        type: int16_t
+      - name: text
+        type: Ptr
+      - name: numer
+        type: Point
+      - name: denom
+        type: Point
+      - name: y_max
+        type: int16_t*
+      - name: y_min
+        type: int16_t*
+      - name: aw_array
+        type: Fixed*
+      - name: lsb_array
+        type: Fixed*
+      - name: bounds_array
+        type: Rect*
+    dispatcher: FontDispatch
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: SetPreserveGlyph
+    args:
+      - name: preserve_glyph
+        type: Boolean
+    dispatcher: FontDispatch
+    selector: 0x000A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetPreserveGlyph
+    return: Boolean
+    dispatcher: FontDispatch
+    selector: 0x000B
+    executor: C_
+
+# ####
+
+- function:
+    name: FlushFonts
+    return: OSErr
+    dispatcher: FontDispatch
+    selector: 0x000C
+    executor: C_

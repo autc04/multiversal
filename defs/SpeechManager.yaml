@@ -1,0 +1,472 @@
+- struct:
+    name: VoiceSpec
+    members:
+      - name: creator
+        type: OSType
+      - name: id
+        type: OSType
+
+# ####
+
+- typedef:
+    name: VoiceSpecPtr
+    type: VoiceSpec*
+
+# ####
+
+- struct:
+    name: VoiceFileInfo
+    members:
+      - name: fileSpec
+        type: FSSpec
+      - name: resID
+        type: uint16_t
+
+# ####
+
+- struct:
+    name: SpeechStatusInfo
+    members:
+      - name: outputBusy
+        type: Boolean
+      - name: outputPaused
+        type: Boolean
+      - name: inputBytesLeft
+        type: int32_t
+      - name: phonemeCode
+        type: int16_t
+
+# ####
+
+- struct:
+    name: VoiceDescription
+    members:
+      - name: length
+        type: int32_t
+      - name: voice
+        type: VoiceSpec
+      - name: version
+        type: int32_t
+      - name: name
+        type: Str63
+      - name: comment
+        type: Str255
+      - name: gender
+        type: int16_t
+      - name: age
+        type: int16_t
+      - name: script
+        type: int16_t
+      - name: language
+        type: int16_t
+      - name: region
+        type: int16_t
+      - name: reserved
+        type: int32_t[4]
+
+# ####
+
+- struct:
+    name: SpeechChannelRecord
+    members:
+      - name: data
+        type: LONGINT[1]
+
+# ####
+
+- typedef:
+    name: SpeechChannel
+    type: SpeechChannelRecord*
+
+# ####
+
+- struct:
+    name: PhonemeInfo
+    members:
+      - name: opcode
+        type: int16_t
+      - name: phStr
+        type: Str15
+      - name: exampleStr
+        type: Str31
+      - name: hiliteStart
+        type: int16_t
+      - name: hiliteEnd
+        type: int16_t
+
+# ####
+
+- struct:
+    name: PhonemeDescriptor
+    members:
+      - name: phonemeCount
+        type: int16_t
+      - name: thePhonemes
+        type: PhonemeInfo[1]
+
+# ####
+
+- struct:
+    name: SpeechXtndData
+    members:
+      - name: synthCreator
+        type: OSType
+      - name: synthData
+        type: Byte[2]
+
+# ####
+
+- struct:
+    name: DelimiterInfo
+    members:
+      - name: startDelimiter
+        type: Byte[2]
+      - name: endDelimiter
+        type: Byte[2]
+
+# ####
+
+- function:
+    name: SpeechManagerVersion
+    return: NumVersion
+    dispatcher: SoundDispatch
+    selector: 0x0000000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SpeechBusy
+    return: int16_t
+    dispatcher: SoundDispatch
+    selector: 0x003C000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SpeechBusySystemWide
+    return: int16_t
+    dispatcher: SoundDispatch
+    selector: 0x0040000C
+    executor: C_
+
+# ####
+
+- function:
+    name: CountVoices
+    return: OSErr
+    args:
+      - name: numVoices
+        type: int16_t*
+    dispatcher: SoundDispatch
+    selector: 0x0108000C
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeSpeechChannel
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+    dispatcher: SoundDispatch
+    selector: 0x021C000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SpeakString
+    return: OSErr
+    args:
+      - name: textToBeSpoken
+        type: ConstStringPtr
+    dispatcher: SoundDispatch
+    selector: 0x0220000C
+    executor: C_
+
+# ####
+
+- function:
+    name: StopSpeech
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+    dispatcher: SoundDispatch
+    selector: 0x022C000C
+    executor: C_
+
+# ####
+
+- function:
+    name: ContinueSpeech
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+    dispatcher: SoundDispatch
+    selector: 0x0238000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetIndVoice
+    return: OSErr
+    args:
+      - name: index
+        type: int16_t
+      - name: voice
+        type: VoiceSpec*
+    dispatcher: SoundDispatch
+    selector: 0x030C000C
+    executor: C_
+
+# ####
+
+- function:
+    name: NewSpeechChannel
+    return: OSErr
+    args:
+      - name: voice
+        type: VoiceSpec*
+      - name: chan
+        type: SpeechChannel*
+    dispatcher: SoundDispatch
+    selector: 0x0418000C
+    executor: C_
+
+# ####
+
+- function:
+    name: StopSpeechAt
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: whereToStop
+        type: int32_t
+    dispatcher: SoundDispatch
+    selector: 0x0430000C
+    executor: C_
+
+# ####
+
+- function:
+    name: PauseSpeechAt
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: whereToPause
+        type: int32_t
+    dispatcher: SoundDispatch
+    selector: 0x0434000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSpeechRate
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: rate
+        type: Fixed
+    dispatcher: SoundDispatch
+    selector: 0x0444000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSpeechRate
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: rate
+        type: Fixed*
+    dispatcher: SoundDispatch
+    selector: 0x0448000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSpeechPitch
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: pitch
+        type: Fixed
+    dispatcher: SoundDispatch
+    selector: 0x044C000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSpeechPitch
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: pitch
+        type: Fixed*
+    dispatcher: SoundDispatch
+    selector: 0x0450000C
+    executor: C_
+
+# ####
+
+- function:
+    name: UseDictionary
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: dictionary
+        type: Handle
+    dispatcher: SoundDispatch
+    selector: 0x0460000C
+    executor: C_
+
+# ####
+
+- function:
+    name: MakeVoiceSpec
+    return: OSErr
+    args:
+      - name: creator
+        type: OSType
+      - name: id
+        type: OSType
+      - name: voice
+        type: VoiceSpec*
+    dispatcher: SoundDispatch
+    selector: 0x0604000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetVoiceDescription
+    return: OSErr
+    args:
+      - name: voice
+        type: const VoiceSpec*
+      - name: info
+        type: VoiceDescription*
+      - name: infoLength
+        type: LONGINT
+    dispatcher: SoundDispatch
+    selector: 0x0610000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetVoiceInfo
+    return: OSErr
+    args:
+      - name: voice
+        type: const VoiceSpec*
+      - name: selector
+        type: OSType
+      - name: voiceInfo
+        type: void*
+    dispatcher: SoundDispatch
+    selector: 0x0614000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SpeakText
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: textBuf
+        type: const void*
+      - name: textBytes
+        type: ULONGINT
+    dispatcher: SoundDispatch
+    selector: 0x0624000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SetSpeechInfo
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: selector
+        type: OSType
+      - name: speechInfo
+        type: const void*
+    dispatcher: SoundDispatch
+    selector: 0x0654000C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSpeechInfo
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: selector
+        type: OSType
+      - name: speechInfo
+        type: void*
+    dispatcher: SoundDispatch
+    selector: 0x0658000C
+    executor: C_
+
+# ####
+
+- function:
+    name: SpeakBuffer
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: textBuf
+        type: const void*
+      - name: textBytes
+        type: ULONGINT
+      - name: controlFlags
+        type: int32_t
+    dispatcher: SoundDispatch
+    selector: 0x0828000C
+    executor: C_
+
+# ####
+
+- function:
+    name: TextToPhonemes
+    return: OSErr
+    args:
+      - name: chan
+        type: SpeechChannel
+      - name: textBuf
+        type: const void*
+      - name: textBytes
+        type: ULONGINT
+      - name: phonemeBuf
+        type: Handle
+      - name: phonemeBytes
+        type: LONGINT*
+    dispatcher: SoundDispatch
+    selector: 0x0A5C000C
+    executor: C_

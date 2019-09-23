@@ -1,0 +1,201 @@
+- lowmem:
+    name: nilhandle
+    type: Ptr
+    address: 0x00
+    comment: |
+      Declarations of low memory globals which haven't been put anywhere else
+      yet follow. Whenever a low memory global clearly belongs to one manager/module,
+      put it should live in the appropriate header.
+      There is also a complete list of low memory globals in globals.cpp,
+      which is not used but might be nice to have.
+      rsys/misc MADEUP (true-b);
+
+# ####
+
+- lowmem:
+    name: trapvectors
+    type: LONGINT[10]
+    address: 0x80
+    comment: |
+      * NOTE: MacWrite starts writing longwords at location 0x80 for TRAPs
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: dodusesit
+    type: Ptr
+    address: 0xE4
+    comment: |
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: hyperlong
+    type: LONGINT
+    address: 0x1AA
+    comment: |
+      * Hypercard does a movel to this location.
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: mathones
+    type: LONGINT
+    address: 0x282
+    comment: |
+      * NOTE: mathones is a LONGINT that Mathematica looks at that contains -1
+       * on a Mac+
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: ROM85
+    type: INTEGER
+    address: 0x28E
+    comment: |
+      * NOTE: Theoretically ROM85 is mentioned in IMV, but I don't know where.
+       * On a Mac+ the value 0x7FFF is stored there.
+       * tim: It is at least on page IMV-328.
+      MacTypes IMV-328 (true-b);
+
+# ####
+
+- lowmem:
+    name: BufTgFNum
+    type: LONGINT
+    address: 0x2FC
+    comment: |
+      DiskDvr IMII-212 (false);
+
+# ####
+
+- lowmem:
+    name: BufTgFFlg
+    type: INTEGER
+    address: 0x300
+    comment: |
+      DiskDvr IMII-212 (false);
+
+# ####
+
+- lowmem:
+    name: BufTgFBkNum
+    type: INTEGER
+    address: 0x302
+    comment: |
+      DiskDvr IMII-212 (false);
+
+# ####
+
+- lowmem:
+    name: BufTgDate
+    type: LONGINT
+    address: 0x304
+    comment: |
+      DiskDvr IMII-212 (false);
+
+# ####
+
+- lowmem:
+    name: MCLKPCmiss1
+    type: INTEGER
+    address: 0x3A0
+    comment: |
+      MacLinkPC badaccess (true-b);
+
+# ####
+
+- lowmem:
+    name: MCLKPCmiss2
+    type: INTEGER
+    address: 0x3A6
+    comment: |
+      MacLinkPC badaccess (true-b);
+
+# ####
+
+- lowmem:
+    name: JFLUSH
+    type: VoidUPP
+    address: 0x6F4
+    comment: |
+      * JFLUSH is a guess from disassembling some of Excel 3.0
+      idunno guess (true-b);
+
+# ####
+
+- lowmem:
+    name: JResUnknown1
+    type: VoidUPP
+    address: 0x700
+    comment: |
+      idunno resedit (true-b);
+
+# ####
+
+- lowmem:
+    name: JResUnknown2
+    type: VoidUPP
+    address: 0x714
+    comment: |
+      idunno resedit (true-b);
+
+# ####
+
+- lowmem:
+    name: graphlooksat
+    type: INTEGER
+    address: 0x952
+    comment: |
+      * NOTE: The graphing program looks for a -1 in 0x952
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: macwritespace
+    type: LONGINT
+    address: 0x954
+    comment: |
+      * NOTE: MacWrite stores a copy of the trap address for LoadSeg in 954
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: DSErrCode
+    type: INTEGER
+    address: 0xAF0
+    comment: |
+      MacTypes IMII-362 (true);
+
+# ####
+
+- lowmem:
+    name: SCSIFlags
+    type: INTEGER
+    address: 0xB22
+    comment: |
+      uknown Private.a (true-b);
+
+# ####
+
+- lowmem:
+    name: LastSPExtra
+    type: LONGINT
+    address: 0xB4C
+    comment: |
+      rsys/misc WHOKNOWS (true-b);
+
+# ####
+
+- lowmem:
+    name: lastlowglobal
+    type: LONGINT
+    address: 0x2000
+    comment: |
+      rsys/misc MadeUp (true-b);

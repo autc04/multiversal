@@ -1,0 +1,462 @@
+- enum:
+    values:
+      - name: evtNotEnb
+        value: 1
+
+# ####
+
+- struct:
+    name: EvQEl
+    members:
+      - name: qLink
+        type: QElemPtr
+      - name: qType
+        type: INTEGER
+      - name: evtQWhat
+        type: INTEGER
+      - name: evtQMessage
+        type: LONGINT
+      - name: evtQWhen
+        type: LONGINT
+      - name: evtQWhere
+        type: Point
+      - name: evtQModifiers
+        type: INTEGER
+    size: 22
+
+# ####
+
+- typedef:
+    name: EvQElPtr
+    type: EvQEl*
+
+# ####
+
+- enum:
+    values:
+      - name: osEvt
+        value: 15
+      - name: SUSPENDRESUMEBITS
+        value: 0x01000000
+      - name: SUSPEND
+        value: 0 << 0
+      - name: RESUME
+        value: 1 << 0
+      - name: CONVERTCLIPBOARD
+        value: 1 << 1
+      - name: mouseMovedMessage
+        value: 0xFA
+
+# ####
+
+- enum:
+    values:
+      - name: SZreserved0
+        value: 1 << 15
+      - name: SZacceptSuspendResumeEvents
+        value: 1 << 14
+      - name: SZreserved1
+        value: 1 << 13
+      - name: SZcanBackground
+        value: 1 << 12
+      - name: SZdoesActivateOnFGSwitch
+        value: 1 << 11
+      - name: SZonlyBackground
+        value: 1 << 10
+      - name: SZgetFrontClicks
+        value: 1 << 9
+      - name: SZAcceptAppDiedEvents
+        value: 1 << 8
+      - name: SZis32BitCompatible
+        value: 1 << 7
+      - name: SZisHighLevelEventAware
+        value: 1 << 6
+      - name: SZlocalAndRemoveHLEvents
+        value: 1 << 5
+      - name: SZisStationeryAware
+        value: 1 << 4
+      - name: SZuseTextEditServices
+        value: 1 << 3
+      - name: SZreserved2
+        value: 1 << 2
+      - name: SZreserved3
+        value: 1 << 1
+      - name: SZreserved4
+        value: 1 << 0
+    name: SZ_t
+
+# ####
+
+- struct:
+    name: SIZEResource
+    members:
+      - name: size_flags
+        type: int16_t
+      - name: preferred_size
+        type: int32_t
+      - name: minimum_size
+        type: int32_t
+
+# ####
+
+- executor_only:
+    code: |
+      /* executor-only struct */
+      typedef struct size_info
+      {
+          int16_t size_flags;
+          int32_t preferred_size;
+          int32_t minimum_size;
+          bool size_resource_present_p;
+          bool application_p;
+      } size_info_t;
+      
+      extern size_info_t size_info;
+
+# ####
+
+- lowmem:
+    name: monkeylives
+    type: INTEGER
+    address: 0x100
+    comment: |
+      OSEvent SysEqu.a (true-b);
+
+# ####
+
+- lowmem:
+    name: SysEvtMask
+    type: INTEGER
+    address: 0x144
+    comment: |
+      OSEvent IMII-70 (true);
+
+# ####
+
+- lowmem:
+    name: EventQueue
+    type: QHdr
+    address: 0x14A
+    comment: |
+      OSEvent IMII-71 (true);
+
+# ####
+
+- lowmem:
+    name: Ticks
+    type: ULONGINT
+    address: 0x16A
+    comment: |
+      OSEvent IMI-260 (true);
+
+# ####
+
+- lowmem:
+    name: MBState
+    type: Byte
+    address: 0x172
+    comment: |
+      EventMgr PegLeg (True-b);
+
+# ####
+
+- lowmem:
+    name: MTemp
+    type: Point
+    address: 0x828
+    comment: |
+      QuickDraw PegLeg (True-b);
+
+# ####
+
+- lowmem:
+    name: MouseLocation
+    type: Point
+    address: 0x82C
+    comment: |
+      QuickDraw Vamp (true);
+
+# ####
+
+- lowmem:
+    name: MouseLocation2
+    type: Point
+    address: 0x830
+    comment: |
+      QuickDraw MacAttack (true);
+
+# ####
+
+- executor_only:
+    code: |
+      namespace callconv
+      {
+      struct D0Minus1Boolean
+      {
+          operator bool() { return EM_D0 == 0; }
+      
+          static void set(bool b)
+          {
+              EM_D0 = b ? 0 : -1;
+          }
+      
+          template<class T>
+          static void afterCall(T) {}
+      
+      };
+      }
+
+# ####
+
+- function:
+    name: PPostEvent
+    return: OSErr
+    args:
+      - name: evcode
+        type: INTEGER
+      - name: evmsg
+        type: LONGINT
+      - name: qelp
+        type: EvQElPtr*
+
+# ####
+
+- function:
+    name: PostEvent
+    return: OSErr
+    args:
+      - name: evcode
+        type: INTEGER
+      - name: evmsg
+        type: LONGINT
+
+# ####
+
+- not-for: executor
+  function:
+    name: FlushEvents
+    args:
+      - name: evmask
+        type: INTEGER
+      - name: stopmask
+        type: INTEGER
+    trap: 0xA032
+    m68k-inline: [0x201F, 0xA032]
+- only-for: executor
+  function:
+    name: FlushEvents
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0LowWord
+      - name: stopmask
+        type: INTEGER
+        register: D0HighWord
+    trap: 0xA032
+    executor_extras: ClearD0
+    executor: true
+
+# ####
+
+- not-for: executor
+  function:
+    name: GetOSEvent
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA031
+    m68k-inline: [0xA031, 0x5240]
+    returnreg: D0
+- only-for: executor
+  function:
+    name: GetOSEvent
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA031
+    returnreg: D0Minus1Boolean
+    executor: true
+
+# ####
+
+- not-for: executor
+  function:
+    name: OSEventAvail
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA030
+    m68k-inline: [0xA030, 0x5240]
+    returnreg: D0
+- only-for: executor
+  function:
+    name: OSEventAvail
+    return: Boolean
+    args:
+      - name: evmask
+        type: INTEGER
+        register: D0
+      - name: eventp
+        type: EventRecord*
+        register: A0
+    trap: 0xA030
+    returnreg: D0Minus1Boolean
+    executor: true
+
+# ####
+
+- function:
+    name: SetEventMask
+    args:
+      - name: evmask
+        type: INTEGER
+
+# ####
+
+- function:
+    name: GetEvQHdr
+    return: QHdrPtr
+
+# ####
+
+- function:
+    name: geteventelem
+    return: EvQEl*
+
+# ####
+
+- struct:
+    name: TargetID
+    members:
+      - name: sessionID
+        type: int32_t
+      - name: name
+        type: PPCPortRec
+      - name: location
+        type: LocationNameRec
+      - name: recvrName
+        type: PPCPortRec
+    size: 252
+
+# ####
+
+- typedef:
+    name: TargetIDPtr
+    type: TargetID
+
+# ####
+
+- struct:
+    name: HighLevelEventMsg
+    members:
+      - name: HighLevelEventMsgHeaderlength
+        type: int16_t
+      - name: version
+        type: int16_t
+      - name: reserved1
+        type: int32_t
+      - name: theMsgEvent
+        type: EventRecord
+      - name: userRefCon
+        type: int32_t
+      - name: postingOptions
+        type: int32_t
+      - name: msgLength
+        type: int32_t
+    size: 36
+
+# ####
+
+- typedef:
+    name: HighLevelEventMsgPtr
+    type: HighLevelEventMsg*
+
+# ####
+
+- funptr:
+    return: Boolean
+    args:
+      - type: Ptr
+      - type: HighLevelEventMsgPtr
+      - type: TargetID*
+    name: GetSpecificFilterUPP
+
+# ####
+
+- enum:
+    values:
+      - name: noOutstandingHLE
+        value: -607
+      - name: bufferIsSmall
+        value: -608
+
+# ####
+
+- function:
+    name: AcceptHighLevelEvent
+    return: OSErr
+    args:
+      - name: sender_id_return
+        type: TargetID*
+      - name: refcon_return
+        type: int32_t*
+      - name: msg_buf
+        type: Ptr
+      - name: msg_length_return
+        type: int32_t*
+    dispatcher: OSDispatch
+    selector: 0x0033
+    executor: C_
+
+# ####
+
+- function:
+    name: GetSpecificHighLevelEvent
+    return: Boolean
+    args:
+      - name: fn
+        type: GetSpecificFilterUPP
+      - name: data
+        type: Ptr
+      - name: err_return
+        type: OSErr*
+    dispatcher: OSDispatch
+    selector: 0x0045
+    executor: C_
+
+# ####
+
+- function:
+    name: PostHighLevelEvent
+    return: OSErr
+    args:
+      - name: evt
+        type: EventRecord*
+      - name: receiver_id
+        type: Ptr
+      - name: refcon
+        type: int32_t
+      - name: msg_buf
+        type: Ptr
+      - name: msg_length
+        type: int32_t
+      - name: post_options
+        type: int32_t
+    dispatcher: OSDispatch
+    selector: 0x0034
+    executor: C_

@@ -1,0 +1,440 @@
+- enum:
+    values:
+      - name: putDlgID
+        value: -3999
+
+# ####
+
+- enum:
+    values:
+      - name: putSave
+        value: 1
+      - name: putCancel
+        value: 2
+      - name: putEject
+        value: 5
+      - name: putDrive
+        value: 6
+      - name: putName
+        value: 7
+
+# ####
+
+- enum:
+    values:
+      - name: getDlgID
+        value: -4000
+
+# ####
+
+- enum:
+    values:
+      - name: getOpen
+        value: 1
+      - name: getCancel
+        value: 3
+      - name: getEject
+        value: 5
+      - name: getDrive
+        value: 6
+      - name: getNmList
+        value: 7
+      - name: getScroll
+        value: 8
+
+# ####
+
+- struct:
+    name: SFReply
+    members:
+      - name: good
+        type: Boolean
+      - name: copy
+        type: Boolean
+      - name: fType
+        type: OSType
+      - name: vRefNum
+        type: INTEGER
+      - name: version
+        type: INTEGER
+      - name: fName
+        type: Str63
+    size: 74
+
+# ####
+
+- typedef:
+    name: SFTypeList
+    type: OSType[4]
+
+# ####
+
+- lowmem:
+    name: SFSaveDisk
+    type: INTEGER
+    address: 0x214
+    comment: |
+      StdFilePkg IMIV-72 (true);
+
+# ####
+
+- lowmem:
+    name: CurDirStore
+    type: LONGINT
+    address: 0x398
+    comment: |
+      StdFilePkg IMIV-72 (true);
+
+# ####
+
+- struct:
+    name: StandardFileReply
+    members:
+      - name: sfGood
+        type: Boolean
+      - name: sfReplacing
+        type: Boolean
+      - name: sfType
+        type: OSType
+      - name: sfFile
+        type: FSSpec
+      - name: sfScript
+        type: ScriptCode
+      - name: sfFlags
+        type: INTEGER
+      - name: sfIsFolder
+        type: Boolean
+      - name: sfIsVolume
+        type: Boolean
+      - name: sfReserved1
+        type: LONGINT
+      - name: sfReserved2
+        type: INTEGER
+    size: 88
+
+# ####
+
+- funptr:
+    return: INTEGER
+    args:
+      - name: item
+        type: INTEGER
+      - name: theDialog
+        type: DialogPtr
+    name: DlgHookUPP
+
+# ####
+
+- funptr:
+    return: Boolean
+    args:
+      - name: pb
+        type: CInfoPBPtr
+    name: FileFilterUPP
+
+# ####
+
+- funptr:
+    return: INTEGER
+    args:
+      - name: item
+        type: INTEGER
+      - name: theDialog
+        type: DialogPtr
+      - name: yourDataPtr
+        type: void*
+    name: DlgHookYDUPP
+
+# ####
+
+- funptr:
+    return: Boolean
+    args:
+      - name: pb
+        type: CInfoPBPtr
+      - name: yourDataPtr
+        type: void*
+    name: FileFilterYDUPP
+
+# ####
+
+- funptr:
+    args:
+      - name: theDialog
+        type: DialogPtr
+      - name: itemNo
+        type: INTEGER
+      - name: activating
+        type: Boolean
+      - name: yourDataPtr
+        type: void*
+    name: ActivateYDUPP
+
+# ####
+
+- enum:
+    values:
+      - name: sfItemOpenButton
+        value: 1
+      - name: sfItemCancelButton
+        value: 2
+      - name: sfItemBalloonHelp
+        value: 3
+      - name: sfItemVolumeUser
+        value: 4
+      - name: sfItemEjectButton
+        value: 5
+      - name: sfItemDesktopButton
+        value: 6
+      - name: sfItemFileListUser
+        value: 7
+      - name: sfItemPopUpMenuUser
+        value: 8
+      - name: sfItemDividerLinePict
+        value: 9
+      - name: sfItemFileNameTextEdit
+        value: 10
+        comment: |
+          Put only
+      - name: sfItemPromptStaticText
+        value: 11
+      - name: sfItemNewFolderUser
+        value: 12
+
+# ####
+
+- enum:
+    values:
+      - name: sfHookFirstCall
+        value: -1
+      - name: sfHookLastCall
+        value: -2
+      - name: sfHookNullEvent
+        value: 100
+      - name: sfHookRebuildList
+        value: 101
+      - name: sfHookFolderPopUp
+        value: 102
+      - name: sfHookOpenFolder
+        value: 103
+      - name: sfHookOpenAlias
+        value: 104
+      - name: sfHookGoToDesktop
+        value: 105
+      - name: sfHookGoToAliasTarget
+        value: 106
+      - name: sfHookGoToParent
+        value: 107
+      - name: sfHookGoToNextDrive
+        value: 108
+      - name: sfHookGoToPrevDrive
+        value: 109
+      - name: sfHookChangeSelection
+        value: 110
+
+# ####
+
+- enum:
+    values:
+      - name: sfMainDialogRefCon
+        value: "'stdf'"
+
+# ####
+
+- enum:
+    values:
+      - name: sfPutDialogID
+        value: -6043
+      - name: sfGetDialogID
+        value: -6042
+
+# ####
+
+- dispatcher:
+    name: Pack3
+    trap: 0xA9EA
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: SFPPutFile
+    args:
+      - name: p
+        type: Point
+      - name: prompt
+        type: ConstStringPtr
+      - name: name
+        type: ConstStringPtr
+      - name: dh
+        type: DlgHookUPP
+      - name: rep
+        type: SFReply*
+      - name: dig
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    dispatcher: Pack3
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: SFPutFile
+    args:
+      - name: p
+        type: Point
+      - name: prompt
+        type: ConstStringPtr
+      - name: name
+        type: ConstStringPtr
+      - name: dh
+        type: DlgHookUPP
+      - name: rep
+        type: SFReply*
+    dispatcher: Pack3
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: SFPGetFile
+    args:
+      - name: p
+        type: Point
+      - name: prompt
+        type: ConstStringPtr
+      - name: filef
+        type: FileFilterUPP
+      - name: numt
+        type: INTEGER
+      - name: tl
+        type: SFTypeList
+      - name: dh
+        type: DlgHookUPP
+      - name: rep
+        type: SFReply*
+      - name: dig
+        type: INTEGER
+      - name: fp
+        type: ModalFilterUPP
+    dispatcher: Pack3
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: SFGetFile
+    args:
+      - name: p
+        type: Point
+      - name: prompt
+        type: ConstStringPtr
+      - name: filef
+        type: FileFilterUPP
+      - name: numt
+        type: INTEGER
+      - name: tl
+        type: SFTypeList
+      - name: dh
+        type: DlgHookUPP
+      - name: rep
+        type: SFReply*
+    dispatcher: Pack3
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: StandardGetFile
+    args:
+      - name: filef
+        type: FileFilterUPP
+      - name: numt
+        type: INTEGER
+      - name: tl
+        type: SFTypeList
+      - name: replyp
+        type: StandardFileReply*
+    dispatcher: Pack3
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: StandardPutFile
+    args:
+      - name: prompt
+        type: ConstStringPtr
+      - name: defaultname
+        type: ConstStringPtr
+      - name: replyp
+        type: StandardFileReply*
+    dispatcher: Pack3
+    selector: 0x0005
+    executor: C_
+
+# ####
+
+- function:
+    name: CustomPutFile
+    args:
+      - name: prompt
+        type: ConstStringPtr
+      - name: defaultName
+        type: ConstStringPtr
+      - name: replyp
+        type: StandardFileReply*
+      - name: dlgid
+        type: INTEGER
+      - name: where
+        type: Point
+      - name: dlghook
+        type: DlgHookYDUPP
+      - name: filterproc
+        type: ModalFilterYDUPP
+      - name: activeList
+        type: Ptr
+      - name: activateproc
+        type: ActivateYDUPP
+      - name: yourdatap
+        type: void*
+    dispatcher: Pack3
+    selector: 0x0007
+    executor: C_
+
+# ####
+
+- function:
+    name: CustomGetFile
+    args:
+      - name: filefilter
+        type: FileFilterYDUPP
+      - name: numtypes
+        type: INTEGER
+      - name: typelist
+        type: SFTypeList
+      - name: replyp
+        type: StandardFileReply*
+      - name: dlgid
+        type: INTEGER
+      - name: where
+        type: Point
+      - name: dlghook
+        type: DlgHookYDUPP
+      - name: filterproc
+        type: ModalFilterYDUPP
+      - name: activeList
+        type: Ptr
+      - name: activateproc
+        type: ActivateYDUPP
+      - name: yourdatap
+        type: void*
+    dispatcher: Pack3
+    selector: 0x0008
+    executor: C_

@@ -1,0 +1,27 @@
+- function:
+    name: NumToString
+    args:
+      - name: l
+        type: LONGINT
+        register: D0
+      - name: s
+        type: StringPtr
+        register: A0
+    executor: C_
+    dispatcher: Pack7
+    selector: 0x0000
+
+# ####
+
+- function:
+    name: StringToNum
+    args:
+      - name: s
+        type: ConstStringPtr
+        register: A0
+      - name: lp
+        type: LONGINT*
+        register: Out<D0>
+    executor: C_
+    dispatcher: Pack7
+    selector: 0x0001

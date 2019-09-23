@@ -1,0 +1,830 @@
+- typedef:
+    name: TimeStamp
+    type: int32_t
+
+# ####
+
+- typedef:
+    name: EditionRefNum
+    type: Handle
+
+# ####
+
+- typedef:
+    name: UpdateMode
+    type: int16_t
+
+# ####
+
+- typedef:
+    name: SectionType
+    type: SignedByte
+
+# ####
+
+- typedef:
+    name: FormatType
+    type: char[4]
+
+# ####
+
+- typedef:
+    name: ExpDialogHookUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: ExpModalFilterUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: FormatIOUPP
+    type: ProcPtr
+
+# ####
+
+- typedef:
+    name: EditionOpenerUPP
+    type: ProcPtr
+
+# ####
+
+- struct:
+    name: SectionRecord
+    members:
+      - name: version
+        type: SignedByte
+      - name: kind
+        type: SectionType
+      - name: mode
+        type: UpdateMode
+      - name: mdDate
+        type: TimeStamp
+      - name: sectionID
+        type: int32_t
+      - name: refCon
+        type: int32_t
+      - name: alias
+        type: AliasHandle
+      - name: subPart
+        type: int32_t
+      - name: nextSection
+        type: Handle
+        comment: |
+          ### Section
+      - name: controlBlock
+        type: Handle
+      - name: refNum
+        type: EditionRefNum
+    size: 36
+
+# ####
+
+- typedef:
+    name: SectionPtr
+    type: SectionRecord*
+
+# ####
+
+- typedef:
+    name: SectionHandle
+    type: SectionPtr*
+
+# ####
+
+- struct:
+    name: EditionContainerSpec
+    members:
+      - name: theFile
+        type: FSSpec
+      - name: theFileScript
+        type: ScriptCode
+      - name: thePart
+        type: int32_t
+      - name: thePartName
+        type: Str31
+      - name: thePartScript
+        type: ScriptCode
+
+# ####
+
+- struct:
+    name: EditionContainerSpec
+    size: 110
+
+# ####
+
+- typedef:
+    name: EditionContainerSpecPtr
+    type: EditionContainerSpec*
+
+# ####
+
+- struct:
+    name: EditionInfoRecord
+    members:
+      - name: crDate
+        type: TimeStamp
+      - name: mdDate
+        type: TimeStamp
+      - name: fdCreator
+        type: OSType
+      - name: fdType
+        type: OSType
+      - name: container
+        type: EditionContainerSpec
+
+# ####
+
+- struct:
+    name: EditionInfoRecord
+    size: 126
+
+# ####
+
+- typedef:
+    name: EditionInfoPtr
+    type: EditionInfoRecord*
+
+# ####
+
+- struct:
+    name: NewPublisherReply
+    members:
+      - name: canceled
+        type: Boolean
+      - name: replacing
+        type: Boolean
+      - name: usePart
+        type: Boolean
+      - name: _filler
+        type: uint8_t
+      - name: preview
+        type: Handle
+      - name: previewFormat
+        type: FormatType
+      - name: container
+        type: EditionContainerSpec
+
+# ####
+
+- struct:
+    name: NewPublisherReply
+    size: 122
+
+# ####
+
+- typedef:
+    name: NewPublisherReplyPtr
+    type: NewPublisherReply*
+
+# ####
+
+- struct:
+    name: NewSubscriberReply
+    members:
+      - name: canceled
+        type: Boolean
+      - name: formatsMask
+        type: SignedByte
+      - name: container
+        type: EditionContainerSpec
+
+# ####
+
+- struct:
+    name: NewSubscriberReply
+    size: 112
+
+# ####
+
+- typedef:
+    name: NewSubscriberReplyPtr
+    type: NewSubscriberReply*
+
+# ####
+
+- struct:
+    name: SectionOptionsReply
+    members:
+      - name: canceled
+        type: Boolean
+      - name: changed
+        type: Boolean
+      - name: sectionH
+        type: SectionHandle
+      - name: action
+        type: ResType
+
+# ####
+
+- struct:
+    name: SectionOptionsReply
+    size: 10
+
+# ####
+
+- typedef:
+    name: SectionOptionsReplyPtr
+    type: SectionOptionsReply*
+
+# ####
+
+- typedef:
+    name: EditionOpenerVerb
+    type: uint8_t
+
+# ####
+
+- enum:
+    values:
+      - name: eoOpen
+        value: 0
+      - name: eoClose
+        value: 1
+      - name: eoOpenNew
+        value: 2
+      - name: eoCloseNew
+        value: 3
+      - name: eoCanSubscribe
+        value: 4
+
+# ####
+
+- struct:
+    name: EditionOpenerParamBlock
+    members:
+      - name: info
+        type: EditionInfoRecord
+      - name: sectionH
+        type: SectionHandle
+      - name: document
+        type: FSSpecPtr
+      - name: fdCreator
+        type: OSType
+      - name: ioRefNum
+        type: int32_t
+      - name: ioProc
+        type: FormatIOUPP
+      - name: success
+        type: Boolean
+      - name: formatsMask
+        type: SignedByte
+
+# ####
+
+- struct:
+    name: EditionOpenerParamBlock
+    size: 148
+
+# ####
+
+- typedef:
+    name: EditionOpenerParamBlockPtr
+    type: EditionOpenerParamBlock*
+
+# ####
+
+- typedef:
+    name: FormatIOVerb
+    type: uint8_t
+
+# ####
+
+- enum:
+    values:
+      - name: ioHasFormat
+        value: 0
+      - name: ioReadFormat
+        value: 1
+      - name: ioNewFormat
+        value: 2
+      - name: ioWtriteFormat
+        value: 3
+
+# ####
+
+- struct:
+    name: FormatIOParamBlock
+    members:
+      - name: ioRefNum
+        type: int32_t
+      - name: format
+        type: FormatType
+      - name: formatIndex
+        type: int32_t
+      - name: offset
+        type: int32_t
+      - name: buffPtr
+        type: Ptr
+      - name: buffLen
+        type: int32_t
+
+# ####
+
+- struct:
+    name: FormatIOParamBlock
+    size: 24
+
+# ####
+
+- typedef:
+    name: FormatIOParamBlockPtr
+    type: FormatIOParamBlock*
+
+# ####
+
+- enum:
+    values:
+      - name: flLckedErr
+        value: -45
+      - name: fBusyErr
+        value: -47
+      - name: userCanceledErr
+        value: -128
+      - name: editionMgrInitErr
+        value: -450
+      - name: badSectionErr
+        value: -451
+      - name: notRegisteredSectionErr
+        value: -452
+      - name: badSubPartErr
+        value: -454
+      - name: multiplePubliserWrn
+        value: -460
+      - name: containerNotFoundWrn
+        value: -461
+      - name: notThePublisherWrn
+        value: -463
+
+# ####
+
+- dispatcher:
+    name: Pack11
+    trap: 0xA82D
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: InitEditionPackVersion
+    return: OSErr
+    args:
+      - name: unused
+        type: INTEGER
+    dispatcher: Pack11
+    selector: 0x0100
+    executor: C_
+
+# ####
+
+- function:
+    name: NewSection
+    return: OSErr
+    args:
+      - name: container
+        type: EditionContainerSpecPtr
+      - name: section_doc
+        type: FSSpecPtr
+      - name: kind
+        type: SectionType
+      - name: section_id
+        type: int32_t
+      - name: initial_mode
+        type: UpdateMode
+      - name: section_out
+        type: SectionHandle*
+    dispatcher: Pack11
+    selector: 0x0A02
+    executor: C_
+
+# ####
+
+- function:
+    name: RegisterSection
+    return: OSErr
+    args:
+      - name: section_doc
+        type: FSSpecPtr
+      - name: section
+        type: SectionHandle
+      - name: alias_was_updated_p_out
+        type: Boolean*
+    dispatcher: Pack11
+    selector: 0x0604
+    executor: C_
+
+# ####
+
+- function:
+    name: UnRegisterSection
+    return: OSErr
+    args:
+      - name: section
+        type: SectionHandle
+    dispatcher: Pack11
+    selector: 0x0206
+    executor: C_
+
+# ####
+
+- function:
+    name: IsRegisteredSection
+    return: OSErr
+    args:
+      - name: section
+        type: SectionHandle
+    dispatcher: Pack11
+    selector: 0x0208
+    executor: C_
+
+# ####
+
+- function:
+    name: AssociateSection
+    return: OSErr
+    args:
+      - name: section
+        type: SectionHandle
+      - name: new_section_doc
+        type: FSSpecPtr
+    dispatcher: Pack11
+    selector: 0x040C
+    executor: C_
+
+# ####
+
+- function:
+    name: CreateEditionContainerFile
+    return: OSErr
+    args:
+      - name: edition_file
+        type: FSSpecPtr
+      - name: creator
+        type: OSType
+      - name: edition_file_name_script
+        type: ScriptCode
+    dispatcher: Pack11
+    selector: 0x050E
+    executor: C_
+
+# ####
+
+- function:
+    name: DeleteEditionContainerFile
+    return: OSErr
+    args:
+      - name: edition_file
+        type: FSSpecPtr
+    dispatcher: Pack11
+    selector: 0x0210
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEditionFormatMark
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: format
+        type: FormatType
+      - name: mark
+        type: int32_t
+    dispatcher: Pack11
+    selector: 0x0620
+    executor: C_
+
+# ####
+
+- function:
+    name: GetEditionFormatMark
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: format
+        type: FormatType
+      - name: currentMark
+        type: int32_t*
+    dispatcher: Pack11
+    selector: 0x061E
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenEdition
+    return: OSErr
+    args:
+      - name: subscriber_section
+        type: SectionHandle
+      - name: ref_num
+        type: EditionRefNum*
+    dispatcher: Pack11
+    selector: 0x0412
+    executor: C_
+
+# ####
+
+- function:
+    name: EditionHasFormat
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: format
+        type: FormatType
+      - name: format_size
+        type: Size*
+    dispatcher: Pack11
+    selector: 0x0618
+    executor: C_
+
+# ####
+
+- function:
+    name: ReadEdition
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: format
+        type: FormatType
+      - name: buffer
+        type: Ptr
+      - name: buffer_size
+        type: Size
+    dispatcher: Pack11
+    selector: 0x081A
+    executor: C_
+
+# ####
+
+- function:
+    name: OpenNewEdition
+    return: OSErr
+    args:
+      - name: publisher_section
+        type: SectionHandle
+      - name: creator
+        type: OSType
+      - name: publisher_section_doc
+        type: FSSpecPtr
+      - name: ref_num
+        type: EditionRefNum*
+    dispatcher: Pack11
+    selector: 0x0814
+    executor: C_
+
+# ####
+
+- function:
+    name: WriteEdition
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: format
+        type: FormatType
+      - name: buffer
+        type: Ptr
+      - name: buffer_size
+        type: Size
+    dispatcher: Pack11
+    selector: 0x081C
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseEdition
+    return: OSErr
+    args:
+      - name: edition
+        type: EditionRefNum
+      - name: success_p
+        type: Boolean
+    dispatcher: Pack11
+    selector: 0x0316
+    executor: C_
+
+# ####
+
+- function:
+    name: GetLastEditionContainerUsed
+    return: OSErr
+    args:
+      - name: container
+        type: EditionContainerSpecPtr
+    dispatcher: Pack11
+    selector: 0x0226
+    executor: C_
+
+# ####
+
+- function:
+    name: NewSubscriberDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: NewSubscriberReplyPtr
+    dispatcher: Pack11
+    selector: 0x0232
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPublisherDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: NewSubscriberReplyPtr
+    dispatcher: Pack11
+    selector: 0x0236
+    executor: C_
+
+# ####
+
+- function:
+    name: SectionOptionsDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: SectionOptionsReply*
+    dispatcher: Pack11
+    selector: 0x023A
+    executor: C_
+
+# ####
+
+- function:
+    name: NewSubscriberExpDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: NewSubscriberReplyPtr
+      - name: where
+        type: Point
+      - name: expnasion_ditl_res_id
+        type: int16_t
+      - name: dialog_hook
+        type: ExpDialogHookUPP
+      - name: filter_hook
+        type: ExpModalFilterUPP
+      - name: data
+        type: Ptr
+    dispatcher: Pack11
+    selector: 0x0B34
+    executor: C_
+
+# ####
+
+- function:
+    name: NewPublisherExpDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: NewPublisherReplyPtr
+      - name: where
+        type: Point
+      - name: expnasion_ditl_res_id
+        type: int16_t
+      - name: dialog_hook
+        type: ExpDialogHookUPP
+      - name: filter_hook
+        type: ExpModalFilterUPP
+      - name: data
+        type: Ptr
+    dispatcher: Pack11
+    selector: 0x0B38
+    executor: C_
+
+# ####
+
+- function:
+    name: SectionOptionsExpDialog
+    return: OSErr
+    args:
+      - name: reply
+        type: SectionOptionsReply*
+      - name: where
+        type: Point
+      - name: expnasion_ditl_res_id
+        type: int16_t
+      - name: dialog_hook
+        type: ExpDialogHookUPP
+      - name: filter_hook
+        type: ExpModalFilterUPP
+      - name: data
+        type: Ptr
+    dispatcher: Pack11
+    selector: 0x0B3C
+    executor: C_
+
+# ####
+
+- function:
+    name: GetEditionInfo
+    return: OSErr
+    args:
+      - name: section
+        type: SectionHandle
+      - name: edition_info
+        type: EditionInfoPtr
+    dispatcher: Pack11
+    selector: 0x0422
+    executor: C_
+
+# ####
+
+- function:
+    name: GoToPublisherSection
+    return: OSErr
+    args:
+      - name: container
+        type: EditionContainerSpecPtr
+    dispatcher: Pack11
+    selector: 0x0224
+    executor: C_
+
+# ####
+
+- function:
+    name: GetStandardFormats
+    return: OSErr
+    args:
+      - name: container
+        type: EditionContainerSpecPtr
+      - name: preview_format
+        type: FormatType*
+      - name: preview
+        type: Handle
+      - name: publisher_alias
+        type: Handle
+      - name: formats
+        type: Handle
+    dispatcher: Pack11
+    selector: 0x0A28
+    executor: C_
+
+# ####
+
+- function:
+    name: GetEditionOpenerProc
+    return: OSErr
+    args:
+      - name: opener
+        type: EditionOpenerUPP*
+    dispatcher: Pack11
+    selector: 0x022A
+    executor: C_
+
+# ####
+
+- function:
+    name: SetEditionOpenerProc
+    return: OSErr
+    args:
+      - name: opener
+        type: EditionOpenerUPP
+    dispatcher: Pack11
+    selector: 0x022C
+    executor: C_
+
+# ####
+
+- function:
+    name: CallEditionOpenerProc
+    return: OSErr
+    args:
+      - name: selector
+        type: EditionOpenerVerb
+      - name: param_block
+        type: EditionOpenerParamBlock*
+      - name: opener
+        type: EditionOpenerUPP
+    dispatcher: Pack11
+    selector: 0x052E
+    executor: C_
+
+# ####
+
+- function:
+    name: CallFormatIOProc
+    return: OSErr
+    args:
+      - name: selector
+        type: FormatIOVerb
+      - name: param_block
+        type: FormatIOParamBlock*
+      - name: proc
+        type: FormatIOUPP
+    dispatcher: Pack11
+    selector: 0x0530
+    executor: C_

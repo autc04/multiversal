@@ -1,0 +1,1148 @@
+- enum:
+    values:
+      - name: documentProc
+        value: 0
+      - name: dBoxProc
+        value: 1
+      - name: plainDBox
+        value: 2
+      - name: altDBoxProc
+        value: 3
+      - name: noGrowDocProc
+        value: 4
+      - name: movableDBoxProc
+        value: 5
+      - name: rDocProc
+        value: 16
+
+# ####
+
+- enum:
+    values:
+      - name: dialogKind
+        value: 2
+      - name: userKind
+        value: 8
+
+# ####
+
+- enum:
+    values:
+      - name: inDesk
+        value: 0
+      - name: inMenuBar
+        value: 1
+      - name: inSysWindow
+        value: 2
+      - name: inContent
+        value: 3
+      - name: inDrag
+        value: 4
+      - name: inGrow
+        value: 5
+      - name: inGoAway
+        value: 6
+
+# ####
+
+- enum:
+    values:
+      - name: noConstraint
+        value: 0
+      - name: hAxisOnly
+        value: 1
+      - name: vAxisOnly
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: wDraw
+        value: 0
+      - name: wHit
+        value: 1
+      - name: wCalcRgns
+        value: 2
+      - name: wNew
+        value: 3
+      - name: wDispose
+        value: 4
+      - name: wGrow
+        value: 5
+      - name: wDrawGIcon
+        value: 6
+
+# ####
+
+- enum:
+    values:
+      - name: kWindowMsgDraw
+        value: 0
+      - name: kWindowMsgHitTest
+        value: 1
+      - name: kWindowMsgCalculateShape
+        value: 2
+      - name: kWindowMsgInitialize
+        value: 3
+      - name: kWindowMsgCleanUp
+        value: 4
+      - name: kWindowMsgDrawGrowOutline
+        value: 5
+      - name: kWindowMsgDrawGrowBox
+        value: 6
+
+# ####
+
+- enum:
+    values:
+      - name: wNoHit
+        value: 0
+      - name: wInContent
+        value: 1
+      - name: wInDrag
+        value: 2
+      - name: wInGrow
+        value: 3
+      - name: wInGoAway
+        value: 4
+
+# ####
+
+- enum:
+    values:
+      - name: wContentColor
+        value: 0
+      - name: wFrameColor
+        value: 1
+      - name: wTextColor
+        value: 2
+      - name: wHiliteColor
+        value: 3
+      - name: wTitleBarColor
+        value: 4
+      - name: wHiliteColorLight
+        value: 5
+      - name: wHiliteColorDark
+        value: 6
+      - name: wTitleBarLight
+        value: 7
+      - name: wTitleBarDark
+        value: 8
+      - name: wDialogLight
+        value: 9
+      - name: wDialogDark
+        value: 10
+      - name: wTingeLight
+        value: 11
+      - name: wTingeDark
+        value: 12
+    comment: |
+      color table entries
+
+# ####
+
+- enum:
+    values:
+      - name: deskPatID
+        value: 16
+
+# ####
+
+- typedef:
+    name: WindowPtr
+    type: GrafPtr
+
+# ####
+
+- typedef:
+    name: CWindowPtr
+    type: CGrafPtr
+
+# ####
+
+- struct:
+    name: ControlRecord
+
+# ####
+
+- typedef:
+    name: ControlPtr
+    type: ControlRecord*
+
+# ####
+
+- typedef:
+    name: ControlHandle
+    type: ControlPtr*
+
+# ####
+
+- struct:
+    name: WindowRecord
+    members:
+      - name: port
+        type: GrafPort
+      - name: windowKind
+        type: INTEGER
+      - name: visible
+        type: Boolean
+      - name: hilited
+        type: Boolean
+      - name: goAwayFlag
+        type: Boolean
+      - name: spareFlag
+        type: Boolean
+      - name: strucRgn
+        type: RgnHandle
+      - name: contRgn
+        type: RgnHandle
+      - name: updateRgn
+        type: RgnHandle
+      - name: windowDefProc
+        type: Handle
+      - name: dataHandle
+        type: Handle
+      - name: titleHandle
+        type: StringHandle
+      - name: titleWidth
+        type: INTEGER
+      - name: controlList
+        type: ControlHandle
+      - name: nextWindow
+        type: WindowRecord*
+      - name: windowPic
+        type: PicHandle
+      - name: refCon
+        type: LONGINT
+    size: 156
+
+# ####
+
+- typedef:
+    name: WindowPeek
+    type: WindowRecord*
+
+# ####
+
+- struct:
+    name: WStateData
+    members:
+      - name: userState
+        type: Rect
+      - name: stdState
+        type: Rect
+    size: 16
+
+# ####
+
+- enum:
+    values:
+      - name: inZoomIn
+        value: 7
+      - name: inZoomOut
+        value: 8
+
+# ####
+
+- enum:
+    values:
+      - name: wInZoomIn
+        value: 5
+      - name: wInZoomOut
+        value: 6
+
+# ####
+
+- struct:
+    name: AuxWinRec
+
+# ####
+
+- typedef:
+    name: AuxWinPtr
+    type: AuxWinRec*
+
+# ####
+
+- typedef:
+    name: AuxWinHandle
+    type: AuxWinPtr*
+
+# ####
+
+- struct:
+    name: AuxWinRec
+    members:
+      - name: awNext
+        type: AuxWinHandle
+      - name: awOwner
+        type: WindowPtr
+      - name: awCTable
+        type: CTabHandle
+      - name: dialogCItem
+        type: Handle
+      - name: awFlags
+        type: LONGINT
+      - name: awReserved
+        type: CTabHandle
+      - name: awRefCon
+        type: LONGINT
+    size: 28
+
+# ####
+
+- funptr:
+    return: LONGINT
+    args:
+      - name: varcode
+        type: INTEGER
+      - name: wp
+        type: WindowPtr
+      - name: message
+        type: INTEGER
+      - name: param
+        type: LONGINT
+    name: WindowDefUPP
+
+# ####
+
+- lowmem:
+    name: WindowList
+    type: WindowPeek
+    address: 0x9D6
+    comment: |
+      WindowMgr IMI-274 (true);
+
+# ####
+
+- lowmem:
+    name: SaveUpdate
+    type: INTEGER
+    address: 0x9DA
+    comment: |
+      WindowMgr IMI-297 (true);
+
+# ####
+
+- lowmem:
+    name: PaintWhite
+    type: INTEGER
+    address: 0x9DC
+    comment: |
+      WindowMgr IMI-297 (true);
+
+# ####
+
+- lowmem:
+    name: WMgrPort
+    type: GrafPtr
+    address: 0x9DE
+    comment: |
+      WindowMgr IMI-282 (true);
+
+# ####
+
+- lowmem:
+    name: WMgrCPort
+    type: CGrafPtr
+    address: 0xD2C
+    comment: |
+      QuickDraw IMV-205 (false);
+
+# ####
+
+- lowmem:
+    name: OldStructure
+    type: RgnHandle
+    address: 0x9E6
+    comment: |
+      WindowMgr IMI-296 (true);
+
+# ####
+
+- lowmem:
+    name: OldContent
+    type: RgnHandle
+    address: 0x9EA
+    comment: |
+      WindowMgr IMI-296 (true);
+
+# ####
+
+- lowmem:
+    name: GrayRgn
+    type: RgnHandle
+    address: 0x9EE
+    comment: |
+      WindowMgr IMI-282 (true);
+
+# ####
+
+- lowmem:
+    name: SaveVisRgn
+    type: RgnHandle
+    address: 0x9F2
+    comment: |
+      WindowMgr IMI-293 (true);
+
+# ####
+
+- lowmem:
+    name: DragHook
+    type: ProcPtr
+    address: 0x9F6
+    comment: |
+      WindowMgr IMI-324 (true);
+
+# ####
+
+- lowmem:
+    name: DragPattern
+    type: Pattern
+    address: 0xA34
+    comment: |
+      WindowMgr IMI-324 (true);
+
+# ####
+
+- lowmem:
+    name: DeskPattern
+    type: Pattern
+    address: 0xA3C
+    comment: |
+      WindowMgr IMI-282 (true);
+
+# ####
+
+- lowmem:
+    name: CurActivate
+    type: WindowPtr
+    address: 0xA64
+    comment: |
+      WindowMgr IMI-280 (true);
+
+# ####
+
+- lowmem:
+    name: CurDeactive
+    type: WindowPtr
+    address: 0xA68
+    comment: |
+      WindowMgr IMI-280 (true);
+
+# ####
+
+- lowmem:
+    name: DeskHook
+    type: ProcPtr
+    address: 0xA6C
+    comment: |
+      WindowMgr IMI-282 (true);
+
+# ####
+
+- lowmem:
+    name: GhostWindow
+    type: WindowPtr
+    address: 0xA84
+    comment: |
+      WindowMgr IMI-287 (true);
+
+# ####
+
+- lowmem:
+    name: AuxWinHead
+    type: AuxWinHandle
+    address: 0xCD0
+    comment: |
+      WindowMgr IMV-200 (true);
+
+# ####
+
+- lowmem:
+    name: DeskCPat
+    type: PixPatHandle
+    address: 0xCD8
+    comment: |
+      WindowMgr SysEqua.a (true);
+
+# ####
+
+- executor_only:
+    code: |
+      inline RgnHandle GetGrayRgn() { return LM(GrayRgn); }
+      NOTRAP_FUNCTION2(GetGrayRgn);
+
+# ####
+
+- function:
+    name: SetWTitle
+    args:
+      - name: w
+        type: WindowPtr
+      - name: t
+        type: ConstStringPtr
+    trap: 0xA91A
+    executor: C_
+
+# ####
+
+- function:
+    name: GetWTitle
+    args:
+      - name: w
+        type: WindowPtr
+      - name: t
+        type: StringPtr
+    trap: 0xA919
+    executor: C_
+
+# ####
+
+- function:
+    name: FrontWindow
+    return: WindowPtr
+    trap: 0xA924
+    executor: C_
+
+# ####
+
+- function:
+    name: HiliteWindow
+    args:
+      - name: w
+        type: WindowPtr
+      - name: flag
+        type: Boolean
+    trap: 0xA91C
+    executor: C_
+
+# ####
+
+- function:
+    name: BringToFront
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA920
+    executor: C_
+
+# ####
+
+- function:
+    name: SelectWindow
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA91F
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowHide
+    args:
+      - name: w
+        type: WindowPtr
+      - name: flag
+        type: Boolean
+    trap: 0xA908
+    executor: C_
+
+# ####
+
+- function:
+    name: HideWindow
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA916
+    executor: C_
+
+# ####
+
+- function:
+    name: ShowWindow
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA915
+    executor: C_
+
+# ####
+
+- function:
+    name: SendBehind
+    args:
+      - name: w
+        type: WindowPtr
+      - name: behind
+        type: WindowPtr
+    trap: 0xA921
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawGrowIcon
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA904
+    executor: C_
+
+# ####
+
+- function:
+    name: InitWindows
+    trap: 0xA912
+    executor: C_
+
+# ####
+
+- function:
+    name: GetWMgrPort
+    args:
+      - name: wp
+        type: GrafPtr*
+    trap: 0xA910
+    executor: C_
+
+# ####
+
+- function:
+    name: NewWindow
+    return: WindowPtr
+    args:
+      - name: wst
+        type: void*
+      - name: r
+        type: const Rect*
+      - name: title
+        type: ConstStringPtr
+      - name: vis
+        type: Boolean
+      - name: procid
+        type: INTEGER
+      - name: behind
+        type: WindowPtr
+      - name: gaflag
+        type: Boolean
+      - name: rc
+        type: LONGINT
+    trap: 0xA913
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewWindow
+    return: WindowPtr
+    args:
+      - name: wid
+        type: INTEGER
+      - name: wst
+        type: void*
+      - name: behind
+        type: WindowPtr
+    trap: 0xA9BD
+    executor: C_
+
+# ####
+
+- function:
+    name: CloseWindow
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA92D
+    executor: C_
+
+# ####
+
+- function:
+    name: NewCWindow
+    return: WindowPtr
+    args:
+      - name: storage
+        type: void*
+      - type: const Rect*
+      - type: ConstStringPtr
+      - type: Boolean
+      - type: INTEGER
+      - type: WindowPtr
+      - type: Boolean
+      - type: LONGINT
+    trap: 0xAA45
+    executor: C_
+
+# ####
+
+- function:
+    name: GetNewCWindow
+    return: WindowPtr
+    args:
+      - type: INTEGER
+      - type: void*
+      - type: WindowPtr
+    trap: 0xAA46
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeWindow
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA914
+    executor: C_
+
+# ####
+
+- function:
+    name: SetWRefCon
+    args:
+      - name: w
+        type: WindowPtr
+      - name: data
+        type: LONGINT
+    trap: 0xA918
+    executor: C_
+
+# ####
+
+- function:
+    name: GetWRefCon
+    return: LONGINT
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA917
+    executor: C_
+
+# ####
+
+- function:
+    name: SetWindowPic
+    args:
+      - name: w
+        type: WindowPtr
+      - name: p
+        type: PicHandle
+    trap: 0xA92E
+    executor: C_
+
+# ####
+
+- function:
+    name: GetWindowPic
+    return: PicHandle
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA92F
+    executor: C_
+
+# ####
+
+- function:
+    name: PinRect
+    return: LONGINT
+    args:
+      - name: r
+        type: const Rect*
+      - name: p
+        type: Point
+    trap: 0xA94E
+    executor: C_
+
+# ####
+
+- function:
+    name: DragTheRgn
+    return: LONGINT
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: startp
+        type: Point
+      - name: limit
+        type: const Rect*
+      - name: slop
+        type: const Rect*
+      - name: axis
+        type: INTEGER
+      - name: proc
+        type: ProcPtr
+    trap: 0xA926
+    executor: C_
+
+# ####
+
+- function:
+    name: DragGrayRgn
+    return: LONGINT
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: startp
+        type: Point
+      - name: limit
+        type: const Rect*
+      - name: slop
+        type: const Rect*
+      - name: axis
+        type: INTEGER
+      - name: proc
+        type: ProcPtr
+    trap: 0xA905
+    executor: C_
+
+# ####
+
+- function:
+    name: ClipAbove
+    args:
+      - name: w
+        type: WindowPeek
+    trap: 0xA90B
+    executor: C_
+
+# ####
+
+- function:
+    name: CheckUpdate
+    return: Boolean
+    args:
+      - name: ev
+        type: EventRecord*
+    trap: 0xA911
+    executor: C_
+
+# ####
+
+- function:
+    name: SaveOld
+    args:
+      - name: w
+        type: WindowPeek
+    trap: 0xA90E
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintOne
+    args:
+      - name: w
+        type: WindowPeek
+      - name: clobbered
+        type: RgnHandle
+    trap: 0xA90C
+    executor: C_
+
+# ####
+
+- function:
+    name: PaintBehind
+    args:
+      - name: w
+        type: WindowPeek
+      - name: clobbered
+        type: RgnHandle
+    trap: 0xA90D
+    executor: C_
+
+# ####
+
+- function:
+    name: CalcVis
+    args:
+      - name: w
+        type: WindowPeek
+    trap: 0xA909
+    executor: C_
+
+# ####
+
+- function:
+    name: CalcVisBehind
+    args:
+      - name: w
+        type: WindowPeek
+      - name: clobbered
+        type: RgnHandle
+    trap: 0xA90A
+    executor: C_
+
+# ####
+
+- function:
+    name: DrawNew
+    args:
+      - name: w
+        type: WindowPeek
+      - name: flag
+        type: Boolean
+    trap: 0xA90F
+    executor: C_
+
+# ####
+
+- function:
+    name: GetWVariant
+    return: INTEGER
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA80A
+    executor: C_
+
+# ####
+
+- function:
+    name: FindWindow
+    return: INTEGER
+    args:
+      - name: p
+        type: Point
+      - name: wpp
+        type: WindowPtr*
+    trap: 0xA92C
+    executor: C_
+
+# ####
+
+- function:
+    name: TrackBox
+    return: Boolean
+    args:
+      - name: wp
+        type: WindowPtr
+      - name: pt
+        type: Point
+      - name: part
+        type: INTEGER
+    trap: 0xA83B
+    executor: C_
+
+# ####
+
+- function:
+    name: TrackGoAway
+    return: Boolean
+    args:
+      - name: w
+        type: WindowPtr
+      - name: p
+        type: Point
+    trap: 0xA91E
+    executor: C_
+
+# ####
+
+- function:
+    name: ZoomWindow
+    args:
+      - name: wp
+        type: WindowPtr
+      - name: part
+        type: INTEGER
+      - name: front
+        type: Boolean
+    trap: 0xA83A
+    executor: C_
+
+# ####
+
+- function:
+    name: MoveWindow
+    args:
+      - name: wp
+        type: WindowPtr
+      - name: h
+        type: INTEGER
+      - name: v
+        type: INTEGER
+      - name: front
+        type: Boolean
+    trap: 0xA91B
+    executor: C_
+
+# ####
+
+- function:
+    name: DragWindow
+    args:
+      - name: wp
+        type: WindowPtr
+      - name: p
+        type: Point
+      - name: rp
+        type: const Rect*
+    trap: 0xA925
+    executor: C_
+
+# ####
+
+- function:
+    name: GrowWindow
+    return: LONGINT
+    args:
+      - name: w
+        type: WindowPtr
+      - name: startp
+        type: Point
+      - name: rp
+        type: const Rect*
+    trap: 0xA92B
+    executor: C_
+
+# ####
+
+- function:
+    name: SizeWindow
+    args:
+      - name: w
+        type: WindowPtr
+      - name: width
+        type: INTEGER
+      - name: height
+        type: INTEGER
+      - name: flag
+        type: Boolean
+    trap: 0xA91D
+    executor: C_
+
+# ####
+
+- function:
+    name: InvalRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA928
+    executor: C_
+
+# ####
+
+- function:
+    name: InvalRgn
+    args:
+      - name: r
+        type: RgnHandle
+    trap: 0xA927
+    executor: C_
+
+# ####
+
+- function:
+    name: ValidRect
+    args:
+      - name: r
+        type: const Rect*
+    trap: 0xA92A
+    executor: C_
+
+# ####
+
+- function:
+    name: ValidRgn
+    args:
+      - name: r
+        type: RgnHandle
+    trap: 0xA929
+    executor: C_
+
+# ####
+
+- function:
+    name: BeginUpdate
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA922
+    executor: C_
+
+# ####
+
+- function:
+    name: EndUpdate
+    args:
+      - name: w
+        type: WindowPtr
+    trap: 0xA923
+    executor: C_
+
+# ####
+
+- function:
+    name: SetWinColor
+    args:
+      - name: w
+        type: WindowPtr
+      - name: new_w_ctab
+        type: CTabHandle
+    trap: 0xAA41
+    executor: C_
+
+# ####
+
+- function:
+    name: SetDeskCPat
+    args:
+      - type: PixPatHandle
+    trap: 0xAA47
+    executor: C_
+
+# ####
+
+- function:
+    name: GetAuxWin
+    return: Boolean
+    args:
+      - type: WindowPtr
+      - type: AuxWinHandle*
+    trap: 0xAA42
+    executor: C_
+
+# ####
+
+- typedef:
+    name: WindowRef
+    type: WindowPtr
+
+# ####
+
+- not-for: executor
+  function:
+    name: GetWindowKind
+    return: INTEGER
+    args:
+      - type: WindowRef
+        name: win
+    inline: ((WindowPeek)(win))->windowKind
+
+# ####
+
+- not-for: executor
+  function:
+    name: SetPortWindowPort
+    args:
+      - type: WindowRef
+        name: win
+    inline: SetPort(win)
+
+# ####
+
+- not-for: executor
+  function:
+    name: GetWindowPortBounds
+    args:
+      - type: WindowRef
+        name: window
+      - type: Rect*
+        name: bounds
+    inline: "*(bounds) = (window)->portRect"

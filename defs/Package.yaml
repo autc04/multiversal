@@ -1,0 +1,46 @@
+- enum:
+    values:
+      - name: dskInit
+        value: 2
+      - name: stdFile
+        value: 3
+      - name: flPoint
+        value: 4
+      - name: trFunc
+        value: 5
+      - name: intUtil
+        value: 6
+      - name: bdConv
+        value: 7
+
+# ####
+
+- lowmem:
+    name: AppPacks
+    type: Handle[8]
+    address: 0xAB8
+    comment: |
+      PackageMgr ThinkC (true-b);
+
+# ####
+
+- function:
+    name: InitPack
+    args:
+      - name: packid
+        type: INTEGER
+    trap: 0xA9E5
+    executor: C_
+
+# ####
+
+- function:
+    name: InitAllPacks
+    trap: 0xA9E6
+    executor: C_
+
+# ####
+
+- executor_only:
+    code: |
+      RAW_68K_TRAP(Pack1, 0xA9E8);

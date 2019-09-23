@@ -1,0 +1,426 @@
+- enum:
+    values:
+      - name: kPEFTag1
+        value: "'Joy!'"
+      - name: kPEFTag2
+        value: "'peff'"
+      - name: kPEFVersion
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFProcessShare
+        value: 1
+      - name: kPEFGlobalShare
+        value: 4
+      - name: kPEFProtectedShare
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFCodeSection
+        value: 0
+      - name: kPEFUnpackedDataSection
+      - name: kPEFPatternDataSection
+      - name: kPEFConstantSection
+      - name: kPEFLoaderSection
+      - name: kPEFDebugSection
+      - name: kPEFExecutableDataSection
+      - name: kPEFExceptionSection
+      - name: kPEFTracebackSection
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFCodeSymbol
+      - name: kPEFDataSymbol
+      - name: kPEFTVectorSymbol
+      - name: kPEFTOCSymbol
+      - name: kPEFGlueSymbol
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFWeakImportLibMask
+        value: 0x40
+      - name: kPEFInitLibBeforeMask
+        value: 0x80
+    comment: |
+      flags for PEFImportedLibrary::options
+
+# ####
+
+- struct:
+    name: PEFContainerHeader
+    members:
+      - name: tag1
+        type: OSType
+      - name: tag2
+        type: OSType
+      - name: architecture
+        type: OSType
+      - name: formatVersion
+        type: uint32_t
+      - name: dateTimeStamp
+        type: uint32_t
+      - name: oldDefVersion
+        type: uint32_t
+      - name: oldImpVersion
+        type: uint32_t
+      - name: currentVersion
+        type: uint32_t
+      - name: sectionCount
+        type: uint16_t
+      - name: instSectionCount
+        type: uint16_t
+      - name: reservedA
+        type: uint32_t
+    size: 40
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEF_CONTAINER_TAG1(p) ((p)->tag1)
+      #define PEF_CONTAINER_TAG2(p) ((p)->tag2)
+      #define PEF_CONTAINER_ARCHITECTURE(p) ((p)->architecture)
+      #define PEF_CONTAINER_FORMAT_VERSION(p) ((p)->formatVersion)
+      #define PEF_CONTAINER_SECTION_COUNT(p) ((p)->sectionCount)
+      #define PEF_CONTAINER_INSTSECTION_COUNT(p) ((p)->instSectionCount)
+      #define PEF_CONTAINER_DATE(p) ((p)->dateTimeStamp)
+      #define PEF_CONTAINER_OLD_DEV_VERS(p) ((p)->oldDefVersion)
+      #define PEF_CONTAINER_OLD_IMP_VERS(p) ((p)->oldImpVersion)
+      #define PEF_CONTAINER_CURRENT_VERS(p) ((p)->currentVersion)
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFFirstSectionHeaderOffset
+        value: sizeof(PEFContainerHeader)
+
+# ####
+
+- struct:
+    name: PEFSectionHeader
+    members:
+      - name: nameOffset
+        type: int32_t
+      - name: defaultAddress
+        type: uint32_t
+      - name: totalLength
+        type: uint32_t
+      - name: unpackedLength
+        type: uint32_t
+      - name: containerLength
+        type: uint32_t
+      - name: containerOffset
+        type: uint32_t
+      - name: sectionKind
+        type: uint8_t
+      - name: shareKind
+        type: uint8_t
+      - name: alignment
+        type: uint8_t
+      - name: reservedA
+        type: uint8_t
+    size: 28
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEFSH_DEFAULT_ADDRESS(p) ((p)->defaultAddress)
+      #define PEFSH_TOTAL_SIZE(p) ((p)->totalLength)
+      #define PEFSH_UNPACKED_SIZE(p) ((p)->unpackedLength)
+      #define PEFSH_PACKED_SIZE(p) ((p)->containerLength)
+      #define PEFSH_CONTAINER_OFFSET(p) ((p)->containerOffset)
+      #define PEFSH_SECTION_KIND(p) ((p)->sectionKind)
+      #define PEFSH_SHARE_KIND(p) ((p)->shareKind)
+      #define PEFSH_ALIGNMENT(p) (1 << (p)->alignment)
+
+# ####
+
+- struct:
+    name: PEFLoaderInfoHeader
+    members:
+      - name: mainSection
+        type: int32_t
+      - name: mainOffset
+        type: uint32_t
+      - name: initSection
+        type: int32_t
+      - name: initOffset
+        type: uint32_t
+      - name: termSection
+        type: int32_t
+      - name: termOffset
+        type: uint32_t
+      - name: importedLibraryCount
+        type: uint32_t
+      - name: totalImportedSymbolCount
+        type: uint32_t
+      - name: relocSectionCount
+        type: uint32_t
+      - name: relocInstrOffset
+        type: uint32_t
+      - name: loaderStringsOffset
+        type: uint32_t
+      - name: exportHashOffset
+        type: uint32_t
+      - name: exportHashTablePower
+        type: uint32_t
+      - name: exportedSymbolCount
+        type: uint32_t
+    size: 56
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEFLIH_MAIN_SECTION(p) ((p)->mainSection)
+      #define PEFLIH_MAIN_OFFSET(p) ((p)->mainOffset)
+      #define PEFLIH_INIT_SECTION(p) ((p)->initSection)
+      #define PEFLIH_INIT_OFFSET(p) ((p)->initOffset)
+      #define PEFLIH_TERM_SECTION(p) ((p)->termSection)
+      #define PEFLIH_TERM_OFFSET(p) ((p)->termOffset)
+      #define PEFLIH_IMPORTED_LIBRARY_COUNT(p) ((p)->importedLibraryCount)
+      #define PEFLIH_IMPORTED_SYMBOL_COUNT(p) ((p)->totalImportedSymbolCount)
+      #define PEFLIH_RELOC_SECTION_COUNT(p) ((p)->relocSectionCount)
+      #define PEFLIH_RELOC_INSTR_OFFSET(p) ((p)->relocInstrOffset)
+      #define PEFLIH_STRINGS_OFFSET(p) ((p)->loaderStringsOffset)
+      #define PEFLIH_HASH_OFFSET(p) ((p)->exportHashOffset)
+      #define PEFLIH_HASH_TABLE_POWER(p) ((p)->exportHashTablePower)
+      #define PEFLIH_SYMBOL_COUNT(p) ((p)->exportedSymbolCount)
+
+# ####
+
+- struct:
+    name: PEFImportedLibrary
+    members:
+      - name: nameOffset
+        type: uint32_t
+      - name: oldImpVersion
+        type: uint32_t
+      - name: currentVersion
+        type: uint32_t
+      - name: importedSymbolCount
+        type: uint32_t
+      - name: firstImportedSymbol
+        type: uint32_t
+      - name: options
+        type: uint8_t
+      - name: reservedA
+        type: uint8_t
+      - name: reservedB
+        type: uint16_t
+    size: 24
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEFIL_NAME_OFFSET(p) ((p)->nameOffset)
+      #define PEFIL_SYMBOL_COUNT(p) ((p)->importedSymbolCount)
+      #define PEFIL_FIRST_SYMBOL(p) ((p)->firstImportedSymbol)
+
+# ####
+
+- struct:
+    name: PEFLoaderRelocationHeader
+    members:
+      - name: sectionIndex
+        type: uint16_t
+      - name: reservedA
+        type: uint16_t
+      - name: relocCount
+        type: uint32_t
+      - name: firstRelocOffset
+        type: uint32_t
+    size: 12
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEFRLH_RELOC_COUNT(p) ((p)->relocCount)
+      #define PEFRLH_FIRST_RELOC_OFFSET(p) ((p)->firstRelocOffset)
+      #define PEFRLH_SECTION_INDEX(p) ((p)->sectionIndex)
+
+# ####
+
+- enum:
+    values:
+      - name: kExponentLimit
+        value: 16
+      - name: kAverageChainLimit
+        value: 10
+
+# ####
+
+- enum:
+    values:
+      - name: kPEFHashLengthShift
+        value: 16
+      - name: kPEFHashValueMask
+        value: 0xFFFF
+
+# ####
+
+- enum:
+    values:
+      - name: FIRST_INDEX_SHIFT
+        value: 0
+      - name: FIRST_INDEX_MASK
+        value: 0x3FFFF
+      - name: CHAIN_COUNT_SHIFT
+        value: 18
+      - name: CHAIN_COUNT_MASK
+        value: 0x3FFF
+
+# ####
+
+- struct:
+    name: PEFExportedSymbol
+    members:
+      - name: classAndName
+        type: uint32_t
+      - name: symbolValue
+        type: uint32_t
+      - name: sectionIndex
+        type: int16_t
+    size: 10
+
+# ####
+
+- executor_only:
+    code: |
+      #define PEFEXS_CLASS_AND_NAME(p) ((p)->classAndName)
+      #define PEFEXS_NAME(p) (PEFEXS_CLASS_AND_NAME(p) & 0xffffff)
+      #define PEFEXS_SYMBOL_VALUE(p) ((p)->symbolValue)
+      #define PEFEXS_SECTION_INDEX(p) ((p)->sectionIndex)
+
+# ####
+
+- struct:
+    name: PEFImportedSymbol
+    members:
+      - name: classAndName
+        type: uint32_t
+
+# ####
+
+- typedef:
+    name: PEFExportedSymbolKey
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: PEFExportedSymbolHashSlot
+    type: uint32_t
+
+# ####
+
+- enum:
+    values:
+      - name: NAME_MASK
+        value: 0xFFFFFF
+
+# ####
+
+- function:
+    name: PEFExportedSymbolClass
+    return: uint32_t
+    args:
+      - name: classAndName
+        type: uint32_t
+    inline: ((classAndName) >> 24) & 0xFF
+
+# ####
+
+- function:
+    name: PEFExportedSymbolNameOffset
+    return: uint32_t
+    args:
+      - name: classAndName
+        type: uint32_t
+    inline: (classAndName) & 0xFFFFFF
+
+# ####
+
+- function:
+    name: PEFComposeImportedSymbol
+    return: uint32_t
+    args:
+      - name: cls
+        type: uint32_t
+      - name: nameOffset
+        type: uint32_t
+    inline: (((uint32_t)cls) << 24) | (uint32_t)(nameOffset)
+
+# ####
+
+- function:
+    name: PEFRelocComposeBySectC
+    return: uint16_t
+    args:
+      - name: runLength
+        type: uint16_t
+    inline: 0x4000 | ((uint16_t)(runLength) - 1)
+
+# ####
+
+- function:
+    name: PEFRelocComposeBySectD
+    return: uint16_t
+    args:
+      - name: runLength
+        type: uint16_t
+    inline: 0x4200 | ((uint16_t)(runLength) - 1)
+
+# ####
+
+- function:
+    name: PEFRelocComposeSetPosition_1st
+    return: uint16_t
+    args:
+      - name: fullOffset
+        type: uint32_t
+    inline: 0xA000 | (uint16_t)((uint32_t)(fullOffset) >> 16)
+
+# ####
+
+- function:
+    name: PEFRelocComposeSetPosition_2nd
+    return: uint16_t
+    args:
+      - name: fullOffset
+        type: uint32_t
+    inline: (uint16_t) ((uint32_t)(fullOffset))
+
+# ####
+
+- function:
+    name: PEFRelocComposeLgByImport_1st
+    return: uint16_t
+    args:
+      - name: fullIndex
+        type: uint32_t
+    inline: 0xA400 | (uint16_t)((uint32_t)(fullIndex) >> 16)
+
+# ####
+
+- function:
+    name: PEFRelocComposeLgByImport_2nd
+    return: uint16_t
+    args:
+      - name: fullIndex
+        type: uint32_t
+    inline: (uint16_t) ((uint32_t)(fullIndex))

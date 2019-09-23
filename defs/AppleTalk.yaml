@@ -1,0 +1,24 @@
+- lowmem:
+    name: PortBUse
+    type: Byte
+    address: 0x291
+    comment: |
+      AppleTalk IMII-305 (true-b);
+
+# ####
+
+- lowmem:
+    name: ABusVars
+    type: Ptr
+    address: 0x2D8
+    comment: |
+      AppleTalk IMII-328 (false);
+
+# ####
+
+- lowmem:
+    name: ABusDCE
+    type: Ptr
+    address: 0x2DC
+    comment: |
+      AppleTalk MPW (false);

@@ -1,0 +1,361 @@
+- typedef:
+    name: ISAType
+    type: uint8_t
+
+# ####
+
+- typedef:
+    name: CallingConventionType
+    type: uint16_t
+
+# ####
+
+- typedef:
+    name: ProcInfoType
+    type: uint32_t
+
+# ####
+
+- typedef:
+    name: RegisterSelectorType
+    type: uint16_t
+
+# ####
+
+- typedef:
+    name: RoutineFlagsType
+    type: uint16_t
+
+# ####
+
+- enum:
+    values:
+      - name: kM68kISA
+        value: 0
+      - name: kPowerPCISA
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: kPascalStackBased
+      - name: kCStackBased
+      - name: kRegisterBased
+      - name: kThinkCStackBased
+        value: 5
+      - name: kD0DispatchedPascalStackBased
+        value: 8
+      - name: kD0DispatchedCStackBased
+        value: 9
+      - name: kD1DispatchedPascalStackBased
+        value: 12
+      - name: kStackDispatchedPascalStackBased
+        value: 14
+      - name: kSpecialCase
+
+# ####
+
+- struct:
+    name: PPCProcDescriptor
+    members:
+      - name: code
+        type: uint32_t
+      - name: rtoc
+        type: uint32_t
+
+# ####
+
+- typedef:
+    name: RDFlagsType
+    type: uint8_t
+
+# ####
+
+- struct:
+    name: RoutineRecord
+    members:
+      - name: procInfo
+        type: ProcInfoType
+      - name: reserved1
+        type: uint8_t
+      - name: ISA
+        type: ISAType
+      - name: routineFlags
+        type: RoutineFlagsType
+      - name: procDescriptor
+        type: ProcPtr
+      - name: reserved2
+        type: uint32_t
+      - name: selector
+        type: uint32_t
+    size: 20
+
+# ####
+
+- struct:
+    name: RoutineDescriptor
+    members:
+      - name: goMixedModeTrap
+        type: uint16_t
+      - name: version
+        type: uint8_t
+      - name: routineDescriptorFlags
+        type: RDFlagsType
+      - name: reserved1
+        type: uint32_t
+      - name: reserved2
+        type: uint8_t
+      - name: selectorInfo
+        type: uint8_t
+      - name: routineCount
+        type: uint16_t
+      - name: routineRecords
+        type: RoutineRecord[1]
+    size: 32
+
+# ####
+
+- enum:
+    values:
+      - name: MIXED_MODE_TRAP
+        value: 0xAAFE
+
+# ####
+
+- enum:
+    values:
+      - name: kRoutineDescriptorVersion
+        value: 7
+
+# ####
+
+- enum:
+    values:
+      - name: kSelectorsAreNotIndexable
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: kNoByteCode
+      - name: kOneByteCode
+      - name: kTwoByteCode
+      - name: kFourByteCode
+
+# ####
+
+- enum:
+    values:
+      - name: kCallingConventionWidth
+        value: 4
+
+# ####
+
+- enum:
+    values:
+      - name: kStackParameterPhase
+        value: 6
+
+# ####
+
+- enum:
+    values:
+      - name: kStackParameterWidth
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: kResultSizeWidth
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: kRegisterD0
+        value: 0
+      - name: kRegisterD1
+        comment: |
+          1
+      - name: kRegisterD2
+        comment: |
+          2
+      - name: kRegisterD3
+        comment: |
+          3
+      - name: kRegisterA0
+        comment: |
+          4
+      - name: kRegisterA1
+        comment: |
+          5
+      - name: kRegisterA2
+        comment: |
+          6
+      - name: kRegisterA3
+        comment: |
+          7
+      - name: kRegisterD4
+        comment: |
+          8
+      - name: kRegisterD5
+        comment: |
+          9
+      - name: kRegisterD6
+        comment: |
+          10
+      - name: kREgisterD7
+        comment: |
+          11
+      - name: kRegisterA4
+        comment: |
+          12
+      - name: kRegisterA5
+        comment: |
+          13
+      - name: kRegisterA6
+        comment: |
+          14
+      - name: kCCRegisterCBit
+        value: 16
+      - name: kCCRegisterVBit
+        comment: |
+          17
+      - name: kCCRegisterZBit
+        comment: |
+          18
+      - name: kCCRegisterNBit
+        comment: |
+          19
+      - name: kCCRegisterXBit
+        comment: |
+          20
+
+# ####
+
+- typedef:
+    name: UniversalProcPtr
+    type: RoutineDescriptor*
+
+# ####
+
+- executor_only:
+    code: |
+      #define RESULT_SIZE(n) ((n) << kCallingConventionWidth)
+      #define STACK_ROUTINE_PARAMETER(arg, n) \
+          ((n) << (kStackParameterPhase + ((arg)-1) * kStackParameterWidth))
+
+# ####
+
+- dispatcher:
+    name: MixedModeDispatch
+    trap: 0xAA59
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: NewRoutineDescriptor
+    return: UniversalProcPtr
+    args:
+      - name: proc
+        type: ProcPtr
+      - name: info
+        type: ProcInfoType
+      - name: isa
+        type: ISAType
+    dispatcher: MixedModeDispatch
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: DisposeRoutineDescriptor
+    args:
+      - name: ptr
+        type: UniversalProcPtr
+    dispatcher: MixedModeDispatch
+    selector: 0x0001
+    executor: C_
+
+# ####
+
+- function:
+    name: NewFatRoutineDescriptor
+    return: UniversalProcPtr
+    args:
+      - name: m68k
+        type: ProcPtr
+      - name: ppc
+        type: ProcPtr
+      - name: info
+        type: ProcInfoType
+    dispatcher: MixedModeDispatch
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: SaveMixedModeState
+    return: OSErr
+    args:
+      - name: statep
+        type: void*
+      - name: vers
+        type: uint32_t
+    dispatcher: MixedModeDispatch
+    selector: 0x0003
+    executor: C_
+
+# ####
+
+- function:
+    name: RestoreMixedModeState
+    return: OSErr
+    args:
+      - name: statep
+        type: void*
+      - name: vers
+        type: uint32_t
+    dispatcher: MixedModeDispatch
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- not-for: executor
+  function:
+    name: CallUniversalProc
+    return: LONGINT
+    args:
+      - name: theProcPtr
+        type: UniversalProcPtr
+      - name: procInfo
+        type: ProcInfoType
+      - type: ...
+- only-for: executor
+  function:
+    name: CallUniversalProc
+    executor: C_
+    comment: |
+      Executor's version does not declare variable arguments.
+      We get them directly from the PowerPC stack instead.
+      
+    return: LONGINT
+    args:
+      - name: theProcPtr
+        type: UniversalProcPtr
+      - name: procInfo
+        type: ProcInfoType
+
+# ####
+
+- executor_only:
+    code: |
+      extern uint32_t ModeSwitch(UniversalProcPtr theProcPtr, ProcInfoType procInfo, ISAType fromISA);

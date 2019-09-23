@@ -1,0 +1,72 @@
+- dispatcher:
+    name: Pack2
+    trap: 0xA9E9
+    selector-location: StackW
+
+# ####
+
+- function:
+    name: DILoad
+    dispatcher: Pack2
+    selector: 0x0002
+    executor: C_
+
+# ####
+
+- function:
+    name: DIUnload
+    dispatcher: Pack2
+    selector: 0x0004
+    executor: C_
+
+# ####
+
+- function:
+    name: DIBadMount
+    return: INTEGER
+    args:
+      - name: pt
+        type: Point
+      - name: evtmess
+        type: LONGINT
+    dispatcher: Pack2
+    selector: 0x0000
+    executor: C_
+
+# ####
+
+- function:
+    name: DIFormat
+    return: OSErr
+    args:
+      - name: dn
+        type: INTEGER
+    dispatcher: Pack2
+    selector: 0x0006
+    executor: C_
+
+# ####
+
+- function:
+    name: DIVerify
+    return: OSErr
+    args:
+      - name: dn
+        type: INTEGER
+    dispatcher: Pack2
+    selector: 0x0008
+    executor: C_
+
+# ####
+
+- function:
+    name: DIZero
+    return: OSErr
+    args:
+      - name: dn
+        type: INTEGER
+      - name: vname
+        type: StringPtr
+    dispatcher: Pack2
+    selector: 0x000A
+    executor: C_
