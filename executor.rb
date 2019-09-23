@@ -248,11 +248,13 @@ class ExecutorGenerator < Generator
     end
 
     def generate(defs)
+        print "Writing Headers...\n"
         FileUtils.mkdir_p "out/executor"
         defs.topsort.each do |name|
             formatted_file "out/executor/#{remap_name(name)}.h" do |f|
                 f << generate_header(defs.headers[name])
             end
         end
+        print "Done.\n"
     end
 end

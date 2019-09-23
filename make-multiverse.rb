@@ -138,20 +138,21 @@ class Defs
         @headers = {}
         @declared_names = {}        
 
+        print "Reading yaml files..."
         Dir.glob('defs/*.yaml') do |file|
-            print "Reading #{file}...\n"
-            
             header = HeaderFile.new(file, filter_key: filter_key)
             @headers[header.name] = header
         
             header.declared_names.each { |n| @declared_names[n] = header.name }
         end
         
-        print "Linking things up...\n"
+        print "#{headers.size} files.\n"
+
         headers.each do |name, header|
             header.collect_includes(declared_names)
         end
         
+
         @topsort = []
         done = Set.new
         headers.each do |name, header|

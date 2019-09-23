@@ -296,6 +296,8 @@ class CIncludesGenerator < Generator
     def generate(defs)
         @functions_needing_glue = []
         
+        print "Writing Headers...\n"
+
         FileUtils.mkdir_p "out/CIncludes"
         FileUtils.mkdir_p "out/RIncludes"
         FileUtils.mkdir_p "out/src"
@@ -386,10 +388,12 @@ class CIncludesGenerator < Generator
             @functions_needing_glue.each {|name| f << name + "\n"}
         end
         
+        print "Compiling libInterface.a...\n"
         Dir.glob('out/src/*.c') do |file|
             name = File.basename(file, '.c')
             system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
         end
         system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
+        print "Done.\n"
     end
 end
