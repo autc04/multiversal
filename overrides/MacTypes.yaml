@@ -1,9 +1,0 @@
-- not-for: executor
-  struct:
-    name: Point
-    members:
-      - name: v
-        type: INTEGER
-      - name: h
-        type: INTEGER
-    size: 4
