@@ -306,7 +306,7 @@ class CIncludesGenerator < Generator
         FileUtils.mkdir_p "#{$options.output_dir}/RIncludes"
         FileUtils.mkdir_p "#{$options.output_dir}/src"
         FileUtils.mkdir_p "#{$options.output_dir}/obj"
-        FileUtils.mkdir_p "#{$options.output_dir}/lib"
+        FileUtils.mkdir_p "#{$options.output_dir}/lib68k"
         
         formatted_file("#{$options.output_dir}/CIncludes/Multiverse.h") do |f|
             f << <<~PREAMBLE
@@ -397,7 +397,7 @@ class CIncludesGenerator < Generator
             name = File.basename(file, '.c')
             system("m68k-apple-macos-gcc -c #{file} -o #{$options.output_dir}/obj/#{name}.o -I #{$options.output_dir}/CIncludes -O -ffunction-sections")
         end
-        system("m68k-apple-macos-ar cqs #{$options.output_dir}/lib/libInterface.a #{$options.output_dir}/obj/*.o")
+        system("m68k-apple-macos-ar cqs #{$options.output_dir}/lib68k/libInterface.a #{$options.output_dir}/obj/*.o")
         print "Done.\n"
     end
 end
