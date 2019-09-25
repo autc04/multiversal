@@ -1,6 +1,10 @@
 require './generator'
 
 class ExecutorGenerator < Generator
+    def self.filter_key
+        "executor"
+    end
+
     def initialize
         super
         @need_guest = false
@@ -249,9 +253,9 @@ class ExecutorGenerator < Generator
 
     def generate(defs)
         print "Writing Headers...\n"
-        FileUtils.mkdir_p "out/executor"
+        FileUtils.mkdir_p "#{$options.output_dir}/executor"
         defs.topsort.each do |name|
-            formatted_file "out/executor/#{remap_name(name)}.h" do |f|
+            formatted_file "#{$options.output_dir}/executor/#{remap_name(name)}.h" do |f|
                 f << generate_header(defs.headers[name])
             end
         end

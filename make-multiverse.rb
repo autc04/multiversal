@@ -1,6 +1,7 @@
 require 'yaml'
 require 'set'
 require 'fileutils'
+require 'optparse'
 
 require './generator'
 require './cincludes'
@@ -179,15 +180,17 @@ private
 end
 
 
+Options = Struct.new(:output_dir, :generator)
+$options = Options.new
+$options.output_dir = "./out"
 
-what = ARGV[0] or "--cincludes"
-case what
-when "--cincludes"
-    defs = Defs.new(filter_key: "CIncludes")
-    CIncludesGenerator.new.generate(defs)
-when "--executor"
-    defs = Defs.new(filter_key: "executor")
-    ExecutorGenerator.new.generate(defs)
-else
-    print("what?? '#{what}'\n")
-end
+OptionParser.new do |op|
+    op.on('-o', '--output-dir=PATH', String) { |a| $options.output_dir = a }
+    op.on('-G', '--generator=GEN', {
+        'CIncludes'=>CIncludesGenerator,
+        'Executor'=>ExecutorGenerator
+    }) { |a| $options.generator = a }
+end.parse!
+
+defs = Defs.new(filter_key: $options.generator.filter_key)
+$options.generator.new.generate(defs)

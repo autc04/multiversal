@@ -1,4 +1,8 @@
 class Generator
+    def self.filter_key
+        nil
+    end
+
     def initialize
         @type_size_map = {
             "uint8_t" => 1,
@@ -213,6 +217,6 @@ class Generator
     end
 
     def formatted_file(name, &block)
-        IO.popen("clang-format | grep -v \"// clang-format o\" > #{name}", "w", &block)
+        IO.popen("clang-format | grep -v \"// clang-format o\" > \"#{name}\"", "w", &block)
     end
 end

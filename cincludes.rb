@@ -1,6 +1,10 @@
 require './generator'
 
 class CIncludesGenerator < Generator
+    def self.filter_key
+        "CIncludes"
+    end
+
     def encode_size(type)
         sz = size_of_type(type)
         return 4 unless sz
@@ -298,13 +302,13 @@ class CIncludesGenerator < Generator
         
         print "Writing Headers...\n"
 
-        FileUtils.mkdir_p "out/CIncludes"
-        FileUtils.mkdir_p "out/RIncludes"
-        FileUtils.mkdir_p "out/src"
-        FileUtils.mkdir_p "out/obj"
-        FileUtils.mkdir_p "out/lib"
+        FileUtils.mkdir_p "#{$options.output_dir}/CIncludes"
+        FileUtils.mkdir_p "#{$options.output_dir}/RIncludes"
+        FileUtils.mkdir_p "#{$options.output_dir}/src"
+        FileUtils.mkdir_p "#{$options.output_dir}/obj"
+        FileUtils.mkdir_p "#{$options.output_dir}/lib"
         
-        formatted_file("out/CIncludes/Multiverse.h") do |f|
+        formatted_file("#{$options.output_dir}/CIncludes/Multiverse.h") do |f|
             f << <<~PREAMBLE
                 #pragma once
                 #include <stdint.h>
@@ -347,7 +351,7 @@ class CIncludesGenerator < Generator
                 f << inc
         
                 if @impl_out.length > 0 then
-                    formatted_file("out/src/#{header.name}.c") do |f|
+                    formatted_file("#{$options.output_dir}/src/#{header.name}.c") do |f|
                         f << "#include \"Multiverse.h\"\n"
                         f << @impl_out
                     end
@@ -369,31 +373,31 @@ class CIncludesGenerator < Generator
             "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
             "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
             "StandardFile", "Serial"].each do |name|
-            File.open("out/CIncludes/#{name}.h", "w") do |f|
+            File.open("#{$options.output_dir}/CIncludes/#{name}.h", "w") do |f|
                 f << "#pragma once\n"
                 f << "#include \"Multiverse.h\"\n"
             end
         end 
         
-        Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "out/RIncludes/")}
-        Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "out/src/")}
+        Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "#{$options.output_dir}/RIncludes/")}
+        Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "#{$options.output_dir}/src/")}
         ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
          "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
-            File.open("out/RIncludes/#{name}.r", "w") do |f|
+            File.open("#{$options.output_dir}/RIncludes/#{name}.r", "w") do |f|
                 f << "#include \"Multiverse.r\"\n"
             end
         end
         
-        File.open("out/CIncludes/needs-glue.txt", "w") do |f|
+        File.open("#{$options.output_dir}/CIncludes/needs-glue.txt", "w") do |f|
             @functions_needing_glue.each {|name| f << name + "\n"}
         end
         
         print "Compiling libInterface.a...\n"
-        Dir.glob('out/src/*.c') do |file|
+        Dir.glob("#{$options.output_dir}/src/*.c") do |file|
             name = File.basename(file, '.c')
-            system("m68k-apple-macos-gcc -c #{file} -o out/obj/#{name}.o -I out/CIncludes -O -ffunction-sections")
+            system("m68k-apple-macos-gcc -c #{file} -o #{$options.output_dir}/obj/#{name}.o -I #{$options.output_dir}/CIncludes -O -ffunction-sections")
         end
-        system("m68k-apple-macos-ar cqs out/lib/libInterface.a out/obj/*.o")
+        system("m68k-apple-macos-ar cqs #{$options.output_dir}/lib/libInterface.a #{$options.output_dir}/obj/*.o")
         print "Done.\n"
     end
 end
