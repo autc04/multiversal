@@ -126,11 +126,12 @@ class Generator
         value["values"].each do |val|
             @out << val["name"]
             if val["value"] then
-                @out << "= " << convert_expression(val["value"].to_s) << ","
+                @out << " = " << convert_expression(val["value"].to_s) << ","
             else
                 @out << ","
             end
-            @out << " // " << val["comment"].rstrip << "\n" if val["comment"]
+            @out << " // " << val["comment"].rstrip if val["comment"]
+            @out << "\n"
         end
         @out << "}"
         @out << value["name"] if value["name"]
@@ -217,6 +218,17 @@ class Generator
     end
 
     def formatted_file(name, &block)
-        IO.popen("clang-format | grep -v \"// clang-format o\" > \"#{name}\"", "w", &block)
+        if not @format_command then
+            if system('which clang-format > /dev/null') then
+                @format_command = "clang-format | grep -v \"// clang-format o\""
+            elsif system('which uncrustify > /dev/null') then
+                @format_command = "uncrustify -q -c uncrustify.cfg | grep -v \"// clang-format o\""
+            elsif system('which astyle > /dev/null') then
+                @format_command = "astyle --style=allman --max-code-length=79 --mode=c | grep -v \"// clang-format o\""
+            else
+                @format_command = "grep -v \"// clang-format o\""
+            end
+        end
+        IO.popen("#{@format_command} > \"#{name}\"", "w", &block)
     end
 end
