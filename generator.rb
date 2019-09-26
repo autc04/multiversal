@@ -219,11 +219,11 @@ class Generator
 
     def formatted_file(name, &block)
         if not @format_command then
-            if system('which clang-format > /dev/null') then
+            if system('clang-format --version > /dev/null') then
                 @format_command = "clang-format | grep -v \"// clang-format o\""
-            elsif system('which uncrustify > /dev/null') then
+            elsif system('uncrustify --version > /dev/null') then
                 @format_command = "uncrustify -q -c uncrustify.cfg | grep -v \"// clang-format o\""
-            elsif system('which astyle > /dev/null') then
+            elsif system('astyle --version > /dev/null') then
                 @format_command = "astyle --style=allman --max-code-length=79 --mode=c | grep -v \"// clang-format o\""
             else
                 @format_command = "grep -v \"// clang-format o\""
