@@ -371,7 +371,7 @@ class CIncludesGenerator < Generator
             "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
             "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
             "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-            "Traps", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
+            "Traps", "Types", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
             "StandardFile", "Serial"].each do |name|
             File.open("#{$options.output_dir}/CIncludes/#{name}.h", "w") do |f|
                 f << "#pragma once\n"
@@ -381,7 +381,7 @@ class CIncludesGenerator < Generator
         
         Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "#{$options.output_dir}/RIncludes/")}
         Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "#{$options.output_dir}/src/")}
-        ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes",
+        ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes", "Types",
          "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
             File.open("#{$options.output_dir}/RIncludes/#{name}.r", "w") do |f|
                 f << "#include \"Multiverse.r\"\n"
