@@ -164,6 +164,8 @@ pascal OSErr FSOpen(ConstStr255Param fileName, short vRefNum, short *refNum)
     ParamBlockRec pb;
     pb.ioParam.ioNamePtr = (StringPtr)fileName;
     pb.ioParam.ioVRefNum = vRefNum;
+    pb.ioParam.ioPermssn = fsCurPerm;
+    pb.ioParam.ioMisc = NULL;
     pb.fileParam.ioFVersNum = 0; 
 
     // Try newer OpenDF first, because it does not open drivers
@@ -184,6 +186,8 @@ pascal OSErr OpenDF(ConstStr255Param fileName, short vRefNum, short *refNum)
     ParamBlockRec pb;
     pb.ioParam.ioNamePtr = (StringPtr)fileName;
     pb.ioParam.ioVRefNum = vRefNum;
+    pb.ioParam.ioPermssn = fsCurPerm;
+    pb.ioParam.ioMisc = NULL;
     pb.fileParam.ioFVersNum = 0; 
 
     err = PBOpenDFSync(&pb);
@@ -198,6 +202,8 @@ pascal OSErr OpenRF(ConstStr255Param fileName, short vRefNum, short *refNum)
     ParamBlockRec pb;
     pb.ioParam.ioNamePtr = (StringPtr)fileName;
     pb.ioParam.ioVRefNum = vRefNum;
+    pb.ioParam.ioPermssn = fsCurPerm;
+    pb.ioParam.ioMisc = NULL;
     pb.fileParam.ioFVersNum = 0; 
 
     err = PBOpenRFSync(&pb);
