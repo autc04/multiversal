@@ -1553,7 +1553,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41472
+    trap: 0xA200
     returnreg: D0
     variants:
       - PBHOpenSync
@@ -1653,7 +1653,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41479
+    trap: 0xA207
     returnreg: D0
     variants:
       - PBHGetVInfoSync
@@ -1693,7 +1693,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41480
+    trap: 0xA208
     returnreg: D0
     variants:
       - PBHCreateSync
@@ -1733,7 +1733,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41481
+    trap: 0xA209
     returnreg: D0
     variants:
       - PBHDeleteSync
@@ -1773,7 +1773,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41482
+    trap: 0xA20A
     returnreg: D0
     variants:
       - PBHOpenRFSync
@@ -1813,7 +1813,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41483
+    trap: 0xA20B
     returnreg: D0
     variants:
       - PBHRenameSync
@@ -1853,7 +1853,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41484
+    trap: 0xA20C
     returnreg: D0
     variants:
       - PBHGetFInfoSync
@@ -1893,7 +1893,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41485
+    trap: 0xA20D
     returnreg: D0
     variants:
       - PBHSetFInfoSync
@@ -2039,7 +2039,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41492
+    trap: 0xA214
     returnreg: D0
     variants:
       - PBHGetVolSync
@@ -2079,7 +2079,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41493
+    trap: 0xA215
     returnreg: D0
     variants:
       - PBHSetVolSync
@@ -2165,7 +2165,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41537
+    trap: 0xA241
     returnreg: D0
     variants:
       - PBHSetFLockSync
@@ -2205,7 +2205,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41538
+    trap: 0xA242
     returnreg: D0
     variants:
       - PBHRstFLockSync
@@ -2644,7 +2644,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: mfs
-    trap: 0xA260
+    trap: 0xA060
     dispatcher: FSDispatch
     selector: 0x1A
     returnreg: D0
@@ -2666,7 +2666,7 @@
         register: TrapBit<0x400>
     executor: true
     file_trap: hfs
-    trap: 41568
+    trap: 0xA260
     dispatcher: FSDispatch
     selector: 0x1A
     returnreg: D0

@@ -1,7 +1,7 @@
 - lowmem:
     name: nilhandle
     type: Ptr
-    address: 0x00
+    address: 0x0
     comment: |
       Declarations of low memory globals which haven't been put anywhere else
       yet follow. Whenever a low memory global clearly belongs to one manager/module,
