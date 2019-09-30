@@ -457,6 +457,8 @@ pascal OSErr OpenDriver(ConstStr255Param name, short *drvrRefNum)
     pb.ioParam.ioNamePtr = (StringPtr)name;
     pb.fileParam.ioFVersNum = 0;
     pb.ioParam.ioVRefNum = 0;
+    pb.ioParam.ioPermssn = fsCurPerm;
+    pb.ioParam.ioMisc = NULL;
 
     err = PBOpenSync(&pb);
     *drvrRefNum = pb.ioParam.ioRefNum;
