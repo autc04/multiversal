@@ -244,9 +244,6 @@ type 'DITL'
                 byte = 2;
                 integer;
             case HelpItem:
-                longint = 0;
-                longint = 0;
-                longint = 0;
                 boolean enabled, disabled;
                 key bitstring[7] = 1;
                 switch
