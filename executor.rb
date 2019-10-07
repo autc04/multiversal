@@ -253,9 +253,9 @@ class ExecutorGenerator < Generator
 
     def generate(defs)
         print "Writing Headers...\n"
-        FileUtils.mkdir_p "#{$options.output_dir}/executor"
+        FileUtils.mkdir_p "#{$options.output_dir}/"
         defs.topsort.each do |name|
-            formatted_file "#{$options.output_dir}/executor/#{remap_name(name)}.h" do |f|
+            formatted_file "#{$options.output_dir}/#{remap_name(name)}.h" do |f|
                 f << generate_header(defs.headers[name])
             end
         end
