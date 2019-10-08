@@ -333,7 +333,9 @@ class CIncludesGenerator < Generator
                     #endif
                 #endif
         
+                #ifndef TARGET_API_MAC_CARBON
                 #define TARGET_API_MAC_CARBON 0
+                #endif
         
                 //typedef void (*ProcPtr)();
                 typedef struct RoutineDescriptor *ProcPtr;
