@@ -222,11 +222,11 @@ class ExecutorGenerator < Generator
     def generate_preamble(header)
         super
         @out << "#pragma once\n"
-        if header.name == "MacTypes" then
-            @out << "#include \"base/mactype.h\"\n"
-            @out << "#include <cassert>\n"
-            @out << "#include <base/lowglobals.h>\n"
-        end
+        #if header.name == "MacTypes" then
+        @out << "#include \"base/mactype.h\"\n"
+        @out << "#include <cassert>\n"
+        @out << "#include <base/lowglobals.h>\n"
+        #end
 
         header.included.each do |file|
             @out << "#include \"#{remap_name(file)}.h\"\n"
