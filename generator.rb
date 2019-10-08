@@ -1,3 +1,5 @@
+require 'tempfile'
+
 class Generator
     def self.filter_key
         nil
@@ -240,6 +242,21 @@ class Generator
                 @format_command = "grep -v \"// clang-format o\""
             end
         end
-        IO.popen("#{@format_command} > \"#{name}\"", "w", &block)
+        #IO.popen("#{@format_command} > \"#{name}\"", "w", &block)
+        tmp = Tempfile.new('multiverse-tmp')
+        block.call(tmp)
+        tmp.close
+        newtext = ""
+        IO.popen("#{@format_command}", "r", :in => tmp.path) do |pipe|
+            newtext = pipe.read
+        end
+
+        tmp.unlink
+
+        
+        if !File.readable?(name) || File.read(name) != newtext then
+            File.write(name, newtext)
+            print "#{name}\n"
+        end
     end
 end
