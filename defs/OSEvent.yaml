@@ -99,19 +99,19 @@
 
 # ####
 
-- executor_only:
-    code: |
-      /* executor-only struct */
-      typedef struct size_info
-      {
-          int16_t size_flags;
-          int32_t preferred_size;
-          int32_t minimum_size;
-          bool size_resource_present_p;
-          bool application_p;
-      } size_info_t;
-      
-      extern size_info_t size_info;
+- only-for: Executor
+  verbatim: |
+    /* executor-only struct */
+    typedef struct size_info
+    {
+        int16_t size_flags;
+        int32_t preferred_size;
+        int32_t minimum_size;
+        bool size_resource_present_p;
+        bool application_p;
+    } size_info_t;
+    
+    extern size_info_t size_info;
 
 # ####
 
@@ -187,24 +187,24 @@
 
 # ####
 
-- executor_only:
-    code: |
-      namespace callconv
-      {
-      struct D0Minus1Boolean
-      {
-          operator bool() { return EM_D0 == 0; }
-      
-          static void set(bool b)
-          {
-              EM_D0 = b ? 0 : -1;
-          }
-      
-          template<class T>
-          static void afterCall(T) {}
-      
-      };
-      }
+- only-for: Executor
+  verbatim: |
+    namespace callconv
+    {
+    struct D0Minus1Boolean
+    {
+        operator bool() { return EM_D0 == 0; }
+    
+        static void set(bool b)
+        {
+            EM_D0 = b ? 0 : -1;
+        }
+    
+        template<class T>
+        static void afterCall(T) {}
+    
+    };
+    }
 
 # ####
 

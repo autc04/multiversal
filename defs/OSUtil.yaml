@@ -874,10 +874,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #undef GetMMUMode
-      #undef SwapMMUMode
+- only-for: Executor
+  verbatim: |
+    #undef GetMMUMode
+    #undef SwapMMUMode
 
 # ####
 
@@ -985,3 +985,47 @@
         type: LONGINT
         register: D0
     m68k-inline: [0xC18D]
+
+# ####
+
+- function:
+    name: c2pstrcpy
+    args:
+      - name: dst
+        type: Str255
+      - name: src
+        type: const char*
+    carbon: only
+
+# ####
+
+- function:
+    name: p2cstrcpy
+    args:
+      - name: dst
+        type: char *
+      - name: src
+        type: ConstStr255Param
+    carbon: only
+
+# ####
+
+- function:
+    name: CopyCStringToPascal
+    args:
+      - name: src
+        type: const char*
+      - name: dst
+        type: Str255
+    carbon: only
+
+# ####
+
+- function:
+    name: CopyPascalStringToC
+    args:
+      - name: src
+        type: ConstStr255Param
+      - name: dst
+        type: char *
+    carbon: only

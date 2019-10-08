@@ -900,9 +900,17 @@
 
 # ####
 
-- typedef:
+- api: classic
+  typedef:
     name: CGrafPtr
     type: CGrafPort*
+- api: carbon
+  typedef:
+    name: CGrafPtr
+    type: GrafPtr
+    comment: |
+      In Carbon, all ports are color and you're not allowed to access the struct anyway.
+      
 
 # ####
 
@@ -1256,10 +1264,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern void C_unknown574();
-      PASCAL_FUNCTION(unknown574);
+- only-for: Executor
+  verbatim: |
+    extern void C_unknown574();
+    PASCAL_FUNCTION(unknown574);
 
 # ####
 
@@ -3174,10 +3182,93 @@
 
 # ####
 
-- executor_only:
-    code: |
-      inline QDGlobals& qdGlobals()
-      {
-          Ptr thePortPtr = *(GUEST<Ptr> *)SYN68K_TO_US(EM_A5);
-          return *(QDGlobals*)(thePortPtr - offsetof(QDGlobals, thePort));
-      }
+- only-for: Executor
+  verbatim: |
+    inline QDGlobals& qdGlobals()
+    {
+        Ptr thePortPtr = *(GUEST<Ptr> *)SYN68K_TO_US(EM_A5);
+        return *(QDGlobals*)(thePortPtr - offsetof(QDGlobals, thePort));
+    }
+
+# ####
+
+- api: carbon
+  function:
+    name: GetPortTextFont
+    args:
+      - name: p
+        type: CGrafPtr
+    return: int16_t
+
+# ####
+
+- api: carbon
+  function:
+    name: GetPortTextSize
+    args:
+      - name: p
+        type: CGrafPtr
+    return: int16_t
+
+# ####
+
+- api: carbon
+  function:
+    name: QDFlushPortBuffer
+    args:
+      - name: p
+        type: CGrafPtr
+      - name: rgn
+        type: RgnHandle
+
+# ####
+
+- api: carbon
+  function:
+    name: GetPortBounds
+    args:
+      - name: p
+        type: CGrafPtr
+      - name: r
+        type: Rect *
+
+# ####
+
+- api: carbon
+  function:
+    name: GetPortVisibleRegion
+    args:
+      - name: p
+        type: CGrafPtr
+      - name: rgn
+        type: RgnHandle
+
+# ####
+
+- api: carbon
+  function:
+    name: GetRegionBounds
+    args:
+      - name: rgn
+        type: RgnHandle
+      - name: r
+        type: Rect *
+
+# ####
+
+- api: carbon
+  function:
+    name: GetPortBitMapForCopyBits
+    args:
+      - name: p
+        type: CGrafPtr
+    return: BitMap *
+
+# ####
+
+- api: carbon
+  function:
+    name: GetQDGlobalsScreenBits
+    args:
+      - name: bm
+        type: BitMap *

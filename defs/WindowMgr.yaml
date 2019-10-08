@@ -469,10 +469,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      inline RgnHandle GetGrayRgn() { return LM(GrayRgn); }
-      NOTRAP_FUNCTION2(GetGrayRgn);
+- only-for: Executor
+  verbatim: |
+    inline RgnHandle GetGrayRgn() { return LM(GrayRgn); }
+    NOTRAP_FUNCTION2(GetGrayRgn);
 
 # ####
 
@@ -1124,6 +1124,7 @@
       - type: WindowRef
         name: win
     inline: ((WindowPeek)(win))->windowKind
+    noinline: carbon
 
 # ####
 
@@ -1134,6 +1135,7 @@
       - type: WindowRef
         name: win
     inline: SetPort(win)
+    noinline: carbon
 
 # ####
 
@@ -1146,3 +1148,25 @@
       - type: Rect*
         name: bounds
     inline: "*(bounds) = (window)->portRect"
+    noinline: carbon
+
+# ####
+
+- api: carbon
+  function:
+    name: GetWindowPort
+    args:
+      - name: w
+        type: WindowRef
+    return: CGrafPtr
+
+# ####
+
+- api: carbon
+  function:
+    name: InvalWindowRect
+    args:
+      - name: w
+        type: WindowRef
+      - name: r
+        type: const Rect*

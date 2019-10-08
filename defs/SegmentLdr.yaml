@@ -122,10 +122,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern void Launch(ConstStringPtr appl, INTEGER vrefnum);
-      extern void Chain(ConstStringPtr appl, INTEGER vrefnum);
+- only-for: Executor
+  verbatim: |
+    extern void Launch(ConstStringPtr appl, INTEGER vrefnum);
+    extern void Chain(ConstStringPtr appl, INTEGER vrefnum);
 
 # ####
 

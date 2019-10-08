@@ -59,9 +59,9 @@
 
 # ####
 
-- executor_only:
-    code: |
-      const char *const sPrDrvr = ".Print";
+- only-for: Executor
+  verbatim: |
+    const char *const sPrDrvr = ".Print";
 
 # ####
 

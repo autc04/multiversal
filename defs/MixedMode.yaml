@@ -243,11 +243,11 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #define RESULT_SIZE(n) ((n) << kCallingConventionWidth)
-      #define STACK_ROUTINE_PARAMETER(arg, n) \
-          ((n) << (kStackParameterPhase + ((arg)-1) * kStackParameterWidth))
+- only-for: Executor
+  verbatim: |
+    #define RESULT_SIZE(n) ((n) << kCallingConventionWidth)
+    #define STACK_ROUTINE_PARAMETER(arg, n) \
+        ((n) << (kStackParameterPhase + ((arg)-1) * kStackParameterWidth))
 
 # ####
 
@@ -356,6 +356,6 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern uint32_t ModeSwitch(UniversalProcPtr theProcPtr, ProcInfoType procInfo, ISAType fromISA);
+- only-for: Executor
+  verbatim: |
+    extern uint32_t ModeSwitch(UniversalProcPtr theProcPtr, ProcInfoType procInfo, ISAType fromISA);

@@ -1,6 +1,6 @@
-- executor_only:
-    code: |
-      const std::nullptr_t kUnresolvedCFragSymbolAddress = nullptr;
+- only-for: Executor
+  verbatim: |
+    const std::nullptr_t kUnresolvedCFragSymbolAddress = nullptr;
 
 # ####
 
@@ -27,10 +27,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #define CFRG_VERSION(cfrg) ((cfgr)->version)
-      #define CFRG_N_DESCRIPTS(cfrg) ((cfrg)->n_descripts)
+- only-for: Executor
+  verbatim: |
+    #define CFRG_VERSION(cfrg) ((cfgr)->version)
+    #define CFRG_N_DESCRIPTS(cfrg) ((cfrg)->n_descripts)
 
 # ####
 
@@ -69,15 +69,15 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #define CFIR_ISA(cfir) ((cfir)->isa)
-      #define CFIR_TYPE(cfir) ((cfir)->fragment_type)
-      #define CFIR_LOCATION(cfir) ((cfir)->fragment_location)
-      #define CFIR_LENGTH(cfir) ((cfir)->cfir_length)
-      #define CFIR_OFFSET_TO_FRAGMENT(cfir) ((cfir)->offset_to_fragment)
-      #define CFIR_FRAGMENT_LENGTH(cfir) ((cfir)->fragment_length)
-      #define CFIR_NAME(cfir) ((cfir)->name)
+- only-for: Executor
+  verbatim: |
+    #define CFIR_ISA(cfir) ((cfir)->isa)
+    #define CFIR_TYPE(cfir) ((cfir)->fragment_type)
+    #define CFIR_LOCATION(cfir) ((cfir)->fragment_location)
+    #define CFIR_LENGTH(cfir) ((cfir)->cfir_length)
+    #define CFIR_OFFSET_TO_FRAGMENT(cfir) ((cfir)->offset_to_fragment)
+    #define CFIR_FRAGMENT_LENGTH(cfir) ((cfir)->fragment_length)
+    #define CFIR_NAME(cfir) ((cfir)->name)
 
 # ####
 

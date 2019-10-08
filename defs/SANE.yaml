@@ -44,11 +44,11 @@
 
 # ####
 
-- executor_only:
-    code: |
-      /* Begin old stuff:
-      This only makes sense on the 68k. */
-      #if defined(mc68000)
+- only-for: Executor
+  verbatim: |
+    /* Begin old stuff:
+    This only makes sense on the 68k. */
+    #if defined(mc68000)
 
 # ####
 
@@ -64,9 +64,9 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #endif
+- only-for: Executor
+  verbatim: |
+    #endif
 
 # ####
 

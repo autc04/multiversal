@@ -44,9 +44,9 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern char syserr_msg[];
+- only-for: Executor
+  verbatim: |
+    extern char syserr_msg[];
 
 # ####
 

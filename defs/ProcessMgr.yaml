@@ -185,10 +185,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern void process_create(bool desk_accessory_p,
-                                 uint32_t type, uint32_t signature);
+- only-for: Executor
+  verbatim: |
+    extern void process_create(bool desk_accessory_p,
+                               uint32_t type, uint32_t signature);
 
 # ####
 
@@ -246,10 +246,10 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern OSErr C_GetFrontProcess(ProcessSerialNumber *serial_number, int32_t dummy = -1);
-      PASCAL_SUBTRAP(GetFrontProcess, 0xA88F, 0x0039, OSDispatch);
+- only-for: Executor
+  verbatim: |
+    extern OSErr C_GetFrontProcess(ProcessSerialNumber *serial_number, int32_t dummy = -1);
+    PASCAL_SUBTRAP(GetFrontProcess, 0xA88F, 0x0039, OSDispatch);
 
 # ####
 
@@ -318,7 +318,7 @@
 
 # ####
 
-- executor_only:
-    code: |
-      extern OSErr NewLaunch(ConstStringPtr appl, INTEGER vrefnum,
-                             LaunchParamBlockRec *lpbp);
+- only-for: Executor
+  verbatim: |
+    extern OSErr NewLaunch(ConstStringPtr appl, INTEGER vrefnum,
+                           LaunchParamBlockRec *lpbp);

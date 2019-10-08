@@ -1,85 +1,85 @@
-- executor_only:
-    code: |
-      //So as to not conflict with OS X defines
-      #undef PBGetVInfo
-      #undef PBXGetVolInfo
-      #undef PBGetVol
-      #undef PBSetVol
-      #undef PBFlushVol
-      #undef PBCreate
-      #undef PBDelete
-      #undef PBOpenDF
-      #undef PBOpenRF
-      #undef PBRename
-      #undef PBGetFInfo
-      #undef PBSetFInf
-      #undef PBSetFLock
-      #undef PBRstFLock
-      #undef PBSetFVers
-      #undef PBAllocate
-      #undef PBGetEOF
-      #undef PBSetEOF
-      #undef PBGetFPos
-      #undef PBSetFPos
-      #undef PBFlushFile
-      #undef PBCatSearch
-      #undef PBOpenWD
-      #undef PBCloseWD
-      #undef PBHSetVol
-      #undef PBHGetVol
-      #undef PBCatMove
-      #undef PBDirCreate
-      #undef PBGetWDInfo
-      #undef PBGetFCBInfo
-      #undef PBGetCatInfo
-      #undef PBSetCatInfo
-      #undef PBAllocContig
-      #undef PBLockRange
-      #undef PBUnlockRange
-      #undef PBSetVInfo
-      #undef PBHGetVInfo
-      #undef PBHOpen
-      #undef PBHOpenRF
-      #undef PBHOpenDF
-      #undef PBHCreate
-      #undef PBHDelete
-      #undef PBHRename
-      #undef PBHRstFLock
-      #undef PBHSetFLock
-      #undef PBHGetFInfo
-      #undef PBHSetFInfo
-      #undef PBMakeFSSpec
-      #undef PBHGetVolParms
-      #undef PBHGetLogInInfo
-      #undef PBHGetDirAccess
-      #undef PBHSetDirAccess
-      #undef PBHMapID
-      #undef PBHMapName
-      #undef PBHCopyFile
-      #undef PBHMoveRename
-      #undef PBHOpenDeny
-      #undef PBHOpenRFDeny
-      #undef PBExchangeFiles
-      #undef PBCreateFileIDRef
-      #undef PBResolveFileIDRef
-      #undef PBDeleteFileIDRef
-      #undef PBGetForeignPrivs
-      #undef PBSetForeignPrivs
-      #undef PBDTAddIcon
-      #undef PBDTGetIcon
-      #undef PBDTGetIconInfo
-      #undef PBDTAddAPPL
-      #undef PBDTRemoveAPPL
-      #undef PBDTGetAPPL
-      #undef PBDTSetComment
-      #undef PBDTRemoveComment
-      #undef PBDTGetComment
-      #undef PBDTFlush
-      #undef PBDTReset
-      #undef PBDTGetInfo
-      #undef PBDTDelete
-      #undef PBSetFInfo
-      #undef PBGetFInfo
+- only-for: Executor
+  verbatim: |
+    //So as to not conflict with OS X defines
+    #undef PBGetVInfo
+    #undef PBXGetVolInfo
+    #undef PBGetVol
+    #undef PBSetVol
+    #undef PBFlushVol
+    #undef PBCreate
+    #undef PBDelete
+    #undef PBOpenDF
+    #undef PBOpenRF
+    #undef PBRename
+    #undef PBGetFInfo
+    #undef PBSetFInf
+    #undef PBSetFLock
+    #undef PBRstFLock
+    #undef PBSetFVers
+    #undef PBAllocate
+    #undef PBGetEOF
+    #undef PBSetEOF
+    #undef PBGetFPos
+    #undef PBSetFPos
+    #undef PBFlushFile
+    #undef PBCatSearch
+    #undef PBOpenWD
+    #undef PBCloseWD
+    #undef PBHSetVol
+    #undef PBHGetVol
+    #undef PBCatMove
+    #undef PBDirCreate
+    #undef PBGetWDInfo
+    #undef PBGetFCBInfo
+    #undef PBGetCatInfo
+    #undef PBSetCatInfo
+    #undef PBAllocContig
+    #undef PBLockRange
+    #undef PBUnlockRange
+    #undef PBSetVInfo
+    #undef PBHGetVInfo
+    #undef PBHOpen
+    #undef PBHOpenRF
+    #undef PBHOpenDF
+    #undef PBHCreate
+    #undef PBHDelete
+    #undef PBHRename
+    #undef PBHRstFLock
+    #undef PBHSetFLock
+    #undef PBHGetFInfo
+    #undef PBHSetFInfo
+    #undef PBMakeFSSpec
+    #undef PBHGetVolParms
+    #undef PBHGetLogInInfo
+    #undef PBHGetDirAccess
+    #undef PBHSetDirAccess
+    #undef PBHMapID
+    #undef PBHMapName
+    #undef PBHCopyFile
+    #undef PBHMoveRename
+    #undef PBHOpenDeny
+    #undef PBHOpenRFDeny
+    #undef PBExchangeFiles
+    #undef PBCreateFileIDRef
+    #undef PBResolveFileIDRef
+    #undef PBDeleteFileIDRef
+    #undef PBGetForeignPrivs
+    #undef PBSetForeignPrivs
+    #undef PBDTAddIcon
+    #undef PBDTGetIcon
+    #undef PBDTGetIconInfo
+    #undef PBDTAddAPPL
+    #undef PBDTRemoveAPPL
+    #undef PBDTGetAPPL
+    #undef PBDTSetComment
+    #undef PBDTRemoveComment
+    #undef PBDTGetComment
+    #undef PBDTFlush
+    #undef PBDTReset
+    #undef PBDTGetInfo
+    #undef PBDTDelete
+    #undef PBSetFInfo
+    #undef PBGetFInfo
 
 # ####
 
@@ -286,17 +286,17 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #define COMMONFSQUEUEDEFS        \
-          GUEST<QElemPtr> qLink;       \
-          GUEST<INTEGER> qType;        \
-          GUEST<INTEGER> ioTrap;       \
-          GUEST<Ptr> ioCmdAddr;        \
-          GUEST<ProcPtr> ioCompletion; \
-          GUEST<OSErr> ioResult;       \
-          GUEST<StringPtr> ioNamePtr;  \
-          GUEST<INTEGER> ioVRefNum
+- only-for: Executor
+  verbatim: |
+    #define COMMONFSQUEUEDEFS        \
+        GUEST<QElemPtr> qLink;       \
+        GUEST<INTEGER> qType;        \
+        GUEST<INTEGER> ioTrap;       \
+        GUEST<Ptr> ioCmdAddr;        \
+        GUEST<ProcPtr> ioCompletion; \
+        GUEST<OSErr> ioResult;       \
+        GUEST<StringPtr> ioNamePtr;  \
+        GUEST<INTEGER> ioVRefNum
 
 # ####
 
@@ -639,16 +639,16 @@
 
 # ####
 
-- executor_only:
-    code: |
-      #define COMMONCINFODEFS           \
-          COMMONFSQUEUEDEFS;            \
-          GUEST<INTEGER> ioFRefNum;     \
-          GUEST<SignedByte> ioFVersNum; \
-          GUEST<SignedByte> filler1;    \
-          GUEST<INTEGER> ioFDirIndex;   \
-          GUEST<SignedByte> ioFlAttrib; \
-          GUEST<SignedByte> ioACUser
+- only-for: Executor
+  verbatim: |
+    #define COMMONCINFODEFS           \
+        COMMONFSQUEUEDEFS;            \
+        GUEST<INTEGER> ioFRefNum;     \
+        GUEST<SignedByte> ioFVersNum; \
+        GUEST<SignedByte> filler1;    \
+        GUEST<INTEGER> ioFDirIndex;   \
+        GUEST<SignedByte> ioFlAttrib; \
+        GUEST<SignedByte> ioACUser
 
 # ####
 

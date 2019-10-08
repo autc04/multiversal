@@ -765,3 +765,26 @@
       - name: cflag
         type: Boolean
     inline: CheckItem(mh, item, cflag)
+    noinline: carbon
+
+# ####
+
+- api: carbon
+  function:
+    name: EnableMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER
+
+# ####
+
+- api: carbon
+  function:
+    name: DisableMenuItem
+    args:
+      - name: mh
+        type: MenuHandle
+      - name: item
+        type: INTEGER

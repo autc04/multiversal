@@ -229,15 +229,15 @@
 
 # ####
 
-- executor_only:
-    code: |
-      class OSErrorException : public std::runtime_error
-      {
-      public:
-          OSErr code;
-      
-          OSErrorException(OSErr err) : std::runtime_error("oserror"), code(err) {}
-      };
+- only-for: Executor
+  verbatim: |
+    class OSErrorException : public std::runtime_error
+    {
+    public:
+        OSErr code;
+    
+        OSErrorException(OSErr err) : std::runtime_error("oserror"), code(err) {}
+    };
 
 # ####
 
@@ -253,13 +253,13 @@
 
 # ####
 
-- executor_only:
-    code: |
-      constexpr OSType operator"" _4(const char*x, size_t n)
-      {
-          assert(n == 4);
-          return (uint8_t(x[0]) << 24) | (uint8_t(x[1]) << 16) | (uint8_t(x[2]) << 8) | uint8_t(x[3]);
-      }
+- only-for: Executor
+  verbatim: |
+    constexpr OSType operator"" _4(const char*x, size_t n)
+    {
+        assert(n == 4);
+        return (uint8_t(x[0]) << 24) | (uint8_t(x[1]) << 16) | (uint8_t(x[2]) << 8) | uint8_t(x[3]);
+    }
 
 # ####
 
@@ -323,16 +323,16 @@
 
 # ####
 
-- executor_only:
-    code: |
-      inline short RECT_WIDTH(const Rect *r)
-      {
-          return r->right - r->left;
-      }
-      inline short RECT_HEIGHT(const Rect *r)
-      {
-          return r->bottom - r->top;
-      }
+- only-for: Executor
+  verbatim: |
+    inline short RECT_WIDTH(const Rect *r)
+    {
+        return r->right - r->left;
+    }
+    inline short RECT_HEIGHT(const Rect *r)
+    {
+        return r->bottom - r->top;
+    }
 
 # ####
 

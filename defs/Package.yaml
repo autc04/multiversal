@@ -41,6 +41,6 @@
 
 # ####
 
-- executor_only:
-    code: |
-      RAW_68K_TRAP(Pack1, 0xA9E8);
+- only-for: Executor
+  verbatim: |
+    RAW_68K_TRAP(Pack1, 0xA9E8);

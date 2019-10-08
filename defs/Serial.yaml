@@ -234,12 +234,12 @@
 
 # ####
 
-- executor_only:
-    code: |
-      const char *const MODEMINAME = ".AIn";
-      const char *const MODEMONAME = ".AOut";
-      const char *const PRNTRINAME = ".AIn";
-      const char *const PRNTRONAME = ".AOut";
+- only-for: Executor
+  verbatim: |
+    const char *const MODEMINAME = ".AIn";
+    const char *const MODEMONAME = ".AOut";
+    const char *const PRNTRINAME = ".AIn";
+    const char *const PRNTRONAME = ".AOut";
 
 # ####
 

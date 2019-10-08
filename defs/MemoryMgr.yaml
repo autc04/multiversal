@@ -322,33 +322,33 @@
 
 # ####
 
-- executor_only:
-    code: |
-      /* traps which can have a `sys' or `clear' bit set */
-      #define SYSBIT (1 << 10)
-      #define CLRBIT (1 << 9)
-      
-      namespace callconv
-      {
-          template<typename Loc> struct ReturnMemErr
-          {
-              syn68k_addr_t afterwards(syn68k_addr_t ret)
-              {
-                  Loc::set(LM(MemErr));
-                  return ret;
-              }
-          };
-          template<typename Loc> struct ReturnMemErrConditional
-          {
-              syn68k_addr_t afterwards(syn68k_addr_t ret)
-              {
-                  auto err = LM(MemErr);
-                  if(err < 0)
-                      Loc::set(err);
-                  return ret;
-              }
-          };
-      }
+- only-for: Executor
+  verbatim: |
+    /* traps which can have a `sys' or `clear' bit set */
+    #define SYSBIT (1 << 10)
+    #define CLRBIT (1 << 9)
+    
+    namespace callconv
+    {
+        template<typename Loc> struct ReturnMemErr
+        {
+            syn68k_addr_t afterwards(syn68k_addr_t ret)
+            {
+                Loc::set(LM(MemErr));
+                return ret;
+            }
+        };
+        template<typename Loc> struct ReturnMemErrConditional
+        {
+            syn68k_addr_t afterwards(syn68k_addr_t ret)
+            {
+                auto err = LM(MemErr);
+                if(err < 0)
+                    Loc::set(err);
+                return ret;
+            }
+        };
+    }
 
 # ####
 
