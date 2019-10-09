@@ -209,9 +209,9 @@ class ExecutorGenerator < Generator
         @out << ">;\n"
     end
 
-    def declare_executor_only(value)
+    def declare_verbatim(value)
         @out << "BEGIN_EXECUTOR_ONLY\n"
-        @out << value["code"].strip << "\n"
+        @out << value.strip << "\n"
         @out << "END_EXECUTOR_ONLY\n"
     end
 

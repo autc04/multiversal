@@ -180,9 +180,21 @@ class CIncludesGenerator < Generator
             end
         end
 
+        optionalInline = false
         if fun["inline"] then
+            case fun["noinline"] && fun["noinline"].downcase
+            when "carbon"
+                @out << "#if !TARGET_API_MAC_CARBON\n"
+                optionalInline = true
+            when "ppc"
+                @out << "#if TARGET_CPU_68K\n"
+                optionalInline = true
+            end
             declare_inline(name, (fun["return"] or "void"), args, fun["inline"])
-        else
+        end
+        @out << "#else\n" if optionalInline
+
+        if !fun["inline"] || optionalInline then
             @out << "pascal "
             @out << (fun["return"] or "void") << " "
             @out << name << "("
@@ -195,6 +207,7 @@ class CIncludesGenerator < Generator
                 generate_function_definition(out:@impl_out, fun:fun, name:name, args:args, m68kinlines:m68kinlines)
             end
         end
+        @out << "#endif\n" if optionalInline
 
         if not fun["inline"] and (m68kinlines.length == 0 or complex) then
             @functions_needing_glue << name
@@ -296,6 +309,19 @@ class CIncludesGenerator < Generator
         super unless key == "executor_only"
     end
     
+    def make_api_ifdef(api)
+        if (api && api.downcase) == "carbon" then
+            @out << "#if TARGET_API_MAC_CARBON\n"
+            yield
+            @out << "#endif\n"
+        elsif (api && api.downcase) == "classic" then
+            @out << "#if !TARGET_API_MAC_CARBON\n"
+            yield
+            @out << "#endif\n"
+        else
+            yield
+        end
+    end
 
     def generate(defs)
         @functions_needing_glue = []

@@ -172,7 +172,8 @@ class Generator
         end
     end
 
-    def declare_executor_only(value)
+    def declare_verbatim(value)
+        @out << value.strip << "\n"
     end
 
     def generate_header(header)
@@ -182,39 +183,49 @@ class Generator
         generate_preamble(header)
 
         header.data.each do |item|
-            key, value = first_elem(item)
-            generate_comment(key, value)
-        
-            case key
-            when "enum"
-                declare_enum(value)
+            key, value = main_elem(item)
 
-            when "struct", "union"
-                declare_struct_union(key, value)
+            make_api_ifdef item["api"] do
+                generate_comment(key, value)
+            
+                case key
+                when "enum"
+                    declare_enum(value)
 
-            when "dispatcher"
-                declare_dispatcher(value)
+                when "struct", "union"
+                    declare_struct_union(key, value)
 
-            when "typedef"
-                declare_typedef(value)
+                when "dispatcher"
+                    declare_dispatcher(value)
 
-            when "function"
-                declare_function(value)
+                when "typedef"
+                    declare_typedef(value)
 
-            when "lowmem"
-                declare_lowmem(value)
+                when "function"
+                    declare_function(value)
 
-            when "funptr"
-                declare_funptr(value)
+                when "lowmem"
+                    declare_lowmem(value)
 
-            when "executor_only"
-                declare_executor_only(value)
+                when "funptr"
+                    declare_funptr(value)
+
+                when "verbatim"
+                    declare_verbatim(value)
+
+                when "executor_only"
+                    declare_verbatim(value["code"])
+                end
+                @out << "\n"
             end
-        
-            @out << "\n\n"
+            @out << "\n"
         end
         generate_postamble(header)
         return @out
+    end
+
+    def make_api_ifdef(api)
+        yield
     end
 
     def formatted_file(name, &block)

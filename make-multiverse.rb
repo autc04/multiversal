@@ -29,8 +29,12 @@ def hexlit(thing, sz=16)
     end
 end
 
-def first_elem(item)
-    item.each { |key, value| return key, value }
+def main_elem(item)
+    item.each do |key, value| 
+        next if ["only-for", "not-for", "api"].include? key
+        return key, value
+    end
+    return nil
 end
 
 $global_name_map = {}
@@ -43,7 +47,7 @@ class HeaderFile
 
         @data = YAML::load(File.read(@file))
     
-        @filter_key = filter_key
+        @filter_key = filter_key.downcase
 
         @data.reject! do |item|
             onlyfor = item["only-for"]
@@ -51,9 +55,9 @@ class HeaderFile
 
             onlyfor = [onlyfor] if onlyfor and not onlyfor.is_a? Array
             notfor = [notfor] if notfor and not notfor.is_a? Array
-            
-            next true if onlyfor and not onlyfor.index(filter_key)
-            next true if notfor and notfor.index(filter_key)
+
+            next true if onlyfor and not onlyfor.map {|x| x.downcase}.index(filter_key)
+            next true if notfor and notfor.map {|x| x.downcase}.index(filter_key)
             next false
         end
 
@@ -90,7 +94,7 @@ private
         @declared_names = Set.new
         @required_names = Set.new
         @data.each do |item|
-            key, value = first_elem(item)
+            key, value = main_elem(item)
             @declared_names << value["name"] if value["name"]
             $global_name_map[value["name"]] = item if value["name"]
             case key
