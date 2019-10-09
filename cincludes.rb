@@ -258,9 +258,12 @@ class CIncludesGenerator < Generator
                 shift += 2
             end
         end
-        
+        @out << "#if TARGET_API_MAC_CARBON\n"
+        @out << "typedef struct Opaque#{name}Proc *#{name}UPP;\n"
+        @out << "pascal #{name}UPP New#{name}UPP(#{name}ProcPtr proc);\n"
+        @out << "pascal void Dispose#{name}UPP(#{name}UPP upp);\n"
         @out << <<~UPPDECL
-            #if TARGET_RT_MAC_CFM
+            #elif TARGET_RT_MAC_CFM
             typedef UniversalProcPtr #{name}UPP;
             enum { upp#{name}ProcInfo = #{hexlit(procinfo,32)} };
         UPPDECL
