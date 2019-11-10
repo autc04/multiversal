@@ -403,7 +403,7 @@ class CIncludesGenerator < Generator
             "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
             "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
             "Traps", "Types", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
-            "Serial", "StandardFile", "Strings"].each do |name|
+            "Serial", "StandardFile", "Strings", "Navigation"].each do |name|
             File.open("#{$options.output_dir}/CIncludes/#{name}.h", "w") do |f|
                 f << "#pragma once\n"
                 f << "#include \"Multiverse.h\"\n"

@@ -1,0 +1,517 @@
+- typedef:
+    name: NavActionState
+    type: uint32_t
+
+- typedef:
+    name: NavCustomControlMessage
+    type: int32_t
+
+- typedef:
+    name: NavDialogOptionFlags
+    type: uint32_t
+
+- typedef:
+    name: NavAskDiscardChangesResult
+    type: uint32_t
+
+- typedef:
+    name: NavEventCallbackMessage
+    type: uint32_t
+
+- enum:
+    values:
+      - name: kNavCBEvent
+        value: 0
+      - name: kNavCBCustomize
+      - name: kNavCBStart
+      - name: kNavCBTerminate
+      - name: kNavCBAdjustRect
+      - name: kNavCBNewLocation
+      - name: kNavCBShowDesktop
+      - name: kNavCBSelectEntry
+      - name: kNavCBPopupMenuSelect
+      - name: kNavCBAccept
+      - name: kNavCBCancel
+      - name: kNavCBAdjustPreview
+      - name: kNavCBOpenSelection = 0x80000000
+
+- typedef:
+    name: NavSortKeyField
+    type: uint16_t
+
+- typedef:
+    name: NavPopupMenuItem
+    type: uint16_t
+
+- typedef:
+    name: NavFilterModes
+    type: uint32_t
+
+- typedef:
+    name: NavAskSaveChangesResult
+    type: uint32_t
+
+- typedef:
+    name: NavAskSaveChangesAction
+    type: uint32_t
+
+- typedef:
+    name: NavSortOrder
+    type: uint16_t
+
+- typedef:
+    name: NavTranslationOptions
+    type: uint32_t
+
+- struct:
+    name: __navcontext
+- typedef:
+    name: NavContext
+    type: __navcontext*
+
+- enum:
+    values:
+      - name: kNavReplyRecordVersion
+        value: 0
+
+- struct:
+    name: NavReplyRecord
+    members:
+      - name: version
+        type: uint16_t
+      - name: validRecord
+        type: Boolean
+      - name: replacing
+        type: Boolean
+      - name: isStationery
+        type: Boolean
+      - name: translationNeeded
+        type: Boolean
+      - name: selection
+        type: AEDescList
+      - name: keyScript
+        type: ScriptCode
+      - name: fileTranslation
+        type: Handle  # FileTranslationSpec **
+
+- enum:
+    values:
+      - name: kNavDialogOptionsVersion
+        value: 0
+
+- struct:
+    name: NavDialogOptions
+    members:
+      - name: version
+        type: uint16_t
+      - name: dialogOptionFlags
+        type: NavDialogOptionFlags
+      - name: location
+        type: Point
+      - name: clientName
+        type: Str255
+      - name: windowTitle
+        type: Str255
+      - name: actionButtonLabel
+        type: Str255
+      - name: cancelButtonLabel
+        type: Str255
+      - name: savedFileName
+        type: Str255
+      - name: message
+        type: Str255
+      - name: preferenceKey
+        type: uint32_t
+      - name: popupExtension
+        type: Handle
+
+- enum:
+    values:
+      - name: kNavMenuItemSpecVersion
+        value: 0
+
+- struct:
+    name: NavMenuItemSpec
+    members:
+      - name: version
+        type: uint16_t
+      - name: menuCreator
+        type: OSType
+      - name: menuType
+        type: OSType
+      - name: menuItemName
+        type: Str255
+
+- struct:
+    name: NavFileOrFolderInfo
+    members:
+      - name: version
+        type: uint16_t
+      - name: isFolder
+        type: Boolean
+      - name: visible
+        type: Boolean
+      - name: creationDate
+        type: uint32_t
+      - name: modificationDate
+        type: uint32_t
+      - name: fileAndFolder
+        union:
+          - name: fileInfo
+            struct:
+              - name: locked
+                type: Boolean
+              - name: resourceOpen
+                type: Boolean
+              - name: dataOpen
+                type: Boolean
+              - name: reserved1
+                type: Boolean
+              - name: dataSize
+                type: uint32_t
+              - name: resourceSize
+                type: uint32_t
+              - name: finderInfo
+                type: FInfo
+              - name: finderXInfo
+                type: FXInfo
+          - name: folderInfo
+            struct:
+              - name: shareable
+                type: Boolean
+              - name: sharePoint
+                type: Boolean
+              - name: mounted
+                type: Boolean
+              - name: readable
+                type: Boolean
+              - name: writeable
+                type: Boolean
+              - name: reserved2
+                type: Boolean
+              - name: numberOfFiles
+                type: uint32_t
+              - name: finderDInfo
+                type: DInfo
+              - name: finderDXInfo
+                type: DXInfo
+              - name: folderType
+                type: OSType
+              - name: folderCreator
+                type: OSType
+              - name: reserved3
+                type: char[206]
+      
+
+- union:
+    name: NavEventDataInfo
+    members:
+      - name: event
+        type: EventRecord *
+      - name: param
+        type: void *
+
+- struct:
+    name: NavEventData
+    members:
+      - name: eventDataParms
+        type: NavEventDataInfo
+      - name: itemHit
+        type: int16_t
+
+- struct:
+    name: NavCBRec
+    members:
+      - name: version
+        type: uint16_t
+      - name: context
+        type: NavContext
+      - name: window
+        type: WindowPtr
+      - name: customRect
+        type: Rect
+      - name: previewRect
+        type: Rect
+      - name: eventData
+        type: NavEventData
+- typedef:
+    name: NavCBRecPtr
+    type: NavCBRec*
+
+- struct:
+    name: NavTypeList
+    members:
+      - name: componentSignature
+        type: OSType
+      - name: reserved
+        type: int16_t
+      - name: osTypeCount
+        type: int16_t
+      - name: osType
+        type: OSType[1]
+- typedef:
+    name: NavTypeListHandle
+    type: NavTypeList**
+
+- funptr:
+    name: NavEventUPP
+    args:
+      - name: callBackSelector
+        type: NavEventCallbackMessage
+      - name: callbackParms
+        type: NavCBRecPtr
+      - name: callBackUD
+        type: void*
+
+- funptr:
+    name: NavPreviewUPP
+    args:
+      - name: callbackParms
+        type: NavCBRecPtr
+      - name: callBackUD
+        type: void*
+  
+- funptr:
+    name: NavObjectFilterUPP
+    args:
+      - name: theItem
+        type: AEDesc *
+      - name: info
+        type: void *
+      - name: callBackUD
+        type: void*
+      - name: filterMode
+        type: NavFilterModes
+
+- function:
+    name: NavServicesAvailable
+    return: Boolean
+
+- function:
+    name: NavLibraryVersion
+    return: uint32_t
+
+- function:
+    name: NavLoad
+    return: OSErr
+
+- function:
+    name: NavUnload
+    return: OSErr
+
+- function:
+    name: NavDisposeReply
+    return: OSErr
+    args:
+      - name: reply
+        type: NavReplyRecord *
+
+- function:
+    name: NavGetFile
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: previewProc
+        type: NavPreviewUPP
+      - name: filterProc
+        type: NavObjectFilterUPP
+      - name: typeList
+        type: NavTypeListHandle
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavChooseFile
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: previewProc
+        type: NavPreviewUPP
+      - name: filterProc
+        type: NavObjectFilterUPP
+      - name: typeList
+        type: NavTypeListHandle
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavTranslateFile
+    return: OSErr
+    args:
+      - name: translateInfo
+        type: NavReplyRecord *
+      - name: howToTranslate
+        type: NavTranslationOptions
+
+- function:
+    name: NavChooseVolume
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: filterProc
+        type: NavObjectFilterUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavChooseFolder
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: filterProc
+        type: NavObjectFilterUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavChooseObject
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: filterProc
+        type: NavObjectFilterUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavNewFolder
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavPutFile
+    return: OSErr
+    args:
+      - name: defaultLocation
+        type: AEDesc *
+      - name: reply
+        type: NavReplyRecord *
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: eventProc
+        type: NavEventUPP
+      - name: fileType
+        type: OSType
+      - name: fileCreator
+        type: OSType
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavAskSaveChanges
+    return: OSErr
+    args:
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: action
+        type: NavAskSaveChangesAction
+      - name: reply
+        type: NavAskSaveChangesResult *
+      - name: eventProc
+        type: NavEventUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavCustomAskSaveChanges
+    return: OSErr
+    args:
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: reply
+        type: NavAskSaveChangesResult *
+      - name: eventProc
+        type: NavEventUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavAskDiscardChanges
+    return: OSErr
+    args:
+      - name: dialogOptions
+        type: NavDialogOptions *
+      - name: reply
+        type: NavAskDiscardChangesResult *
+      - name: eventProc
+        type: NavEventUPP
+      - name: callBackUD
+        type: void *
+
+- function:
+    name: NavCompleteSave
+    return: OSErr
+    args:
+      - name: translateInfo
+        type: NavReplyRecord *
+      - name: howToTranslate
+        type: NavTranslationOptions
+
+- function:
+    name: NavCreatePreview
+    return: OSErr
+    args:
+      - name: theObject
+        type: AEDesc *
+      - name: previewDataType
+        type: OSType
+      - name: previewData
+        type: const void *
+      - name: previewDataSize
+        type: Size
+
+- function:
+    name: NavCustomControl
+    return: OSErr
+    args:
+      - name: context
+        type: NavContext
+      - name: selector
+        type: NavCustomControlMessage
+      - name: parms
+        type: void *
