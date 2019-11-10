@@ -43,7 +43,8 @@ type 'cfrg'
         hex longint kNoVersionNum = 0;
         longint kDefaultStackSize = 0;
         integer kNoAppSubFolder = 0;
-        byte kIsLib = 0, kIsApp = 1, kLibraryCFrag = 0, kApplicationCFrag = 1;
+        byte kIsLib = 0, kIsApp = 1, kImportLibraryCFrag = 0, kApplicationCFrag = 1,
+            kDropInAdditionCFrag = 2, kStubLibraryCFrag = 3, kWeakStubLibraryCFrag = 4;
         byte kOnDiskFlat = 1, kDataForkCFragLocator = 1, kOnDiskSegmented = 2;
         longint kZeroOffset = 0;
         longint kWholeFork = 0, kCFragGoesToEOF = 0;
