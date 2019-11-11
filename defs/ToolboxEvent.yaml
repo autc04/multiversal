@@ -165,7 +165,7 @@
 
 - function:
     name: TickCount
-    return: LONGINT
+    return: ULONGINT
     trap: 0xA975
     executor: C_
 

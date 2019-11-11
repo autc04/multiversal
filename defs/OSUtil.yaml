@@ -567,7 +567,7 @@
     args:
       - name: mactimepointer
         type: ULONGINT*
-    inline: "*(ULONGINT*)0x020C = (mactimepointer)"
+    inline: "*(mactimepointer) = *(ULONGINT*)0x020C"
 
 # ####
 
