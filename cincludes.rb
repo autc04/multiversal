@@ -189,6 +189,9 @@ class CIncludesGenerator < Generator
             when "ppc"
                 @out << "#if TARGET_CPU_68K\n"
                 optionalInline = true
+            when "m68k"
+                @out << "#if !TARGET_CPU_68K\n"
+                optionalInline = true
             end
             declare_inline(name, (fun["return"] or "void"), args, fun["inline"])
         end
