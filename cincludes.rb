@@ -7,7 +7,7 @@ class CIncludesGenerator < Generator
 
     def encode_size(type)
         sz = size_of_type(type)
-        return 4 unless sz
+        return 0 unless sz
         return sz >= 4 ? 3 : sz
     end
     
@@ -78,6 +78,53 @@ class CIncludesGenerator < Generator
         out << "\n// clang-format on\n"
         out << writeback
         out << "return _retval;" if fun["returnreg"]
+        out << "}"
+    end
+
+    def generate_cfm_wrapper(out:, fun:, name:, args:)
+        if !@cfmwrapper_included then
+            @cfmwrapper_included = true
+            out << "#include \"cfmwrapper.h\"\n"
+        end
+
+        out << "pascal " << (fun["return"] or "void") << " " << name <<
+            "(" << args.map {|x| decl(x["type"],x["name"])}.join(", ") << ")"
+        out << "{\n"
+
+        out << "__cfmsym symbol;\n"
+        out << "OSErr err;\n"
+
+        procinfo = 0
+        procinfo |= encode_size(fun["return"]) << 4 if fun["return"]
+        shift = 6
+        args.each do |arg|
+            procinfo |= encode_size(arg["type"]) << shift
+            shift += 2
+        end
+
+        out << "err = __cfmwrapper_connect(&symbol, \"\\p#{fun["cfm"]}\", \"\\p#{name}\", #{procinfo});"
+        
+        if fun["return"] == "OSErr" then
+            out << "if(err) return err;\n"
+        elsif fun["return"] == "Boolean" then
+            out << "if(err) return false;\n"
+        elsif !fun["return"]
+            out << "if(err) return;\n"
+        else
+            out << "if(err) return 0;\n"
+        end
+
+        out << fun["return"] << " retval = " if fun["return"]
+
+        out << "(*(pascal " << (fun["return"] or "void") << "(*)" <<
+            "(" << args.map {|x| x["type"]}.join(", ") << ")" << ")" <<
+            "(symbol.proc))" <<
+            "(" << args.map {|x| x["name"]}.join(", ") << ");\n"
+
+        out << "__cfmwrapper_disconnect(&symbol);\n"
+
+        out << "return retval;" if fun["return"]
+
         out << "}"
     end
 
@@ -208,6 +255,8 @@ class CIncludesGenerator < Generator
 
             if complex and m68kinlines then
                 generate_function_definition(out:@impl_out, fun:fun, name:name, args:args, m68kinlines:m68kinlines)
+            elsif fun["cfm"] then
+                generate_cfm_wrapper(out:@impl_out, fun:fun, name:name, args:args)
             end
         end
         @out << "#endif\n" if optionalInline
@@ -253,7 +302,7 @@ class CIncludesGenerator < Generator
             procinfo = 42;
             print "WARNING UNSUPPORTED register funptr: #{name}\n"
         else
-            procinfo = 0;
+            procinfo = 0
             procinfo |= encode_size(value["return"]) << 4
             shift = 6
             args.each do |arg|
@@ -380,6 +429,8 @@ class CIncludesGenerator < Generator
         
             defs.topsort.each do |name|
                 header = defs.headers[name]
+                @impl_out = ""
+                @cfmwrapper_included = false
                 inc = generate_header(header)
         
                 f << inc
@@ -415,6 +466,7 @@ class CIncludesGenerator < Generator
         
         Dir.glob("custom/*.r") {|f| FileUtils.cp(f, "#{$options.output_dir}/RIncludes/")}
         Dir.glob("custom/*.c") {|f| FileUtils.cp(f, "#{$options.output_dir}/src/")}
+        Dir.glob("custom/*.h") {|f| FileUtils.cp(f, "#{$options.output_dir}/src/")}
         ["CodeFragments", "Dialogs", "Finder", "Icons", "MacTypes", "Types",
          "Menus", "MixedMode", "Processes", "Windows", "ConditionalMacros"].each do |name|
             File.open("#{$options.output_dir}/RIncludes/#{name}.r", "w") do |f|

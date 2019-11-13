@@ -178,7 +178,6 @@ class Generator
 
     def generate_header(header)
         @out = ""
-        @impl_out = ""
 
         generate_preamble(header)
 
@@ -208,6 +207,7 @@ class Generator
                     declare_lowmem(value)
 
                 when "funptr"
+                    @type_size_map[value["name"]] = 4
                     declare_funptr(value)
 
                 when "verbatim"
