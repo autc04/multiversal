@@ -257,7 +257,7 @@
       - name: length
         type: LONGINT
       - name: fragname
-        type: Str63
+        type: ConstStr63Param
       - name: flags
         type: LoadFlags
       - name: connp
@@ -285,7 +285,7 @@
       - name: connID
         type: ConnectionID
       - name: symName
-        type: Str255
+        type: ConstStr255Param
       - name: symAddr
         type: Ptr*
       - name: symClass
@@ -313,7 +313,7 @@
     return: OSErr
     args:
       - name: library
-        type: Str63
+        type: ConstStr63Param
       - name: arch
         type: OSType
       - name: loadflags
@@ -339,7 +339,7 @@
       - name: length
         type: uint32_t
       - name: fragname
-        type: Str63
+        type: ConstStr63Param
       - name: flags
         type: LoadFlags
       - name: connp
