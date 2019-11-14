@@ -477,13 +477,27 @@ class CIncludesGenerator < Generator
         File.open("#{$options.output_dir}/CIncludes/needs-glue.txt", "w") do |f|
             @functions_needing_glue.each {|name| f << name + "\n"}
         end
-        
-        print "Compiling libInterface.a...\n"
+
+
+        print "Compiling glue code...\n"
+        allNames = Set.new
         Dir.glob("#{$options.output_dir}/src/*.c") do |file|
             name = File.basename(file, '.c')
             system("m68k-apple-macos-gcc -c #{file} -o #{$options.output_dir}/obj/#{name}.o -I #{$options.output_dir}/CIncludes -O -ffunction-sections")
+            allNames << name
         end
-        system("m68k-apple-macos-ar cqs #{$options.output_dir}/lib68k/libInterface.a #{$options.output_dir}/obj/*.o")
+
+        libraries_config = YAML::load(File.read("custom/libraries.yaml"))
+        libraries_config.each do |libname, files|
+            allNames.subtract(files)
+        end
+        libraries_config["Interface"] = allNames.to_a
+
+        libraries_config.each do |libname, files|
+            print "Linking lib#{libname}.a...\n"
+            system("m68k-apple-macos-ar cqs #{$options.output_dir}/lib68k/lib#{libname}.a " +
+                files.map {|f| "#{$options.output_dir}/obj/#{f}.o"}.join(" "))
+        end
         print "Done.\n"
     end
 end
