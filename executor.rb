@@ -251,6 +251,13 @@ class ExecutorGenerator < Generator
         super
     end
 
+    def make_api_ifdef(api)
+        if api == "carbon" then
+        else
+            yield
+        end
+    end
+
     def generate(defs)
         print "Writing Headers...\n"
         FileUtils.mkdir_p "#{$options.output_dir}/"
