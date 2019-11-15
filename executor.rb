@@ -260,11 +260,40 @@ class ExecutorGenerator < Generator
 
     def generate(defs)
         print "Writing Headers...\n"
-        FileUtils.mkdir_p "#{$options.output_dir}/"
+        FileUtils.mkdir_p "#{$options.output_dir}/api"
+        FileUtils.mkdir_p "#{$options.output_dir}/trap_instances"
+        moduleList = []
         defs.topsort.each do |name|
-            formatted_file "#{$options.output_dir}/#{remap_name(name)}.h" do |f|
+            name2 = remap_name(name)
+            moduleList << name2
+            formatted_file "#{$options.output_dir}/api/#{name2}.h" do |f|
                 f << generate_header(defs.headers[name])
             end
+            formatted_file "#{$options.output_dir}/trap_instances/#{name2}.cpp" do |f|
+                f << <<END
+#define INSTANTIATE_TRAPS_#{name2}
+#include <#{name2}.h>
+
+// Function for preventing the linker from considering the static constructors in this module unused
+namespace Executor::ReferenceTraps {
+    void #{name2}() {}
+}
+END
+            end
+        end
+        formatted_file "#{$options.output_dir}/trap_instances/ReferenceAllTraps.cpp" do |f|
+            f << "namespace Executor {\n"
+            f << "namespace ReferenceTraps {\n"
+            moduleList.each { |m| f << "void #{m}();\n" }
+            f << "}\nvoid ReferenceAllTraps() {\n"
+            moduleList.each { |m| f << "ReferenceTraps::#{m}();\n" }
+            f << "}\n}\n"
+        end
+        File.open "#{$options.output_dir}/trap_instances/trap_instances.cmake", "w" do |f|
+            f << "set(trap_instance_sources\n"
+            f << "    \"#{$options.output_dir}/trap_instances/ReferenceAllTraps.cpp\"\n"
+            moduleList.each { |m| f << "    \"#{$options.output_dir}/trap_instances/#{m}.cpp\"\n" }
+            f << ")\n"
         end
         print "Done.\n"
     end
