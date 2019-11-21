@@ -48,8 +48,12 @@ class ExecutorGenerator < Generator
                 return type1, "*", ""
             end
         elsif guest then
-            if type =~ /^const[ \t]+(.*)$/ and not type_needs_guest?($1) then
-                return type
+            if type =~ /^const[ \t]+(.*)$/ then
+                if type_needs_guest?($1) then
+                    return "const GUEST<#{$1}>"
+                else
+                    return type
+                end
             else
                 return "GUEST<#{type}>"
             end
@@ -91,7 +95,25 @@ class ExecutorGenerator < Generator
     end
     def declare_lowmem(value)
         @out << "const LowMemGlobal<#{decl(value["type"])}> #{value["name"]}"
-        @out << "{ #{hexlit(value["address"],12)} };"
+        @out << "{ #{hexlit(value["address"],12)} };\n"
+        # @out << "LOWMEM_ACCESSOR(#{value["name"]});\n"
+        if value["type"] =~ /^(.*)\[[^\[\]]*\]$/ then
+        #    @out << "inline GUEST<#{$1}>* LMGet#{value["name"]}() { return LM(#{value["name"]}); }\n"
+        #    @out << "NOTRAP_FUNCTION2(LMGet#{value["name"]});\n"
+        else
+            sz = size_of_type(value["type"])
+
+            if !sz || sz > 4 then
+                @out << "inline void LMGet#{value["name"]}(#{decl(value["type"]+"*", "val")}) { *val = LM(#{value["name"]}); }\n"
+                @out << "inline void LMSet#{value["name"]}(#{decl("const " + value["type"]+"*", "val")}) { LM(#{value["name"]}) = *val; }\n"
+            else
+                @out << "inline #{decl(value["type"])} LMGet#{value["name"]}() { return LM(#{value["name"]}); }\n"
+                @out << "inline void LMSet#{value["name"]}(#{decl(value["type"],"val")}) { LM(#{value["name"]}) = val; }\n"
+            end
+            @out << "NOTRAP_FUNCTION2(LMGet#{value["name"]});\n"
+            @out << "NOTRAP_FUNCTION2(LMSet#{value["name"]});\n"
+    end
+
     end
 
     def handle_regcall_conv(fun)
