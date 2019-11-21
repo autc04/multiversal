@@ -17,7 +17,7 @@ class Generator
             "int64_t" => 8,
             "char" => 1,
             "Point" => 4,
-            "ProcPtr" => 8,
+            "ProcPtr" => 4,
             "void" => 0,
             "double" => 8
         }
