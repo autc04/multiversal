@@ -874,16 +874,10 @@
 
 # ####
 
-- only-for: Executor
-  verbatim: |
-    #undef GetMMUMode
-    #undef SwapMMUMode
-
-# ####
-
 - function:
     name: GetMMUMode
     return: Byte
+    executor: true
 
 # ####
 
@@ -892,6 +886,9 @@
     args:
       - name: bp
         type: Byte*
+        register: InOut<D0>
+    executor: true
+    trap: 0xA05D
 
 # ####
 

@@ -1072,39 +1072,74 @@
 
 # ####
 
-- only-for: Executor
-  verbatim: |
-    extern void C_LowercaseText(
-        Ptr textp,
-        INTEGER len,
-        ScriptCode script);
-    PASCAL_FUNCTION(LowercaseText); //, 0xA8B5, ScriptUtil);
-    
-    extern void C_UppercaseText(
-        Ptr textp,
-        INTEGER len,
-        ScriptCode script);
-    PASCAL_FUNCTION(UppercaseText); //, 0xA8B5, ScriptUtil);
-    
-    extern void C_StripDiacritics(
-        Ptr textp,
-        INTEGER len,
-        ScriptCode script);
-    PASCAL_FUNCTION(StripDiacritics); //, 0xA8B5, ScriptUtil);
-    
-    extern void C_UppercaseStripDiacritics(
-        Ptr textp,
-        INTEGER len,
-        ScriptCode script);
-    PASCAL_FUNCTION(UppercaseStripDiacritics); //, 0xA8B5, ScriptUtil);
-    
-        // the above four functions are actually one entry point on 68K:
-    extern void C_TextUtilFunctions(
-        short selector,
-        Ptr textp,
-        INTEGER len,
-        ScriptCode script);
-    PASCAL_SUBTRAP(TextUtilFunctions, 0xA8B5, 0x800AFFB6, ScriptUtil);
+- function:
+    name: LowercaseText
+    args:
+      - name: textp
+        type: Ptr
+      - name: len
+        type: INTEGER
+      - name: script
+        type: ScriptCode
+    executor: C_
+
+# ####
+
+- function:
+    name: UppercaseText
+    args:
+      - name: textp
+        type: Ptr
+      - name: len
+        type: INTEGER
+      - name: script
+        type: ScriptCode
+    executor: C_
+
+# ####
+
+- function:
+    name: StripDiacritics
+    args:
+      - name: textp
+        type: Ptr
+      - name: len
+        type: INTEGER
+      - name: script
+        type: ScriptCode
+    executor: C_
+
+# ####
+
+- function:
+    name: UppercaseStripDiacritics
+    args:
+      - name: textp
+        type: Ptr
+      - name: len
+        type: INTEGER
+      - name: script
+        type: ScriptCode
+    executor: C_
+
+# ####
+
+- function:
+    name: TextUtilFunctions
+    args:
+      - name: selector
+        type: int16_t
+      - name: textp
+        type: Ptr
+      - name: len
+        type: INTEGER
+      - name: script
+        type: ScriptCode
+    comment: |
+      the above four functions are actually one entry point on 68K:
+    dispatcher: ScriptUtil
+    selector: 0x800AFFB6
+    executor: C_
 
 # ####
 

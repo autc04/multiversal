@@ -1264,13 +1264,6 @@
 
 # ####
 
-- only-for: Executor
-  verbatim: |
-    extern void C_unknown574();
-    PASCAL_FUNCTION(unknown574);
-
-# ####
-
 - function:
     name: CopyBits
     args:
