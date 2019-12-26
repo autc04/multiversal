@@ -1,0 +1,192 @@
+{
+    "type": "array",
+    "items": {
+        "allOf": [
+            {
+                "type": "object",
+                "properties": {
+                    "not-for": {
+                        "type": "string"
+                    },
+                    "only-for": {
+                        "type": "string"
+                    },
+                    "api": {
+                        "type": "string"
+                    }
+                }
+            },
+            {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "required": [ "enum" ],
+                        "properties": { "enum": { "$ref": "#/definitions/enum" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "struct" ],
+                        "properties": { "struct": { "$ref": "#/definitions/struct" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "union" ],
+                        "properties": { "union": { "$ref": "#/definitions/union" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "function" ],
+                        "properties": { "function": { "$ref": "#/definitions/function" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "funptr" ],
+                        "properties": { "funptr": { "$ref": "#/definitions/funptr" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "lowmem" ],
+                        "properties": { "lowmem": { "$ref": "#/definitions/lowmem" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "verbatim" ],
+                        "properties": { "verbatim": { "$ref": "#/definitions/verbatim" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "typedef" ],
+                        "properties": { "typedef": { "$ref": "#/definitions/typedef" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "common" ],
+                        "properties": { "common": { "$ref": "#/definitions/common" } }
+                    },
+                    {
+                        "type": "object",
+                        "required": [ "dispatcher" ],
+                        "properties": { "dispatcher": { "$ref": "#/definitions/dispatcher" } }
+                    }
+                ]
+            }
+        ]
+    },
+    "definitions": {
+        "expr": {
+            "oneOf": [ { "type": "string" }, { "type": "integer" } ]
+        },
+        "enum": {
+            "type": "object",
+            "properties": {
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "value": { "$ref": "#/definitions/expr" }
+                        },
+                        "required": ["name"]
+                    }
+                }
+            },
+            "required": ["values"]
+        },
+        "struct": {
+            "type": "object"
+        },
+        "union": {
+            "type": "object"
+        },
+        "function": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "return": { "type": "string" },
+                "args": { 
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "type": { "type": "string" },
+                            "register": { "$ref": "#/definitions/reg" }
+                        },
+                        "required": [ "type" ]
+                    }
+                },
+                "trap": { "type": "integer" },
+                "inline": { "type": "string" },
+                "noinline": { "type": "string" },
+                "executor": { "oneOf": [ {"type":"string"}, {"type":"boolean"}] },
+                "returnreg": { "$ref": "#/definitions/reg" },
+                "variants": { "type": "array", "items": { "type": "string" }},
+                "executor_extras": { "type": "string" },
+                "m68k-inline": { "type": "array", "items": { "type": "integer" }},
+                "dispatcher": { "type": "string" },
+                "selector": { "type": "integer" },
+                "file_trap": { "oneOf": [ {"type":"string"}, {"type":"boolean"}] },
+                "comment": { "type": "string" }
+            },
+            "additionalProperties": false,
+            "required": [ "name" ]
+        },
+        "funptr": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "return": { "type": "string" },
+                "args": { 
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "type": { "type": "string" },
+                            "register": { "$ref": "#/definitions/reg" }
+                        },
+                        "required": [ "type" ]
+                    }
+                },
+                "returnreg": { "$ref": "#/definitions/reg" },
+                "comment": { "type": "string" }
+            },
+            "additionalProperties": false,
+            "required": [ "name" ]
+        },
+        "lowmem": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "address": { "type": "integer" },
+                "comment": { "type": "string" }
+            },
+            "additionalProperties": false,
+            "required": [ "name", "type", "address" ]
+        },
+        "verbatim": {
+            "type": "string"
+        },
+        "typedef": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "comment": { "type": "string" }
+            },
+            "required": [ "name", "type" ],
+            "additionalProperties": false
+        },
+        "common": {
+            "type": "object"
+        },
+        "dispatcher": {
+            "type": "object"
+        },
+        "reg": {
+            "type": "string"
+        }
+    }
+}
