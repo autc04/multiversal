@@ -2,15 +2,37 @@ Multiversal Interfaces
 ======================
 
 Interfaces to Apple's classic MacOS APIs (pre-Carbon, i.e. 20th century),
-encoded in YAML files along with a ruby program to convert them to C/C++
-headers for use with Retro68.
+encoded in YAML files along with a ruby program to convert them
 
-The API definition files are generated from the header files in Executor 2000
-by the the translator program in the separate `multiversal-parser` repository.
+1. to C/C++ headers for use with Retro68.
+2. to C++ headers for use as part of Executor 2000
 
+The API definition files were automatically generated from the header files
+that were originally included with Executor 2000.
 As Executor was a clean-room implementation of MacOS and is now available
 under a liberal license, the resulting header files can be used and 
-edistributed freely.
+edistributed freely. The translator program can still be found in the separate
+`multiversal-parser` repository.
 
-Also includes an option to generate replacements for the header files that
-are part of executor. In the future, 
+JSON Schema
+-----------
+
+A JSON Schema definition for the definition files is available in the file
+`multiversal.schema.json`. When it's finished, it will serve as documentation
+for the API definition YAML files.
+
+If you're using `vscode` to edit the YAML files, you can set up automatic schema
+validation (= error messages and completion hints as you type) by installing the
+`YAML` extension and adding
+
+    "yaml.schemas": {
+        "multiversal.schema.json": "defs/*.yaml"
+    }
+
+to your vscode workspace settings (`.vscode/settings.json`). If you have checked
+out the Multiversal Interfaces as a submodule of Executor 2000 or Retro68, add the
+subdirectory to the relative paths:
+
+    "yaml.schemas": {
+        "multiversal/multiversal.schema.json": "multiversal/defs/*.yaml"
+    }
