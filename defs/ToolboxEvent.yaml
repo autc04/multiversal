@@ -63,14 +63,14 @@
 
 - function:
     name: KeyTranslate
-    return: LONGINT
+    return: uint32_t
     args:
       - name: mapp
         type: Ptr
       - name: code
         type: uint16_t
       - name: state
-        type: LONGINT*
+        type: uint32_t*
     trap: 0xA9C3
     executor: C_
 
