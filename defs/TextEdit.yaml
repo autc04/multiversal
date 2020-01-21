@@ -966,6 +966,7 @@
         type: ProcPtr
       - name: teh
         type: TEHandle
+    executor: true
 
 # ####
 
@@ -976,6 +977,7 @@
         type: ProcPtr
       - name: teh
         type: TEHandle
+    executor: true
 
 # ####
 
@@ -992,24 +994,28 @@
 - function:
     name: TEFromScrap
     return: OSErr
+    executor: true
 
 # ####
 
 - function:
     name: TEToScrap
     return: OSErr
+    executor: true
 
 # ####
 
 - function:
     name: TEScrapHandle
     return: Handle
+    executor: true
 
 # ####
 
 - function:
     name: TEGetScrapLength
     return: LONGINT
+    executor: true
 
 # ####
 
@@ -1018,6 +1024,7 @@
     args:
       - name: ln
         type: LONGINT
+    executor: true
 
 # ####
 
