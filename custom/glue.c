@@ -405,10 +405,27 @@ pascal OSErr GetFInfo(ConstStr255Param fileName, short vRefNum,
     OSErr err;
     pb.fileParam.ioVRefNum = vRefNum;
     pb.fileParam.ioNamePtr = (StringPtr)fileName;
+    pb.fileParam.ioFVersNum = 0;
     err = PBGetFInfoSync(&pb);
     *fndrInfo = pb.fileParam.ioFlFndrInfo;
     return err;
 }
+
+pascal OSErr SetFInfo(ConstStr255Param fileName, short vRefNum,
+                      FInfo *fndrInfo)
+{
+    ParamBlockRec pb;
+    OSErr err;
+    pb.fileParam.ioVRefNum = vRefNum;
+    pb.fileParam.ioNamePtr = (StringPtr)fileName;
+    pb.fileParam.ioFVersNum = 0;
+    PBGetFInfoSync(&pb);
+    if(err)
+        return err;
+    pb.fileParam.ioFlFndrInfo = *fndrInfo;
+    return PBSetFInfoSync(&pb);
+}
+
 
 pascal OSErr HDelete(short vRefNum, long dirID, ConstStr255Param fileName)
 {
@@ -445,6 +462,9 @@ pascal OSErr HSetFInfo(short vRefNum, long dirID, ConstStr255Param fileName,
     pb.fileParam.ioFVersNum = 0; // ???
     pb.fileParam.ioFDirIndex = 0;
     pb.fileParam.ioDirID = dirID;
+    err = PBHGetFInfoSync(&pb);
+    if(err)
+        return err;
     pb.fileParam.ioFlFndrInfo = *fndrInfo;
     return PBHSetFInfoSync(&pb);
 }
