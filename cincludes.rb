@@ -264,6 +264,13 @@ class CIncludesGenerator < Generator
         if not fun["inline"] and (m68kinlines.length == 0 or complex) then
             @functions_needing_glue << name
         end
+
+        if fun["old_name"] then
+            @out << "#if OLDROUTINENAMES\n"
+            argnames = args.map {|arg| arg["name"]}.join(", ")
+            @out << "#define #{fun["old_name"]}(#{argnames}) #{name}(#{argnames})\n"
+            @out << "#endif\n"
+        end
     end
 
     def declare_struct_union(what, value)
@@ -424,7 +431,9 @@ class CIncludesGenerator < Generator
         
                 #define STACK_ROUTINE_PARAMETER(n, sz) ((sz) << (kStackParameterPhase + ((n)-1) * kStackParameterWidth))
             
-            
+                #ifndef OLDROUTINENAMES
+                #define OLDROUTINENAMES 0
+                #endif
             PREAMBLE
         
             defs.topsort.each do |name|

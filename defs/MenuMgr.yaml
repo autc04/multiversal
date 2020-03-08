@@ -304,6 +304,7 @@
         type: ResType
     trap: 0xA94D
     executor: C_
+    old_name: AddResMenu
 
 # ####
 
@@ -316,6 +317,7 @@
         type: INTEGER
     trap: 0xA952
     executor: C_
+    old_name: DelMenuItem
 
 # ####
 
@@ -344,6 +346,7 @@
         type: INTEGER
     trap: 0xA826
     executor: C_
+    old_name: InsMenuItem
 
 # ####
 
@@ -451,6 +454,7 @@
         type: ConstStringPtr
     trap: 0xA947
     executor: C_
+    old_name: SetItem
 
 # ####
 
@@ -465,6 +469,7 @@
         type: StringPtr
     trap: 0xA946
     executor: C_
+    old_name: GetItem
 
 # ####
 
@@ -609,6 +614,7 @@
         type: INTEGER
     trap: 0xA949
     executor: C_
+    old_name: GetMHandle
 
 # ####
 

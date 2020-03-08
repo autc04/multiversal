@@ -127,7 +127,8 @@
                 "dispatcher": { "type": "string" },
                 "selector": { "type": "integer" },
                 "file_trap": { "oneOf": [ {"type":"string"}, {"type":"boolean"}] },
-                "comment": { "type": "string" }
+                "comment": { "type": "string" },
+                "old_name": { "type": "string" }
             },
             "additionalProperties": false,
             "required": [ "name" ]
