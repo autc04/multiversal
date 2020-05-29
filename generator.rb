@@ -232,27 +232,38 @@ class Generator
 
     def formatted_file(name, &block)
         if not @format_command then
-            if system('clang-format --version', [:out, :err]=>"/dev/null") then
-                @format_command = "clang-format | grep -v \"// clang-format o\""
-            elsif system('uncrustify --version', [:out, :err]=>"/dev/null") then
-                @format_command = "uncrustify -q -c uncrustify.cfg | grep -v \"// clang-format o\""
-            elsif system('astyle --version', [:out, :err]=>"/dev/null") then
-                @format_command = "astyle --style=allman --max-code-length=79 --mode=c | grep -v \"// clang-format o\""
-            else
-                @format_command = "grep -v \"// clang-format o\""
+            if system('clang-format --version', [:out, :err]=>File::NULL) then
+                @format_command = "clang-format"
+            elsif system('uncrustify --version', [:out, :err]=>File::NULL) then
+                @format_command = "uncrustify -q -c uncrustify.cfg"
+            elsif system('astyle --version', [:out, :err]=>File::NULL) then
+                @format_command = "astyle --style=allman --max-code-length=79 --mode=c"
             end
         end
         #IO.popen("#{@format_command} > \"#{name}\"", "w", &block)
         tmp = Tempfile.new('multiverse-tmp')
         block.call(tmp)
         tmp.close
-        newtext = ""
-        IO.popen("#{@format_command}", "r", :in => tmp.path) do |pipe|
-            newtext = pipe.read
+
+        if @format_command then
+            newtext = ""
+            IO.popen("#{@format_command}", "r", :in => tmp.path) do |pipe|
+                newtext = pipe.read
+            end
+        else
+            newtext = File.read(tmp.path)
         end
 
         tmp.unlink
 
+        filtered = ""
+        newtext.each_line do |line|
+            if line =~ /^\/\/ clang-format o.*/ then
+            else
+                filtered += line
+            end
+        end
+        newtext = filtered
         
         if !File.readable?(name) || File.read(name) != newtext then
             File.write(name, newtext)
