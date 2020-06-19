@@ -1264,6 +1264,15 @@
 
 # ####
 
+- lowmem:
+    name: PortList
+    type: Handle
+    address: 0xD66
+    comment: |
+      undocumented; 2-byte count followed by array of GrafPtrs
+
+# ####
+
 - function:
     name: CopyBits
     args:
