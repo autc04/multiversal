@@ -719,12 +719,6 @@
 # ####
 
 - function:
-    name: GetMBarHeight
-    return: INTEGER
-
-# ####
-
-- function:
     name: GetSysDirection
     return: INTEGER
 

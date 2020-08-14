@@ -794,3 +794,12 @@
         type: MenuHandle
       - name: item
         type: INTEGER
+
+# ####
+
+- function:
+    name: GetMBarHeight
+    return: INTEGER
+    executor: C_
+    inline: LMGetMBarHeight()
+    noinline: carbon, ppc
