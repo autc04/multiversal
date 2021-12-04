@@ -379,9 +379,9 @@
       - name: ioFlRPyLen
         type: LONGINT
       - name: ioFlCrDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioFlMdDat
-        type: LONGINT
+        type: ULONGINT
     name: FileParam
     size: 80
 
@@ -395,9 +395,9 @@
       - name: ioVolIndex
         type: INTEGER
       - name: ioVCrDate
-        type: LONGINT
+        type: ULONGINT
       - name: ioVLsBkUp
-        type: LONGINT
+        type: ULONGINT
       - name: ioVAtrb
         type: uint16_t
       - name: ioVNmFls
@@ -520,9 +520,9 @@
       - name: ioFlRPyLen
         type: LONGINT
       - name: ioFlCrDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioFlMdDat
-        type: LONGINT
+        type: ULONGINT
     name: HFileParam
     size: 80
 
@@ -536,9 +536,9 @@
       - name: ioVolIndex
         type: INTEGER
       - name: ioVCrDate
-        type: LONGINT
+        type: ULONGINT
       - name: ioVLsMod
-        type: LONGINT
+        type: ULONGINT
         comment: |
           -->
       - name: ioVAtrb
@@ -672,11 +672,11 @@
       - name: ioFlRPyLen
         type: LONGINT
       - name: ioFlCrDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioFlMdDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioFlBkDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioFlXFndrInfo
         type: FXInfo
       - name: ioFlParID
@@ -700,11 +700,11 @@
       - name: filler3
         type: uint16_t[9]
       - name: ioDrCrDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioDrMdDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioDrBkDat
-        type: LONGINT
+        type: ULONGINT
       - name: ioDrFndrInfo
         type: DXInfo
       - name: ioDrParID
@@ -845,11 +845,11 @@
         comment: |
           8
       - name: vcbCrDate
-        type: LONGINT
+        type: ULONGINT
         comment: |
           10
       - name: vcbLsMod
-        type: LONGINT
+        type: ULONGINT
         comment: |
           14
       - name: vcbAtrb
