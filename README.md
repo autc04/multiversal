@@ -1,23 +1,23 @@
 Multiversal Interfaces
 ======================
 
-Interfaces to Apple's classic MacOS APIs (pre-Carbon, i.e. 20th century),
-encoded in YAML files along with a ruby program to convert them
+Interfaces to Apple's classic Mac OS APIs (pre-Carbon, i.e. 20th century),
+encoded in YAML files along with a Ruby program to convert them
 
 1. to C/C++ headers for use with Retro68.
 2. to C++ headers for use as part of Executor 2000
 
 The API definition files were automatically generated from the header files
 that were originally included with Executor 2000.
-As Executor was a clean-room implementation of MacOS and is now available
+As Executor was a clean-room implementation of Mac OS and is now available
 under a liberal license, the resulting header files can be used and 
-edistributed freely. The translator program can still be found in the separate
+redistributed freely. The translator program can still be found in the separate
 `multiversal-parser` repository.
 
 JSON Schema
 -----------
 
-A JSON Schema definition for the definition files is available in the file
+A JSON schema definition for the definition files is available in the file
 `multiversal.schema.json`. When it's finished, it will serve as documentation
 for the API definition YAML files.
 
