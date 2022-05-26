@@ -227,6 +227,8 @@ class ExecutorGenerator < Generator
             @out << ", Register<"
             handle_regcall_conv(value)
             @out << ">"
+        elsif value["callconv"] == "C" then
+            @out << ", callconv::CCall"
         end
         @out << ">;\n"
     end

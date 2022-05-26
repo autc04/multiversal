@@ -151,7 +151,8 @@
                     }
                 },
                 "returnreg": { "$ref": "#/definitions/reg" },
-                "comment": { "type": "string" }
+                "comment": { "type": "string" },
+                "callconv": { "type": "string" }
             },
             "additionalProperties": false,
             "required": [ "name" ]
