@@ -1,0 +1,118 @@
+- struct:
+    name: MPWFile
+
+- funptr:
+    name: MPWFileProcPtr
+    args:
+      - name: file
+        type: MPWFile*
+    return: LONGINT
+    callconv: C
+
+- funptr:
+    name: MPWQuitProcPtr
+    callconv: C
+
+- funptr:
+    name: MPWAccessProcPtr
+    args:
+      - name: name
+        type: char*
+      - name: op
+        type: LONGINT
+      - name: param
+        type: ULONGINT
+    return: LONGINT
+    callconv: C
+
+- funptr:
+    name: MPWIOCtlProcPtr
+    args:
+      - name: fd
+        type: LONGINT
+      - name: cmd
+        type: LONGINT
+      - name: param
+        type: ULONGINT
+    return: LONGINT
+    callconv: C
+
+
+- struct:
+    name: fsysTable
+    members:
+      - name: quit
+        type: MPWQuitProcPtr
+      - name: access
+        type: MPWAccessProcPtr
+      - name: close
+        type: MPWFileProcPtr
+      - name: read
+        type: MPWFileProcPtr
+      - name: write
+        type: MPWFileProcPtr
+      - name: ioctl
+        type: MPWIOCtlProcPtr
+
+- struct:
+    name: MPWFile
+    members:
+      - name: flags
+        type: INTEGER
+      - name: err
+        type: INTEGER
+      - name: functions
+        type: fsysTable*
+      - name: cookie
+        type: LONGINT
+      - name: count
+        type: LONGINT
+      - name: buffer
+        type: void*
+
+- struct:
+    name: devtable
+    members:
+      - name: magic
+        type: OSType
+      - name: table
+        type: fsysTable
+
+- struct:
+    name: PgmInfo2
+    members:
+      - name: magic2
+        type: INTEGER
+      - name: argc
+        type: LONGINT
+      - name: argv
+        type: char**
+      - name: envp
+        type: char**
+      - name: exitCode
+        type: LONGINT
+      - name: x
+        type: LONGINT
+      - name: y
+        type: LONGINT
+      - name: tableSize
+        type: INTEGER
+      - name: ioptr
+        type: MPWFile*
+      - name: devptr
+        type: devtable*
+
+- struct:
+    name: PgmInfo1
+    members:
+      - name: magic
+        type: OSType
+      - name: pgmInfo2
+        type: PgmInfo2*
+    size: 8
+
+- lowmem:
+    name: MacPgm
+    type: PgmInfo1*
+    address: 0x316
+
