@@ -28,8 +28,8 @@
 - funptr:
     name: MPWIOCtlProcPtr
     args:
-      - name: fd
-        type: LONGINT
+      - name: file
+        type: MPWFile*
       - name: cmd
         type: LONGINT
       - name: param
