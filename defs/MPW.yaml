@@ -20,8 +20,8 @@
         type: char*
       - name: op
         type: LONGINT
-      - name: param
-        type: ULONGINT
+      - name: file
+        type: MPWFile*
     return: LONGINT
     callconv: C
 
@@ -41,8 +41,10 @@
 - struct:
     name: fsysTable
     members:
-      - name: quit
-        type: MPWQuitProcPtr
+      - name: magic
+        type: OSType
+      #- name: quit
+      #  type: MPWQuitProcPtr
       - name: access
         type: MPWAccessProcPtr
       - name: close
@@ -73,9 +75,11 @@
 - struct:
     name: devtable
     members:
-      - name: magic
-        type: OSType
-      - name: table
+      - name: fsys
+        type: fsysTable
+      - name: econ
+        type: fsysTable
+      - name: syst
         type: fsysTable
 
 - struct:
