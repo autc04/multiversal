@@ -33,7 +33,7 @@
       - name: cmd
         type: LONGINT
       - name: param
-        type: ULONGINT
+        type: void*
     return: LONGINT
     callconv: C
 
@@ -71,6 +71,14 @@
         type: LONGINT
       - name: buffer
         type: void*
+
+- struct:
+    name: MPWSeekParamBlock
+    members:
+      - name: whence
+        type: LONGINT
+      - name: offset
+        type: LONGINT
 
 - struct:
     name: devtable
