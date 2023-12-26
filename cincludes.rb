@@ -437,6 +437,12 @@ class CIncludesGenerator < Generator
             PREAMBLE
         
             defs.topsort.each do |name|
+                # HACK: MPW.h defines things not defined in Universal Interfaces.
+                # We need a better way to specify that this is 'extra' functionality, and it should not be included
+                # in Multiverse.h.
+                # MPW.h has been added for Executor, and it conflicts with Retro68's sample programs.
+                next if name == "MPW"
+
                 header = defs.headers[name]
                 @impl_out = ""
                 @cfmwrapper_included = false
