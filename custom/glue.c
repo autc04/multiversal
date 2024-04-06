@@ -345,12 +345,12 @@ pascal OSErr Create(ConstStr255Param fileName, short vRefNum, OSType creator,
     err = PBCreateSync(&pb);
     if(err != noErr)
         return err;
+    // clear directory index
+    pb.fileParam.ioFDirIndex = 0;
     // get previous finder info
     err = PBGetFInfoSync(&pb);
     if(err != noErr)
         return err;
-    // clear directory index
-    pb.fileParam.ioFDirIndex = 0;
     // copy finder info words
     pb.fileParam.ioFlFndrInfo.fdType = fileType;
     pb.fileParam.ioFlFndrInfo.fdCreator = creator;
@@ -371,15 +371,17 @@ pascal OSErr HCreate(short vRefNum, long dirID, ConstStr255Param fileName,
     err = PBHCreateSync(&pb);
     if(err != noErr)
         return err;
+    // clear directory index
+    pb.fileParam.ioFDirIndex = 0;
     // get previous finder info
     err = PBHGetFInfoSync(&pb);
     if(err != noErr)
         return err;
-    // clear directory index
-    pb.fileParam.ioFDirIndex = 0;
     // copy finder info words
     pb.fileParam.ioFlFndrInfo.fdType = fileType;
     pb.fileParam.ioFlFndrInfo.fdCreator = creator;
+    // reset directory ID, overwritten by PBHGetFInfo
+    pb.fileParam.ioDirID = dirID;
     // save finder info
     return PBHSetFInfoSync(&pb);
 }
