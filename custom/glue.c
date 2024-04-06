@@ -141,6 +141,17 @@ pascal OSErr GetVol(StringPtr volName, short *vRefNum)
     return err;
 }
 
+pascal OSErr GetVRefNum(short refNum, short *vRefNum)
+{
+    FCBPBRec pb;
+    pb.ioNamePtr = NULL;
+    pb.ioVRefNum = 0;
+    pb.ioRefNum = refNum;
+    pb.ioFCBIndx = 0;
+    OSErr err = PBGetFCBInfoSync(&pb);
+    *vRefNum = pb.ioFCBVRefNum;
+    return err;
+}
 
 pascal OSErr UnmountVol(ConstStr63Param volName, short vRefNum)
 {
@@ -265,6 +276,14 @@ pascal OSErr FSClose(short refNum)
     ParamBlockRec pb;
     pb.ioParam.ioRefNum = refNum;
     return PBCloseSync(&pb);
+}
+
+pascal OSErr FlushVol(ConstStr63Param volName, short vRefNum)
+{
+    ParamBlockRec pb;
+    pb.fileParam.ioNamePtr = (StringPtr)volName;
+    pb.fileParam.ioVRefNum = vRefNum;
+    return PBFlushVolSync(&pb);
 }
 
 pascal OSErr FSRead(short refNum, long *count, void *buffPtr)
