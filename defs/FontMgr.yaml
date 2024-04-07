@@ -4,76 +4,56 @@
         value: 0
       - name: applFont
         value: 1
-      - name: newYork
-        value: 2
-      - name: geneva
-        value: 3
-      - name: monaco
-        value: 4
-      - name: venice
-        value: 5
-      - name: london
-        value: 6
-      - name: athens
-        value: 7
-      - name: sanFran
-        value: 8
-      - name: toronto
-        value: 9
-      - name: cairo
-        value: 11
-      - name: losAngeles
-        value: 12
-      - name: times
-        value: 20
-
-# ####
-
-- enum:
-    values:
-      - name: helvetica
-        value: 21
-      - name: courier
-        value: 22
-      - name: symbol
-        value: 23
-      - name: taliesin
-        value: 24
 
 # ####
 
 - enum:
     values:
       - name: kFontIDNewYork
-        value: newYork
+        value: 2
+        old_name: newYork
       - name: kFontIDGeneva
-        value: geneva
+        value: 3
+        old_name: geneva
       - name: kFontIDMonaco
-        value: monaco
+        value: 4
+        old_name: monaco
       - name: kFontIDVenice
-        value: venice
+        value: 5
+        old_name: venice
       - name: kFontIDLondon
-        value: london
+        value: 6
+        old_name: london
       - name: kFontIDAthens
-        value: athens
+        value: 7
+        old_name: athens
       - name: kFontIDSanFrancisco
-        value: sanFran
+        value: 8
+        old_name: sanFran
       - name: kFontIDToronto
-        value: toronto
+        value: 9
+        old_name: toronto
       - name: kFontIDCairo
-        value: cairo
+        value: 11
+        old_name: cairo
       - name: kFontIDLosAngeles
-        value: losAngeles
+        value: 12
+        old_name: losAngeles
       - name: kFontIDTimes
-        value: times
+        value: 20
+        old_name: times
       - name: kFontIDHelvetica
-        value: helvetica
+        value: 21
+        old_name: helvetica
       - name: kFontIDCourier
-        value: courier
+        value: 22
+        old_name: courier
       - name: kFontIDSymbol
-        value: symbol
+        value: 23
+        old_name: symbol
       - name: kFontIDTaliesin
-        value: taliesin
+        value: 24
+        old_name: taliesin
 
 # ####
 

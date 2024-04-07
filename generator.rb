@@ -134,6 +134,11 @@ class Generator
             end
             @out << " // " << val["comment"].rstrip if val["comment"]
             @out << "\n"
+            if val["old_name"] then
+                @out << "#if OLDROUTINENAMES\n"
+                @out << "#define #{val["old_name"]} #{val["name"]}\n"
+                @out << "#endif\n"
+            end
         end
         @out << "}"
         @out << value["name"] if value["name"]

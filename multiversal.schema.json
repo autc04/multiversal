@@ -85,7 +85,8 @@
                         "type": "object",
                         "properties": {
                             "name": { "type": "string" },
-                            "value": { "$ref": "#/definitions/expr" }
+                            "value": { "$ref": "#/definitions/expr" },
+                            "old_name": { "type": "string" }
                         },
                         "required": ["name"]
                     }
