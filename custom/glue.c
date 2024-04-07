@@ -311,7 +311,7 @@ pascal OSErr SetEOF(short refNum, long logEOF)
     ParamBlockRec pb;
     pb.ioParam.ioRefNum = refNum;
     pb.ioParam.ioMisc = (Ptr)logEOF;
-    return PBGetEOFSync(&pb);
+    return PBSetEOFSync(&pb);
 }
 
 pascal OSErr GetFPos(short refNum, long *filePos)
