@@ -9,9 +9,13 @@
         type: ProcPtr
       - name: tmCount
         type: LONGINT
+      - name: tmWakeUp
+        type: LONGINT
+      - name: tmReserved
+        type: LONGINT
         comment: |
           I don't trust IMIV-301
-    size: 14
+    size: 22
 
 # ####
 
@@ -24,6 +28,16 @@
     executor: true
     trap: 0xA058
     executor_extras: ClearD0
+
+# ####
+
+- function:
+    name: InsXTime
+    args:
+      - name: taskp
+        type: QElemPtr
+        register: A0
+    trap: 0xA458
 
 # ####
 
