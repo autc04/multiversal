@@ -470,9 +470,10 @@ class CIncludesGenerator < Generator
         ["Carbon", "Devices", "Dialogs", "Errors", "Events", "Files", "FixMath",
             "Fonts", "Icons", "LowMem", "MacMemory", "MacTypes", "Memory", "Menus",
             "MixedMode", "NumberFormatting", "OSUtils", "Processes", "Quickdraw",
-            "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "ToolUtils",
-            "Traps", "Types", "Windows", "ConditionalMacros", "Gestalt", "AppleEvents", 
-            "Serial", "StandardFile", "Strings", "Navigation"].each do |name|
+            "Resources", "SegLoad", "Sound", "TextEdit", "TextUtils", "Timer",
+            "ToolUtils", "Traps", "Types", "Windows", "ConditionalMacros",
+            "Gestalt", "AppleEvents", "Serial", "StandardFile", "Strings",
+            "Navigation"].each do |name|
             File.open("#{$options.output_dir}/CIncludes/#{name}.h", "w") do |f|
                 f << "#pragma once\n"
                 f << "#include \"Multiverse.h\"\n"
