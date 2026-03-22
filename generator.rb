@@ -240,7 +240,7 @@ class Generator
             if system('clang-format --version', [:out, :err]=>File::NULL) then
                 @format_command = "clang-format"
             elsif system('uncrustify --version', [:out, :err]=>File::NULL) then
-                @format_command = "uncrustify -q -c uncrustify.cfg"
+                @format_command = "uncrustify -l cpp -q -c uncrustify.cfg"
             elsif system('astyle --version', [:out, :err]=>File::NULL) then
                 @format_command = "astyle --style=allman --max-code-length=79 --mode=c"
             end
