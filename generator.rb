@@ -245,13 +245,20 @@ class Generator
         block.call(tmp)
         tmp.close
 
+        rawtext = File.read(tmp.path)
         if @format_command then
             newtext = ""
             IO.popen("#{@format_command}", "r", :in => tmp.path) do |pipe|
                 newtext = pipe.read
             end
+            # A misconfigured or unhappy formatter must never be allowed to
+            # silently truncate a generated header to nothing.
+            if !$?.success? || (newtext.strip.empty? && !rawtext.strip.empty?) then
+                STDERR.puts "warning: '#{@format_command}' failed for #{name}; writing unformatted output"
+                newtext = rawtext
+            end
         else
-            newtext = File.read(tmp.path)
+            newtext = rawtext
         end
 
         tmp.unlink
