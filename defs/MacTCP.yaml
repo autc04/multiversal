@@ -10,11 +10,12 @@
 # The native driver implementation lives in Executor (src/mactcp/).
 #
 # Layout conventions: 68k (mac68k) alignment, i.e. 2-byte alignment for
-# anything wider than a byte.  Where Apple's shipped headers relied on
-# implicit padding, an explicit `filler` member is declared here so the
-# guest layout is unambiguous.  Absolute byte offsets are given in
-# comments; parameter-block union members are offset relative to
-# csParam (= byte 32 of the enclosing iopb).
+# anything wider than a byte, which the generator applies for us.
+# Apple's headers name their padding bytes (`filler`); there is no need
+# to declare them here, and the `size:` on each struct is what pins the
+# result.  Absolute byte offsets are given in comments; parameter-block
+# union members are offset relative to csParam (= byte 32 of the
+# enclosing iopb).
 #
 # Layouts have been checked field by field against Apple's Universal
 # Interfaces 3.4.2 by compiling that header and comparing computed
@@ -365,9 +366,6 @@
         type: Byte                  #  3
       - name: urgentFlag
         type: Byte                  #  4
-      - name: filler
-        type: Byte                  #  5  explicit; Apple's header used
-                                    #     implicit mac68k padding here
       - name: wdsPtr
         type: Ptr                   #  6  (abs 38) -> wdsEntry list
       - name: sendFree
@@ -387,8 +385,8 @@
       The MacTCP Programmer's Guide describes this block incorrectly,
       and Apple's own header says as much in a comment: markFlag and
       urgentFlag sit at the front, immediately after
-      commandTimeoutValue, and the filler follows them instead of
-      preceding rcvBuff.  Verified against Universal Interfaces 3.4.2.
+      commandTimeoutValue, with the pad byte after them rather than
+      before rcvBuff.  Verified against Universal Interfaces 3.4.2.
       The total is 22 bytes either way, which is exactly why a
       size-only assertion does not catch the difference.
     members:
@@ -398,8 +396,6 @@
         type: Byte                  #  1
       - name: urgentFlag
         type: Byte                  #  2
-      - name: filler
-        type: Byte                  #  3
       - name: rcvBuff
         type: Ptr                   #  4  (abs 36)
       - name: rcvBuffLen
@@ -423,8 +419,6 @@
         type: Byte                  #  1
       - name: validityFlags
         type: Byte                  #  2
-      - name: filler
-        type: Byte                  #  3
       - name: userDataPtr
         type: Ptr                   #  4
     size: 8
@@ -467,8 +461,6 @@
         type: Byte                  # 19
       - name: connectionState
         type: Byte                  # 20  TCPConnectionState
-      - name: filler
-        type: Byte                  # 21
       - name: sendWindow
         type: uint16_t              # 22
       - name: rcvWindow
