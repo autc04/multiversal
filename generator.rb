@@ -113,9 +113,22 @@ class Generator
                 end
             else
                 @out << decl(member["type"], member["name"]) << ";"
-                @out << " // " << member["comment"].rstrip << "\n" if member["comment"]
+                if member["comment"] then
+                    trailing_comment(member["comment"])
+                    @out << "\n"
+                end
             end
         end
+    end
+
+    # Emit a trailing "//" comment.  Every line has to be prefixed: a
+    # multi-line comment that only comments its first line leaves the
+    # remaining lines sitting in the header as stray code.
+    def trailing_comment(text)
+        lines = text.rstrip.lines.map(&:rstrip)
+        return if lines.empty?
+        @out << " // " << lines.shift
+        lines.each { |l| @out << "\n// " << l }
     end
 
     def convert_expression(expr)
@@ -132,7 +145,7 @@ class Generator
             else
                 @out << ","
             end
-            @out << " // " << val["comment"].rstrip if val["comment"]
+            trailing_comment(val["comment"]) if val["comment"]
             @out << "\n"
             if val["old_name"] then
                 @out << "#if OLDROUTINENAMES\n"
@@ -250,13 +263,20 @@ class Generator
         block.call(tmp)
         tmp.close
 
+        rawtext = File.read(tmp.path)
         if @format_command then
             newtext = ""
             IO.popen("#{@format_command}", "r", :in => tmp.path) do |pipe|
                 newtext = pipe.read
             end
+            # A misconfigured or unhappy formatter must never be allowed to
+            # silently truncate a generated header to nothing.
+            if !$?.success? || (newtext.strip.empty? && !rawtext.strip.empty?) then
+                STDERR.puts "warning: '#{@format_command}' failed for #{name}; writing unformatted output"
+                newtext = rawtext
+            end
         else
-            newtext = File.read(tmp.path)
+            newtext = rawtext
         end
 
         tmp.unlink
