@@ -1,0 +1,596 @@
+# MacTCP.yaml — MacTCP `.IPP` driver interface definitions
+#
+# Written from the MacTCP Programmer's Guide (Apple, 1989-1994) and
+# Inside Macintosh: Networking.  Clean-room: no Apple header text is
+# reproduced; struct layouts encode the documented driver ABI.
+#
+# NOTE: MacTCP defines no A-traps.  Applications reach the driver via
+# PBOpen("\p.IPP") + PBControl, so this file contributes types,
+# constants, and parameter blocks only — no `function`/trap entries.
+# The native driver implementation lives in Executor (src/mactcp/).
+#
+# Layout conventions: 68k (mac68k) alignment, i.e. 2-byte alignment for
+# anything wider than a byte, which the generator applies for us.
+# Apple's headers name their padding bytes (`filler`); there is no need
+# to declare them here, and the `size:` on each struct is what pins the
+# result.  Absolute byte offsets are given in comments; parameter-block
+# union members are offset relative to csParam (= byte 32 of the
+# enclosing iopb).
+#
+# Layouts have been checked field by field against Apple's Universal
+# Interfaces 3.4.2 by compiling that header and comparing computed
+# offsets (see tests/mactcp_abi.cpp).  Two blocks did not match what
+# the Programmer's Guide describes -- TCPReceivePB's field order and
+# TCPStatusPB's connStatPtr -- and both are noted where they occur.
+
+- typedef:
+    name: ip_addr
+    type: ULONGINT
+    comment: |
+      IPv4 address.  Numeric value; guest byte order (big-endian) is
+      identical to network byte order.
+
+- typedef:
+    name: ip_port
+    type: uint16_t
+
+- typedef:
+    name: tcp_port
+    type: uint16_t
+
+- typedef:
+    name: StreamPtr
+    type: Ptr
+    comment: |
+      Opaque stream cookie returned by TCPCreate/UDPCreate and passed
+      back in every subsequent call.  Applications must not
+      dereference it.
+
+# #### csCodes (PBControl selectors on the .IPP driver refnum)
+
+- enum:
+    name: MacTCPCsCode
+    values:
+      - name: ipctlGetAddr
+        value: 15
+      - name: udpCreate
+        value: 20
+      - name: udpRead
+        value: 21
+      - name: udpBfrReturn
+        value: 22
+      - name: udpWrite
+        value: 23
+      - name: udpRelease
+        value: 24
+      - name: udpMaxMTUSize
+        value: 25
+      - name: udpStatus
+        value: 26
+      - name: udpMultiCreate
+        value: 27
+      - name: udpMultiSend
+        value: 28
+      - name: udpMultiRead
+        value: 29
+      - name: TCPCreate
+        value: 30
+      - name: TCPPassiveOpen
+        value: 31
+      - name: TCPActiveOpen
+        value: 32
+      - name: TCPSend
+        value: 34
+      - name: TCPNoCopyRcv
+        value: 35
+      - name: TCPRcvBfrReturn
+        value: 36
+      - name: TCPRcv
+        value: 37
+      - name: TCPClose
+        value: 38
+      - name: TCPAbort
+        value: 39
+      - name: TCPStatus
+        value: 40
+      - name: TCPExtendedStat
+        value: 41
+      - name: TCPRelease
+        value: 42
+      - name: TCPGlobalInfo
+        value: 43
+
+# #### Result codes
+
+- enum:
+    name: MacTCPErr
+    comment: |
+      MacTCP OSErr codes, -23000 .. -23048.
+    values:
+      - name: inProgress
+        value: 1
+        comment: |
+          ioResult while an asynchronous call is pending.
+      - name: ipBadLapErr
+        value: -23000
+      - name: ipBadCnfgErr
+        value: -23001
+      - name: ipNoCnfgErr
+        value: -23002
+      - name: ipLoadErr
+        value: -23003
+      - name: ipBadAddr
+        value: -23004
+      - name: connectionClosing
+        value: -23005
+      - name: invalidLength
+        value: -23006
+      - name: connectionExists
+        value: -23007
+      - name: connectionDoesntExist
+        value: -23008
+      - name: insufficientResources
+        value: -23009
+      - name: invalidStreamPtr
+        value: -23010
+      - name: streamAlreadyOpen
+        value: -23011
+      - name: connectionTerminated
+        value: -23012
+      - name: invalidBufPtr
+        value: -23013
+      - name: invalidRDS
+        value: -23014
+      - name: invalidWDS
+        value: -23014
+      - name: openFailed
+        value: -23015
+      - name: commandTimeout
+        value: -23016
+      - name: duplicateSocket
+        value: -23017
+      - name: nameSyntaxErr
+        value: -23041
+      - name: cacheFault
+        value: -23042
+      - name: noResultProc
+        value: -23043
+      - name: noNameServer
+        value: -23044
+      - name: authNameErr
+        value: -23045
+      - name: noAnsErr
+        value: -23046
+      - name: dnrErr
+        value: -23047
+      - name: outOfMemory
+        value: -23048
+        comment: |
+          Apple's spelling; nothing else in multiversal defines this
+          name, so there is no collision to work around.
+
+# #### ASR (notification routine) event codes
+
+- enum:
+    name: TCPEventCode
+    values:
+      - name: TCPClosing
+        value: 1
+      - name: TCPULPTimeout
+        value: 2
+      - name: TCPTerminate
+        value: 3
+      - name: TCPDataArrival
+        value: 4
+      - name: TCPUrgent
+        value: 5
+      - name: TCPICMPReceived
+        value: 6
+
+# TODO(phase2): terminReason codes for the TCPTerminate event are not
+# defined here yet — take them from the Programmer's Guide table when
+# implementing ASR delivery.
+
+# #### TCPStatus connectionState values (per MacTCP Programmer's Guide)
+
+- enum:
+    name: TCPConnectionState
+    values:
+      - name: TCPSClosed
+        value: 0
+      - name: TCPSListen
+        value: 2
+      - name: TCPSSynReceived
+        value: 4
+      - name: TCPSSynSent
+        value: 6
+      - name: TCPSEstablished
+        value: 8
+      - name: TCPSFinWait1
+        value: 10
+      - name: TCPSFinWait2
+        value: 12
+      - name: TCPSCloseWait
+        value: 14
+      - name: TCPSClosing
+        value: 16
+      - name: TCPSLastAck
+        value: 18
+      - name: TCPSTimeWait
+        value: 20
+
+# #### validityFlags bits (TCPActiveOpen/TCPPassiveOpen/TCPClose)
+
+- enum:
+    name: TCPValidityFlags
+    values:
+      - name: timeoutValue
+        value: 0x80
+      - name: timeoutAction
+        value: 0x40
+      - name: typeOfService
+        value: 0x20
+      - name: precedence
+        value: 0x10
+
+# #### ICMP report (passed to the ASR on TCPICMPReceived)
+
+- struct:
+    name: ICMPReport
+    members:
+      - name: streamPtr
+        type: StreamPtr             #  0
+      - name: localHost
+        type: ip_addr               #  4
+      - name: localPort
+        type: ip_port               #  8
+      - name: remoteHost
+        type: ip_addr               # 10
+      - name: remotePort
+        type: ip_port               # 14
+      - name: reportType
+        type: INTEGER               # 16
+      - name: optionalAddlInfo
+        type: uint16_t              # 18
+      - name: optionalAddlInfoPtr
+        type: Ptr                   # 20
+    size: 24
+
+- funptr:
+    name: TCPNotifyUPP
+    comment: |
+      Asynchronous notification routine (ASR).  Pascal convention.
+    args:
+      - name: tcpStream
+        type: StreamPtr
+      - name: eventCode
+        type: uint16_t
+      - name: userDataPtr
+        type: Ptr
+      - name: terminReason
+        type: uint16_t
+      - name: icmpMsg
+        type: ICMPReport*
+
+# #### Write/Read Data Structures
+
+- struct:
+    name: wdsEntry
+    comment: |
+      TCPSend gather list entry.  The list is terminated by an entry
+      whose length is zero (the terminator's ptr field is absent /
+      ignored).
+    members:
+      - name: length
+        type: uint16_t              # 0
+      - name: ptr
+        type: Ptr                   # 2
+    size: 6
+
+- struct:
+    name: rdsEntry
+    comment: |
+      TCPNoCopyRcv scatter list entry, filled in by the driver;
+      returned via TCPRcvBfrReturn.  Same layout as wdsEntry.
+    members:
+      - name: length
+        type: uint16_t              # 0
+      - name: ptr
+        type: Ptr                   # 2
+    size: 6
+
+# #### TCP parameter blocks (offsets relative to csParam = iopb+32)
+
+- struct:
+    name: TCPCreatePB
+    members:
+      - name: rcvBuff
+        type: Ptr                   #  0  (abs 32)
+      - name: rcvBuffLen
+        type: ULONGINT              #  4
+      - name: notifyProc
+        type: TCPNotifyUPP          #  8
+      - name: userDataPtr
+        type: Ptr                   # 12
+    size: 16
+
+- struct:
+    name: TCPOpenPB
+    comment: |
+      Used by both TCPActiveOpen and TCPPassiveOpen.
+    members:
+      - name: ulpTimeoutValue
+        type: Byte                  #  0  (abs 32)  seconds; 0 = default
+      - name: ulpTimeoutAction
+        type: Byte                  #  1  1 = abort, 0 = report
+      - name: validityFlags
+        type: Byte                  #  2  TCPValidityFlags bits
+      - name: commandTimeoutValue
+        type: Byte                  #  3
+      - name: remoteHost
+        type: ip_addr               #  4  (abs 36)
+      - name: remotePort
+        type: tcp_port              #  8
+      - name: localHost
+        type: ip_addr               # 10  (abs 42)
+      - name: localPort
+        type: tcp_port              # 14
+      - name: tosFlags
+        type: Byte                  # 16
+      - name: precedence
+        type: Byte                  # 17
+      - name: dontFrag
+        type: Byte                  # 18
+      - name: timeToLive
+        type: Byte                  # 19
+      - name: security
+        type: Byte                  # 20
+      - name: optionCnt
+        type: Byte                  # 21
+      - name: options
+        type: Byte[40]              # 22
+      - name: userDataPtr
+        type: Ptr                   # 62
+    size: 66
+
+- struct:
+    name: TCPSendPB
+    members:
+      - name: ulpTimeoutValue
+        type: Byte                  #  0
+      - name: ulpTimeoutAction
+        type: Byte                  #  1
+      - name: validityFlags
+        type: Byte                  #  2
+      - name: pushFlag
+        type: Byte                  #  3
+      - name: urgentFlag
+        type: Byte                  #  4
+      - name: wdsPtr
+        type: Ptr                   #  6  (abs 38) -> wdsEntry list
+      - name: sendFree
+        type: ULONGINT              # 10
+      - name: sendLength
+        type: uint16_t              # 14
+      - name: userDataPtr
+        type: Ptr                   # 16
+    size: 20
+
+- struct:
+    name: TCPReceivePB
+    comment: |
+      Used by TCPRcv (rcvBuff/rcvBuffLen), TCPNoCopyRcv
+      (rdsPtr/rdsLength), and TCPRcvBfrReturn (rdsPtr).
+
+      The MacTCP Programmer's Guide describes this block incorrectly,
+      and Apple's own header says as much in a comment: markFlag and
+      urgentFlag sit at the front, immediately after
+      commandTimeoutValue, with the pad byte after them rather than
+      before rcvBuff.  Verified against Universal Interfaces 3.4.2.
+      The total is 22 bytes either way, which is exactly why a
+      size-only assertion does not catch the difference.
+    members:
+      - name: commandTimeoutValue
+        type: Byte                  #  0  (abs 32)
+      - name: markFlag
+        type: Byte                  #  1
+      - name: urgentFlag
+        type: Byte                  #  2
+      - name: rcvBuff
+        type: Ptr                   #  4  (abs 36)
+      - name: rcvBuffLen
+        type: uint16_t              #  8  in: buffer size / out: actual
+      - name: rdsPtr
+        type: Ptr                   # 10  (abs 42)
+      - name: rdsLength
+        type: uint16_t              # 14  number of rdsEntry slots
+      - name: secondTimeStamp
+        type: uint16_t              # 16
+      - name: userDataPtr
+        type: Ptr                   # 18
+    size: 22
+
+- struct:
+    name: TCPClosePB
+    members:
+      - name: ulpTimeoutValue
+        type: Byte                  #  0
+      - name: ulpTimeoutAction
+        type: Byte                  #  1
+      - name: validityFlags
+        type: Byte                  #  2
+      - name: userDataPtr
+        type: Ptr                   #  4
+    size: 8
+
+- struct:
+    name: TCPAbortPB
+    members:
+      - name: userDataPtr
+        type: Ptr                   #  0
+    size: 4
+
+- struct:
+    name: TCPStatusPB
+    comment: |
+      Verified against Universal Interfaces 3.4.2.  Note connStatPtr
+      between sendMaxSegSize and userDataPtr: it points at a
+      TCPConnectionStats block, is not mentioned in the parameter
+      table in the Programmer's Guide, and its omission is what makes
+      this block 70 bytes rather than 66 -- and therefore what makes
+      TCPiopb 102 bytes rather than 98.  Apple spells the round-trip
+      field lastRTT, not lastRtt.
+    members:
+      - name: ulpTimeoutValue
+        type: Byte                  #  0
+      - name: ulpTimeoutAction
+        type: Byte                  #  1
+      - name: unused
+        type: LONGINT               #  2
+      - name: remoteHost
+        type: ip_addr               #  6
+      - name: remotePort
+        type: tcp_port              # 10
+      - name: localHost
+        type: ip_addr               # 12
+      - name: localPort
+        type: tcp_port              # 16
+      - name: tosFlags
+        type: Byte                  # 18
+      - name: precedence
+        type: Byte                  # 19
+      - name: connectionState
+        type: Byte                  # 20  TCPConnectionState
+      - name: sendWindow
+        type: uint16_t              # 22
+      - name: rcvWindow
+        type: uint16_t              # 24
+      - name: amtUnackedData
+        type: uint16_t              # 26
+      - name: amtUnreadData
+        type: uint16_t              # 28
+      - name: securityLevelPtr
+        type: Ptr                   # 30
+      - name: sendUnacked
+        type: ULONGINT              # 34
+      - name: sendNext
+        type: ULONGINT              # 38
+      - name: congestionWindow
+        type: ULONGINT              # 42
+      - name: rcvNext
+        type: ULONGINT              # 46
+      - name: srtt
+        type: ULONGINT              # 50
+      - name: lastRTT
+        type: ULONGINT              # 54
+      - name: sendMaxSegSize
+        type: ULONGINT              # 58
+      - name: connStatPtr
+        type: Ptr                   # 62  -> TCPConnectionStats
+      - name: userDataPtr
+        type: Ptr                   # 66
+    size: 70
+
+- union:
+    name: TCPcsParam
+    members:
+      - name: create
+        type: TCPCreatePB
+      - name: open
+        type: TCPOpenPB
+      - name: send
+        type: TCPSendPB
+      - name: receive
+        type: TCPReceivePB
+      - name: close
+        type: TCPClosePB
+      - name: abort
+        type: TCPAbortPB
+      - name: status
+        type: TCPStatusPB
+    size: 70
+
+- struct:
+    name: TCPiopb
+    comment: |
+      The TCP I/O parameter block passed to PBControl on the .IPP
+      driver.  Canonical offsets: ioCompletion 12, ioResult 16,
+      ioNamePtr 18, ioVRefNum 22, ioCRefNum 24, csCode 26,
+      tcpStream 28, csParam 32.  csParam is 70 bytes -- the size of
+      its largest member, TCPStatusPB -- so the whole block is 102.
+    members:
+      - name: qLink
+        type: QElemPtr              #  0
+      - name: qType
+        type: INTEGER               #  4
+      - name: ioTrap
+        type: INTEGER               #  6
+      - name: ioCmdAddr
+        type: Ptr                   #  8
+      - name: ioCompletion
+        type: ProcPtr               # 12
+      - name: ioResult
+        type: OSErr                 # 16
+      - name: ioNamePtr
+        type: StringPtr             # 18
+      - name: ioVRefNum
+        type: INTEGER               # 22
+      - name: ioCRefNum
+        type: INTEGER               # 24
+      - name: csCode
+        type: INTEGER               # 26
+      - name: tcpStream
+        type: StreamPtr             # 28
+      - name: csParam
+        type: TCPcsParam            # 32
+    size: 102
+
+- typedef:
+    name: TCPiopbPtr
+    type: TCPiopb*
+
+# #### ipctlGetAddr parameter block
+
+- struct:
+    name: GetAddrParamBlock
+    members:
+      - name: qLink
+        type: QElemPtr              #  0
+      - name: qType
+        type: INTEGER               #  4
+      - name: ioTrap
+        type: INTEGER               #  6
+      - name: ioCmdAddr
+        type: Ptr                   #  8
+      - name: ioCompletion
+        type: ProcPtr               # 12
+      - name: ioResult
+        type: OSErr                 # 16
+      - name: ioNamePtr
+        type: StringPtr             # 18
+      - name: ioVRefNum
+        type: INTEGER               # 22
+      - name: ioCRefNum
+        type: INTEGER               # 24
+      - name: csCode
+        type: INTEGER               # 26
+      - name: ourAddress
+        type: ip_addr               # 28
+      - name: ourNetMask
+        type: ip_addr               # 32
+    size: 36
+
+# ####
+#
+# Deliberately not yet defined (phase 3):
+#   - UDPiopb and the UDP csParam blocks
+#   - TCPGlobalInfoPB / TCPExtendedStat result blocks
+#   - AddressXlation.h material (hostInfo, DNR selectors) — the DNR is
+#     a code resource loaded by applications, not a driver interface,
+#     and will be specified in its own defs file alongside the 'dnrp'
+#     stub resource.
+#
+# Verification: tests/mactcp_abi.cpp asserts every size and offset
+# above.  It is dual-mode, so the same assertions can be rebuilt
+# against Apple's Universal Interfaces to re-confirm them on any
+# future change.
