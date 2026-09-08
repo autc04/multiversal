@@ -1,0 +1,983 @@
+# DragMgr.yaml — Drag Manager interface definitions
+#
+# The Drag Manager shipped as an extension for System 7.0/7.1 and as part
+# of the system from 7.5 on.  Its whole 68K interface is a single trap,
+# `_DragDispatch` (0xABED), with a routine selector in D0.
+#
+# PROVENANCE, stated plainly because this file cannot claim the same
+# origin as the rest of the repository.  The names, signatures, constants
+# and structure layouts are from Apple's published documentation — Inside
+# Macintosh: Drag and Drop, and the Drag Manager Reference.  Executor
+# never implemented the Drag Manager, so there is no clean-room header
+# here to have generated this from, and the SELECTOR NUMBERS are not in
+# the documentation at all: they are an ABI fact that exists only in
+# Apple's `Drag.h` inline sequences, and that is where they were read.
+#
+# No Apple header text is reproduced.  If that is not a good enough
+# footing for this repository, the maintainer should say so and this file
+# should be dropped rather than quietly kept — the selectors are the only
+# part that cannot be sourced elsewhere, and they are also the only part
+# whose being wrong would stop a machine rather than fail to compile.
+#
+# VERIFIED BY RUNNING, which is worth more than a header comparison and is
+# the part that is genuinely first-hand.  A program built against these
+# definitions registers a tracking handler and a receive handler on its
+# own window, is dropped on by the Finder, reads the `flavorTypeHFS`
+# data back as an FSSpec, and opens the file — on **Mac OS 8.1** (Quadra
+# 650, Basilisk II) and installing cleanly on **Mac OS 9.2.2** (Power
+# Macintosh G4, QEMU).  So 0x7001, 0x7002, 0x7003, 0x7004, 0x700E,
+# 0x700F, 0x7013, 0x7014, 0x701E and 0x701F are known good on hardware;
+# the rest are transcribed and unrun.
+#
+# One detail that matters and is easy to get wrong: Apple's inlines use
+# MOVEQ (0x70nn), which clears the whole of D0.  `selector-location: D0W`
+# generates exactly that for selectors under 128, and every selector here
+# is under 128 - the same shape as AliasDispatch in AliasMgr.yaml.
+#
+# COVERAGE, and checked rather than asserted.  This file declares 39 trap
+# functions, which is every one Apple's Drag.h declares, and the two were
+# compared mechanically: name, selector, return type and argument count
+# all agree, 39 for 39.  The selectors run 0x01 to 0x28 with 0x08 absent,
+# and that gap is Apple's own numbering rather than something missing
+# here.
+#
+# The comparison is `tests/dragmgr_selectors.rb`, so it is reproducible by
+# anyone holding the header rather than a claim in a comment:
+#
+#     ruby tests/dragmgr_selectors.rb /path/to/Drag.h
+#
+# It skips where the header is absent, which it is here -- Apple's header
+# is not redistributable and no text from it is reproduced.  The generated
+# code was checked the same way: a wrapper for each of the 39, compiled
+# for m68k and disassembled, emits `moveq #n,d0` and the 0xABED trap, with
+# n as declared.
+
+- typedef:
+    name: DragRef
+    type: Ptr
+    comment: |
+      A drag.  Opaque: allocated by NewDrag, or handed to a handler by
+      the Drag Manager.
+
+# ####
+
+- typedef:
+    name: DragItemRef
+    type: UInt32
+    comment: |
+      One item within a drag.  Not an index: GetDragItemReferenceNumber
+      turns a one-based index into one of these.
+
+# ####
+
+- typedef:
+    name: FlavorType
+    type: OSType
+
+# ####
+
+- typedef:
+    name: DragAttributes
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: DragBehaviors
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: DragImageFlags
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: FlavorFlags
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: DragTrackingMessage
+    type: INTEGER
+
+# ####
+
+- typedef:
+    name: DragRegionMessage
+    type: INTEGER
+
+# ####
+
+- typedef:
+    name: ZoomAcceleration
+    type: INTEGER
+
+# ####
+
+# The pre-Carbon names, which is what code of the period actually says.
+- typedef:
+    name: DragReference
+    type: DragRef
+
+# ####
+
+- typedef:
+    name: ItemReference
+    type: DragItemRef
+
+# ####
+
+- enum:
+    values:
+      - name: kDragHasLeftSenderWindow
+        value: 1
+      - name: kDragInsideSenderApplication
+        value: 2
+      - name: kDragInsideSenderWindow
+        value: 4
+
+# ####
+
+- enum:
+    values:
+      - name: kDragBehaviorNone
+        value: 0
+      - name: kDragBehaviorZoomBackAnimation
+        value: 1
+
+# ####
+
+- enum:
+    values:
+      - name: kDragRegionAndImage
+        value: 16
+
+# ####
+
+- enum:
+    values:
+      - name: kDragStandardTranslucency
+        value: 0
+      - name: kDragDarkTranslucency
+        value: 1
+      - name: kDragDarkerTranslucency
+        value: 2
+      - name: kDragOpaqueTranslucency
+        value: 3
+
+# ####
+
+- enum:
+    values:
+      - name: flavorSenderOnly
+        value: 1
+      - name: flavorSenderTranslated
+        value: 2
+      - name: flavorNotSaved
+        value: 4
+      - name: flavorSystemTranslated
+        value: 256
+
+# ####
+
+- enum:
+    values:
+      - name: flavorTypeHFS
+        value: "'hfs '"
+      - name: flavorTypePromiseHFS
+        value: "'phfs'"
+      - name: flavorTypeDirectory
+        value: "'diry'"
+
+# ####
+
+- enum:
+    values:
+      - name: kFlavorTypeClippingName
+        value: "'clnm'"
+      - name: kFlavorTypeClippingFilename
+        value: "'clfn'"
+      - name: kFlavorTypeDragToTrashOnly
+        value: "'fdtt'"
+      - name: kFlavorTypeFinderNoTrackingBehavior
+        value: "'fntb'"
+
+# ####
+
+- enum:
+    values:
+      - name: kDragTrackingEnterHandler
+        value: 1
+      - name: kDragTrackingEnterWindow
+        value: 2
+      - name: kDragTrackingInWindow
+        value: 3
+      - name: kDragTrackingLeaveWindow
+        value: 4
+      - name: kDragTrackingLeaveHandler
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: kDragRegionBegin
+        value: 1
+      - name: kDragRegionDraw
+        value: 2
+      - name: kDragRegionHide
+        value: 3
+      - name: kDragRegionIdle
+        value: 4
+      - name: kDragRegionEnd
+        value: 5
+
+# ####
+
+- enum:
+    values:
+      - name: kZoomNoAcceleration
+        value: 0
+      - name: kZoomAccelerate
+        value: 1
+      - name: kZoomDecelerate
+        value: 2
+
+# ####
+
+- enum:
+    values:
+      - name: badDragRefErr
+        value: -1850
+      - name: badDragItemErr
+        value: -1851
+      - name: badDragFlavorErr
+        value: -1852
+      - name: duplicateFlavorErr
+        value: -1853
+      - name: cantGetFlavorErr
+        value: -1854
+      - name: duplicateHandlerErr
+        value: -1855
+      - name: handlerNotFoundErr
+        value: -1856
+      - name: dragNotAcceptedErr
+        value: -1857
+      - name: unsupportedForPlatformErr
+        value: -1858
+      - name: noSuitableDisplaysErr
+        value: -1859
+      - name: badImageRgnErr
+        value: -1860
+      - name: badImageErr
+        value: -1861
+    comment: |
+      The Drag Manager's own errors.  They live in Apple's MacErrors.h
+      rather than in Drag.h, but nothing else in this repository is
+      claiming that range, and a header whose calls return codes it does
+      not name is half a header.
+
+# ####
+
+- struct:
+    name: HFSFlavor
+    members:
+      - name: fileType
+        type: OSType
+      - name: fileCreator
+        type: OSType
+      - name: fdFlags
+        type: UInt16
+      - name: fileSpec
+        type: FSSpec
+    size: 80
+    comment: |
+      The data behind a flavorTypeHFS flavor: an existing file, given as
+      an FSSpec.  This is what the Finder puts in a drag when what is
+      being dragged is a file.
+
+# ####
+
+- struct:
+    name: PromiseHFSFlavor
+    members:
+      - name: fileType
+        type: OSType
+      - name: fileCreator
+        type: OSType
+      - name: fdFlags
+        type: UInt16
+      - name: promisedFlavor
+        type: FlavorType
+    size: 14
+
+# ####
+
+- funptr:
+    name: DragTrackingHandlerUPP
+    return: OSErr
+    args:
+      - name: message
+        type: DragTrackingMessage
+      - name: theWindow
+        type: WindowRef
+      - name: handlerRefCon
+        type: void*
+      - name: theDrag
+        type: DragRef
+
+# ####
+
+- funptr:
+    name: DragReceiveHandlerUPP
+    return: OSErr
+    args:
+      - name: theWindow
+        type: WindowRef
+      - name: handlerRefCon
+        type: void*
+      - name: theDrag
+        type: DragRef
+
+# ####
+
+- funptr:
+    name: DragSendDataUPP
+    return: OSErr
+    args:
+      - name: theType
+        type: FlavorType
+      - name: dragSendRefCon
+        type: void*
+      - name: theItemRef
+        type: DragItemRef
+      - name: theDrag
+        type: DragRef
+
+# ####
+
+- funptr:
+    name: DragInputUPP
+    return: OSErr
+    args:
+      - name: mouse
+        type: Point*
+      - name: modifiers
+        type: INTEGER*
+      - name: dragInputRefCon
+        type: void*
+      - name: theDrag
+        type: DragRef
+
+# ####
+
+- funptr:
+    name: DragDrawingUPP
+    return: OSErr
+    args:
+      - name: message
+        type: DragRegionMessage
+      - name: showRegion
+        type: RgnHandle
+      - name: showOrigin
+        type: Point
+      - name: hideRegion
+        type: RgnHandle
+      - name: hideOrigin
+        type: Point
+      - name: dragDrawingRefCon
+        type: void*
+      - name: theDrag
+        type: DragRef
+
+# ####
+
+- dispatcher:
+    name: DragDispatch
+    trap: 0xABED
+    selector-location: D0W
+
+# ####
+
+- function:
+    name: InstallTrackingHandler
+    return: OSErr
+    args:
+      - name: trackingHandler
+        type: DragTrackingHandlerUPP
+      - name: theWindow
+        type: WindowRef
+      - name: handlerRefCon
+        type: void*
+    dispatcher: DragDispatch
+    selector: 0x0001
+
+# ####
+
+- function:
+    name: InstallReceiveHandler
+    return: OSErr
+    args:
+      - name: receiveHandler
+        type: DragReceiveHandlerUPP
+      - name: theWindow
+        type: WindowRef
+      - name: handlerRefCon
+        type: void*
+    dispatcher: DragDispatch
+    selector: 0x0002
+
+# ####
+
+- function:
+    name: RemoveTrackingHandler
+    return: OSErr
+    args:
+      - name: trackingHandler
+        type: DragTrackingHandlerUPP
+      - name: theWindow
+        type: WindowRef
+    dispatcher: DragDispatch
+    selector: 0x0003
+
+# ####
+
+- function:
+    name: RemoveReceiveHandler
+    return: OSErr
+    args:
+      - name: receiveHandler
+        type: DragReceiveHandlerUPP
+      - name: theWindow
+        type: WindowRef
+    dispatcher: DragDispatch
+    selector: 0x0004
+
+# ####
+
+- function:
+    name: NewDrag
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef*
+    dispatcher: DragDispatch
+    selector: 0x0005
+
+# ####
+
+- function:
+    name: DisposeDrag
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+    dispatcher: DragDispatch
+    selector: 0x0006
+
+# ####
+
+- function:
+    name: AddDragItemFlavor
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: theType
+        type: FlavorType
+      - name: dataPtr
+        type: const void*
+      - name: dataSize
+        type: Size
+      - name: theFlags
+        type: FlavorFlags
+    dispatcher: DragDispatch
+    selector: 0x0007
+
+# ####
+
+- function:
+    name: SetDragItemFlavorData
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: theType
+        type: FlavorType
+      - name: dataPtr
+        type: const void*
+      - name: dataSize
+        type: Size
+      - name: dataOffset
+        type: UInt32
+    dispatcher: DragDispatch
+    selector: 0x0009
+
+# ####
+
+- function:
+    name: SetDragSendProc
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: sendProc
+        type: DragSendDataUPP
+      - name: dragSendRefCon
+        type: void*
+    dispatcher: DragDispatch
+    selector: 0x000A
+
+# ####
+
+- function:
+    name: SetDragInputProc
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: inputProc
+        type: DragInputUPP
+      - name: dragInputRefCon
+        type: void*
+    dispatcher: DragDispatch
+    selector: 0x000B
+
+# ####
+
+- function:
+    name: SetDragDrawingProc
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: drawingProc
+        type: DragDrawingUPP
+      - name: dragDrawingRefCon
+        type: void*
+    dispatcher: DragDispatch
+    selector: 0x000C
+
+# ####
+
+- function:
+    name: TrackDrag
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theEvent
+        type: const EventRecord*
+      - name: theRegion
+        type: RgnHandle
+    dispatcher: DragDispatch
+    selector: 0x000D
+
+# ####
+
+- function:
+    name: CountDragItems
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: numItems
+        type: UInt16*
+    dispatcher: DragDispatch
+    selector: 0x000E
+
+# ####
+
+- function:
+    name: GetDragItemReferenceNumber
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: index
+        type: UInt16
+      - name: theItemRef
+        type: DragItemRef*
+    dispatcher: DragDispatch
+    selector: 0x000F
+
+# ####
+
+- function:
+    name: CountDragItemFlavors
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: numFlavors
+        type: UInt16*
+    dispatcher: DragDispatch
+    selector: 0x0010
+
+# ####
+
+- function:
+    name: GetFlavorType
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: index
+        type: UInt16
+      - name: theType
+        type: FlavorType*
+    dispatcher: DragDispatch
+    selector: 0x0011
+
+# ####
+
+- function:
+    name: GetFlavorFlags
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: theType
+        type: FlavorType
+      - name: theFlags
+        type: FlavorFlags*
+    dispatcher: DragDispatch
+    selector: 0x0012
+
+# ####
+
+- function:
+    name: GetFlavorDataSize
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: theType
+        type: FlavorType
+      - name: dataSize
+        type: Size*
+    dispatcher: DragDispatch
+    selector: 0x0013
+
+# ####
+
+- function:
+    name: GetFlavorData
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: theType
+        type: FlavorType
+      - name: dataPtr
+        type: void*
+      - name: dataSize
+        type: Size*
+      - name: dataOffset
+        type: UInt32
+    dispatcher: DragDispatch
+    selector: 0x0014
+
+# ####
+
+- function:
+    name: GetDragItemBounds
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: itemBounds
+        type: Rect*
+    dispatcher: DragDispatch
+    selector: 0x0015
+
+# ####
+
+- function:
+    name: SetDragItemBounds
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: theItemRef
+        type: DragItemRef
+      - name: itemBounds
+        type: const Rect*
+    dispatcher: DragDispatch
+    selector: 0x0016
+
+# ####
+
+- function:
+    name: GetDropLocation
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: dropLocation
+        type: AEDesc*
+    dispatcher: DragDispatch
+    selector: 0x0017
+
+# ####
+
+- function:
+    name: SetDropLocation
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: dropLocation
+        type: const AEDesc*
+    dispatcher: DragDispatch
+    selector: 0x0018
+
+# ####
+
+- function:
+    name: GetDragAttributes
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: flags
+        type: DragAttributes*
+    dispatcher: DragDispatch
+    selector: 0x0019
+
+# ####
+
+- function:
+    name: GetDragMouse
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: mouse
+        type: Point*
+      - name: globalPinnedMouse
+        type: Point*
+    dispatcher: DragDispatch
+    selector: 0x001A
+
+# ####
+
+- function:
+    name: SetDragMouse
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: globalPinnedMouse
+        type: Point
+    dispatcher: DragDispatch
+    selector: 0x001B
+
+# ####
+
+- function:
+    name: GetDragOrigin
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: globalInitialMouse
+        type: Point*
+    dispatcher: DragDispatch
+    selector: 0x001C
+
+# ####
+
+- function:
+    name: GetDragModifiers
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: modifiers
+        type: INTEGER*
+      - name: mouseDownModifiers
+        type: INTEGER*
+      - name: mouseUpModifiers
+        type: INTEGER*
+    dispatcher: DragDispatch
+    selector: 0x001D
+
+# ####
+
+- function:
+    name: ShowDragHilite
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: hiliteFrame
+        type: RgnHandle
+      - name: inside
+        type: Boolean
+    dispatcher: DragDispatch
+    selector: 0x001E
+
+# ####
+
+- function:
+    name: HideDragHilite
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+    dispatcher: DragDispatch
+    selector: 0x001F
+
+# ####
+
+- function:
+    name: DragPreScroll
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: dH
+        type: INTEGER
+      - name: dV
+        type: INTEGER
+    dispatcher: DragDispatch
+    selector: 0x0020
+
+# ####
+
+- function:
+    name: DragPostScroll
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+    dispatcher: DragDispatch
+    selector: 0x0021
+
+# ####
+
+- function:
+    name: UpdateDragHilite
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: updateRgn
+        type: RgnHandle
+    dispatcher: DragDispatch
+    selector: 0x0022
+
+# ####
+
+- function:
+    name: WaitMouseMoved
+    return: Boolean
+    args:
+      - name: initialMouse
+        type: Point
+    dispatcher: DragDispatch
+    selector: 0x0023
+
+# ####
+
+- function:
+    name: ZoomRects
+    return: OSErr
+    args:
+      - name: fromRect
+        type: const Rect*
+      - name: toRect
+        type: const Rect*
+      - name: zoomSteps
+        type: INTEGER
+      - name: acceleration
+        type: ZoomAcceleration
+    dispatcher: DragDispatch
+    selector: 0x0024
+
+# ####
+
+- function:
+    name: ZoomRegion
+    return: OSErr
+    args:
+      - name: region
+        type: RgnHandle
+      - name: zoomDistance
+        type: Point
+      - name: zoomSteps
+        type: INTEGER
+      - name: acceleration
+        type: ZoomAcceleration
+    dispatcher: DragDispatch
+    selector: 0x0025
+
+# ####
+
+- function:
+    name: GetDragHiliteColor
+    return: OSErr
+    args:
+      - name: window
+        type: WindowRef
+      - name: color
+        type: RGBColor*
+    dispatcher: DragDispatch
+    selector: 0x0026
+
+# ####
+
+# Mac OS 8.5 and later.
+- function:
+    name: SetDragImage
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: imagePixMap
+        type: PixMapHandle
+      - name: imageRgn
+        type: RgnHandle
+      - name: imageOffsetPt
+        type: Point
+      - name: theImageFlags
+        type: DragImageFlags
+    dispatcher: DragDispatch
+    selector: 0x0027
+
+# ####
+
+# Mac OS 8.5 and later.
+- function:
+    name: ChangeDragBehaviors
+    return: OSErr
+    args:
+      - name: theDrag
+        type: DragRef
+      - name: inBehaviorsToSet
+        type: DragBehaviors
+      - name: inBehaviorsToClear
+        type: DragBehaviors
+    dispatcher: DragDispatch
+    selector: 0x0028
