@@ -1,0 +1,216 @@
+# NameRegistry.yaml — Name Registry interface definitions
+#
+# The Name Registry is the PowerPC Mac OS database of devices, built from
+# the Open Firmware device tree at startup.  Native drivers use it to find
+# their own device node and read its properties ("reg", "assigned-addresses",
+# "driver-ist" and so on).  PowerPC only: the routines are exported by
+# NameRegistryLib.
+#
+# Written from Designing PCI Cards and Drivers for Power Macintosh Computers
+# (Apple, 1995-1999), chapter 10, "Name Registry".  No Apple header text is
+# reproduced.  This covers the entry ID, iteration and property access; the
+# search, modifier and name-parsing routines are not declared yet.
+#
+# Natural (PowerPC) alignment, like DriverServices.yaml, and for the same
+# reason: RegEntryID is embedded in drivers' own structures.
+
+- verbatim: |
+    #pragma pack(push)
+    #pragma pack()
+
+# ####
+
+- struct:
+    name: RegEntryID
+    members:
+      - name: contents
+        type: UInt32[4]
+    size: 16
+    comment: |
+      Identifies one entry in the Name Registry.  Opaque: copy the whole
+      structure, and dispose of IDs the Registry hands out with
+      RegistryEntryIDDispose.
+
+# ####
+
+- typedef:
+    name: RegEntryIDPtr
+    type: RegEntryID*
+
+# ####
+
+- typedef:
+    name: RegPropertyName
+    type: char
+    comment: |
+      Property names are C strings.
+
+# ####
+
+- typedef:
+    name: RegPropertyNamePtr
+    type: RegPropertyName*
+
+# ####
+
+- typedef:
+    name: RegPropertyValueSize
+    type: UInt32
+
+# ####
+
+- struct:
+    name: RegEntryIter
+    members:
+      - name: opaque
+        type: void*
+    size: 4
+
+# ####
+
+- typedef:
+    name: RegEntryIterPtr
+    type: RegEntryIter*
+
+# ####
+
+- typedef:
+    name: RegIterationOp
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: RegEntryIterationOp
+    type: RegIterationOp
+
+# ####
+
+- enum:
+    values:
+      - name: kRegIterContinue
+        value: 0x1
+        comment: keep going in the same direction
+      - name: kRegIterRoot
+        value: 0x2
+      - name: kRegIterParents
+        value: 0x3
+      - name: kRegIterChildren
+        value: 0x4
+      - name: kRegIterDescendants
+        value: 0x5
+        comment: the whole subtree; a new iterator starts here, at the root
+      - name: kRegIterSibling
+        value: 0x6
+
+# ####
+
+- function:
+    name: RegistryEntryIDDispose
+    args:
+      - name: id
+        type: RegEntryID*
+
+# ####
+
+- function:
+    name: RegistryEntryIterateCreate
+    return: OSStatus
+    args:
+      - name: cookie
+        type: RegEntryIter*
+
+# ####
+
+- function:
+    name: RegistryEntryIterateDispose
+    args:
+      - name: cookie
+        type: RegEntryIter*
+
+# ####
+
+- function:
+    name: RegistryEntryIterate
+    return: OSStatus
+    args:
+      - name: cookie
+        type: RegEntryIter*
+      - name: relationship
+        type: RegEntryIterationOp
+      - name: foundEntry
+        type: RegEntryID*
+      - name: done
+        type: Boolean*
+    comment: |
+      Each entry returned in foundEntry must be disposed of with
+      RegistryEntryIDDispose.
+
+# ####
+
+- function:
+    name: RegistryPropertyCreate
+    return: OSStatus
+    args:
+      - name: entryID
+        type: const RegEntryID*
+      - name: propertyName
+        type: const RegPropertyName*
+      - name: propertyValue
+        type: const void*
+      - name: propertySize
+        type: RegPropertyValueSize
+    comment: |
+      Fails if the property already exists; use RegistryPropertySet to
+      change the value of an existing one.
+
+# ####
+
+- function:
+    name: RegistryPropertyGetSize
+    return: OSStatus
+    args:
+      - name: entryID
+        type: const RegEntryID*
+      - name: propertyName
+        type: const RegPropertyName*
+      - name: propertySize
+        type: RegPropertyValueSize*
+
+# ####
+
+- function:
+    name: RegistryPropertyGet
+    return: OSStatus
+    args:
+      - name: entryID
+        type: const RegEntryID*
+      - name: propertyName
+        type: const RegPropertyName*
+      - name: propertyValue
+        type: void*
+      - name: propertySize
+        type: RegPropertyValueSize*
+    comment: |
+      propertySize is the buffer size on entry and the value's size on
+      return.
+
+# ####
+
+- function:
+    name: RegistryPropertySet
+    return: OSStatus
+    args:
+      - name: entryID
+        type: const RegEntryID*
+      - name: propertyName
+        type: const RegPropertyName*
+      - name: propertyValue
+        type: const void*
+      - name: propertySize
+        type: RegPropertyValueSize
+
+# ####
+
+- verbatim: |
+    #pragma pack(pop)

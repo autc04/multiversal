@@ -1,0 +1,89 @@
+# PCI.yaml — Expansion Bus Manager configuration-space access
+#
+# Configuration cycles cannot be generated with loads and stores; the host
+# bridge has to do it, and these routines are the documented way to ask.
+# PowerPC only: exported by PCILib.
+#
+# Written from Designing PCI Cards and Drivers for Power Macintosh Computers
+# (Apple, 1995-1999), chapter 12, "Expansion Bus Manager".  No Apple header
+# text is reproduced.  Only the configuration-space routines are declared.
+
+- function:
+    name: ExpMgrConfigReadByte
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: valuePtr
+        type: UInt8*
+    comment: |
+      configAddr is typed as an address but carries a register offset in
+      configuration space, 0 to 255.  The word and long routines swap
+      bytes, so values arrive as they appear on the bus.
+
+# ####
+
+- function:
+    name: ExpMgrConfigReadWord
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: valuePtr
+        type: UInt16*
+
+# ####
+
+- function:
+    name: ExpMgrConfigReadLong
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: valuePtr
+        type: UInt32*
+
+# ####
+
+- function:
+    name: ExpMgrConfigWriteByte
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: value
+        type: UInt8
+
+# ####
+
+- function:
+    name: ExpMgrConfigWriteWord
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: value
+        type: UInt16
+
+# ####
+
+- function:
+    name: ExpMgrConfigWriteLong
+    return: OSErr
+    args:
+      - name: node
+        type: RegEntryIDPtr
+      - name: configAddr
+        type: LogicalAddress
+      - name: value
+        type: UInt32

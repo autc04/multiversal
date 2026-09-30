@@ -1,0 +1,862 @@
+# DriverServices.yaml — native driver and Driver Services Library definitions
+#
+# What a PowerPC native ('ndrv') driver needs beyond the Device Manager:
+# the DriverDescription every native driver exports, and the part of the
+# Driver Services Library it calls -- execution levels, timing, interrupt
+# timers, the interrupt tree, resident memory, and preparing memory for
+# DMA.  PowerPC only: the routines are exported by DriverServicesLib.
+# Apple split these between Devices.h, DriverServices.h, Kernel.h and
+# Interrupts.h; all four names are available here.
+#
+# Written from Designing PCI Cards and Drivers for Power Macintosh Computers
+# (Apple, 1995-1999), chapters 8 and 11.  No Apple header text is
+# reproduced.  Coverage is partial: what a PCI block-storage driver needs,
+# not the whole library.
+#
+# These are PowerPC-native structures, laid out with natural (PowerPC)
+# alignment rather than the 2-byte 68k packing the generator applies to
+# everything else; the pragmas at the start and end of the file switch it.
+# That matters once they are embedded in a driver's own structures: an
+# InterruptSetMember after a Boolean has to start on a 4-byte boundary.
+# The structures that matter for layout (DriverDescription above all, which
+# the system reads out of the driver's data section) carry `size:`.
+
+- verbatim: |
+    #pragma pack(push)
+    #pragma pack()
+
+# ####
+
+- typedef:
+    name: OSStatus
+    type: SInt32
+    comment: |
+      The low 16 bits are an OSErr; the high 16 are its sign extension.
+
+# ####
+
+- typedef:
+    name: OptionBits
+    type: UInt32
+
+# ####
+
+- enum:
+    values:
+      - name: kNilOptions
+        value: 0
+
+# ####
+
+- typedef:
+    name: ByteCount
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: ItemCount
+    type: UInt32
+
+# ####
+
+- typedef:
+    name: LogicalAddress
+    type: void*
+
+# ####
+
+- typedef:
+    name: PhysicalAddress
+    type: void*
+
+# ####
+
+- struct:
+    name: OpaqueRef
+
+# ####
+
+- typedef:
+    name: KernelID
+    type: OpaqueRef*
+    comment: |
+      All the kernel's ID types derive from this.  They are opaque.
+
+# ####
+
+- typedef:
+    name: AddressSpaceID
+    type: KernelID
+
+# ####
+
+- enum:
+    values:
+      - name: kCurrentAddressSpaceID
+        value: 0
+        comment: Mac OS provides only this one address space
+
+# ####
+
+- typedef:
+    name: ExecutionLevel
+    type: UInt32
+
+# ####
+
+- enum:
+    values:
+      - name: kTaskLevel
+        value: 0
+      - name: kSecondaryInterruptLevel
+        value: 5
+      - name: kHardwareInterruptLevel
+        value: 6
+
+# ####
+
+- function:
+    name: CurrentExecutionLevel
+    return: ExecutionLevel
+    comment: |
+      Callable at any level.  Many Driver Services calls, the memory pool
+      and PrepareMemoryForIO among them, are legal only at kTaskLevel.
+
+# ####
+
+- typedef:
+    name: Duration
+    type: SInt32
+    comment: |
+      Positive values are milliseconds, negative values are negated
+      microseconds, as with the Time Manager.  The two forms are
+      interchangeable, so code converting a Duration has to handle both.
+
+# ####
+
+- enum:
+    values:
+      - name: durationMicrosecond
+        value: -1
+      - name: durationMillisecond
+        value: 1
+      - name: durationSecond
+        value: 1000
+      - name: durationMinute
+        value: 1000 * 60
+      - name: durationHour
+        value: 1000 * 60 * 60
+      - name: durationDay
+        value: 1000 * 60 * 60 * 24
+      - name: durationForever
+        value: 0x7FFFFFFF
+      - name: durationImmediate
+        value: 0
+
+# ####
+
+- struct:
+    name: AbsoluteTime
+    members:
+      - name: hi
+        type: UInt32
+      - name: lo
+        type: UInt32
+    size: 8
+    comment: |
+      Time base units.  Their length varies from machine to machine;
+      convert with the routines below rather than assuming one.
+
+# ####
+
+- struct:
+    name: Nanoseconds
+    members:
+      - name: hi
+        type: UInt32
+      - name: lo
+        type: UInt32
+    size: 8
+
+# ####
+
+- function:
+    name: UpTime
+    return: AbsoluteTime
+    comment: |
+      Time since startup.  Callable at any level.
+
+# ####
+
+- function:
+    name: AbsoluteDeltaToDuration
+    return: Duration
+    args:
+      - name: leftAbsoluteTime
+        type: AbsoluteTime
+      - name: rightAbsoluteTime
+        type: AbsoluteTime
+    comment: |
+      Returns left minus right, and zero if that is negative, so the later
+      time goes on the left: AbsoluteDeltaToDuration(UpTime(), start).
+      This is the reverse of what the book's note on the routine suggests;
+      the order given here is the one observed under Mac OS 9.2.2.
+
+# ####
+
+- function:
+    name: DurationToAbsolute
+    return: AbsoluteTime
+    args:
+      - name: duration
+        type: Duration
+
+# ####
+
+- function:
+    name: AddDurationToAbsolute
+    return: AbsoluteTime
+    args:
+      - name: duration
+        type: Duration
+      - name: absoluteTime
+        type: AbsoluteTime
+
+# ####
+
+- function:
+    name: DelayFor
+    return: OSStatus
+    args:
+      - name: expirationTime
+        type: Duration
+    comment: |
+      Blocks, so task level only.  The delay can run long but not short.
+
+# ####
+
+- function:
+    name: DelayForHardware
+    return: OSStatus
+    args:
+      - name: absoluteTime
+        type: AbsoluteTime
+    comment: |
+      Busy-waits, which makes it callable at any level.  The argument is
+      the length of the delay, not a deadline: convert with
+      DurationToAbsolute.  Passing UpTime() plus a delay spins for the
+      machine's whole uptime.
+
+# ####
+
+- typedef:
+    name: TimerID
+    type: KernelID
+
+# ####
+
+- verbatim: |
+    typedef OSStatus (*SecondaryInterruptHandler2)(void *p1, void *p2);
+
+# ####
+
+- function:
+    name: SetInterruptTimer
+    return: OSStatus
+    args:
+      - name: expirationTime
+        type: const AbsoluteTime*
+      - name: handler
+        type: SecondaryInterruptHandler2
+      - name: p1
+        type: void*
+      - name: timer
+        type: TimerID*
+    comment: |
+      Runs handler as a secondary interrupt handler once expirationTime (an
+      absolute time, unlike DelayForHardware's argument) is reached.  The
+      handler gets p1, and the program counter at expiry as p2.  Callable
+      at any level.
+
+# ####
+
+- function:
+    name: CancelTimer
+    return: OSStatus
+    args:
+      - name: timer
+        type: TimerID
+      - name: timeRemaining
+        type: AbsoluteTime*
+    comment: |
+      Fails if the timer has already fired or been cancelled, which is how
+      a caller learns that the handler has run or is about to.
+
+# ####
+
+- function:
+    name: SynchronizeIO
+    comment: |
+      Orders accesses to noncached (memory-mapped I/O) space against the
+      instructions around them.
+
+# ####
+
+- typedef:
+    name: InterruptSetID
+    type: KernelID
+
+# ####
+
+- typedef:
+    name: InterruptMemberNumber
+    type: SInt32
+
+# ####
+
+- struct:
+    name: InterruptSetMember
+    members:
+      - name: setID
+        type: InterruptSetID
+      - name: member
+        type: InterruptMemberNumber
+    size: 8
+
+# ####
+
+- enum:
+    values:
+      - name: kReturnToParentWhenComplete
+        value: 0x00000001
+      - name: kReturnToParentWhenNotComplete
+        value: 0x00000002
+
+# ####
+
+- enum:
+    values:
+      - name: kISTChipInterruptSource
+        value: 0
+      - name: kISTOutputDMAInterruptSource
+        value: 1
+      - name: kISTInputDMAInterruptSource
+        value: 2
+      - name: kISTPropertyMemberCount
+        value: 3
+
+# ####
+
+- typedef:
+    name: ISTProperty
+    type: InterruptSetMember[kISTPropertyMemberCount]
+    comment: |
+      The value of a device's "driver-ist" Name Registry property: the
+      interrupt sources that belong to it.  A PCI card with one interrupt
+      line uses only kISTChipInterruptSource.
+
+# ####
+
+- verbatim: |
+    #define kISTPropertyName "driver-ist"
+
+# ####
+
+- typedef:
+    name: InterruptReturnValue
+    type: SInt32
+
+# ####
+
+- enum:
+    values:
+      - name: kFirstMemberNumber
+        value: 1
+      - name: kIsrIsComplete
+        value: 0
+        comment: the interrupt was this device's, and has been handled
+      - name: kIsrIsNotComplete
+        value: -1
+        comment: not this device's; offer it to the others sharing the line
+      - name: kMemberNumberParent
+        value: -2
+
+# ####
+
+- typedef:
+    name: InterruptSourceState
+    type: Boolean
+
+# ####
+
+- enum:
+    values:
+      - name: kSourceWasEnabled
+        value: 1
+      - name: kSourceWasDisabled
+        value: 0
+
+# ####
+
+- verbatim: |
+    typedef InterruptMemberNumber (*InterruptHandler)(InterruptSetMember ISTmember,
+                                                      void *refCon,
+                                                      UInt32 theIntCount);
+    typedef void (*InterruptEnabler)(InterruptSetMember ISTmember, void *refCon);
+    typedef InterruptSourceState (*InterruptDisabler)(InterruptSetMember ISTmember,
+                                                      void *refCon);
+
+# ####
+
+- function:
+    name: InstallInterruptFunctions
+    return: OSStatus
+    args:
+      - name: setID
+        type: InterruptSetID
+      - name: member
+        type: InterruptMemberNumber
+      - name: refCon
+        type: void*
+      - name: handlerFunction
+        type: InterruptHandler
+      - name: enableFunction
+        type: InterruptEnabler
+      - name: disableFunction
+        type: InterruptDisabler
+    comment: |
+      Task level only.  A nil function leaves whatever is installed in
+      place, so a driver can take over the handler while keeping the
+      platform's enabler and disabler.
+
+# ####
+
+- function:
+    name: GetInterruptFunctions
+    return: OSStatus
+    args:
+      - name: setID
+        type: InterruptSetID
+      - name: member
+        type: InterruptMemberNumber
+      - name: refCon
+        type: void**
+      - name: handlerFunction
+        type: InterruptHandler*
+      - name: enableFunction
+        type: InterruptEnabler*
+      - name: disableFunction
+        type: InterruptDisabler*
+    comment: |
+      Installing replaces the member's handler, and PCI interrupt lines are
+      shared; reading the old one first lets a driver pass on interrupts
+      that are not its own.
+
+# ####
+
+- function:
+    name: PoolAllocateResident
+    return: LogicalAddress
+    args:
+      - name: byteSize
+        type: ByteCount
+      - name: clear
+        type: Boolean
+    comment: |
+      Resident (never paged) memory from the system pool.  Task level only.
+
+# ####
+
+- function:
+    name: PoolDeallocate
+    return: OSStatus
+    args:
+      - name: address
+        type: LogicalAddress
+
+# ####
+
+- function:
+    name: MemAllocatePhysicallyContiguous
+    return: LogicalAddress
+    args:
+      - name: byteSize
+        type: ByteCount
+      - name: clear
+        type: Boolean
+    comment: |
+      Resident and physically contiguous.  Task level only, and large
+      requests made after startup are unlikely to succeed.
+
+# ####
+
+- function:
+    name: MemDeallocatePhysicallyContiguous
+    return: OSStatus
+    args:
+      - name: address
+        type: LogicalAddress
+
+# ####
+
+- function:
+    name: GetLogicalPageSize
+    return: ByteCount
+
+# ####
+
+- struct:
+    name: AddressRange
+    members:
+      - name: base
+        type: void*
+      - name: length
+        type: ByteCount
+    size: 8
+
+# ####
+
+- typedef:
+    name: AddressRangeTablePtr
+    type: AddressRange*
+
+# ####
+
+- struct:
+    name: MultipleAddressRange
+    members:
+      - name: entryCount
+        type: ItemCount
+      - name: rangeTable
+        type: AddressRangeTablePtr
+    size: 8
+
+# ####
+
+- typedef:
+    name: LogicalMappingTablePtr
+    type: LogicalAddress*
+
+# ####
+
+- typedef:
+    name: PhysicalMappingTablePtr
+    type: PhysicalAddress*
+
+# ####
+
+- typedef:
+    name: IOPreparationID
+    type: KernelID
+
+# ####
+
+- typedef:
+    name: IOPreparationOptions
+    type: OptionBits
+
+# ####
+
+- enum:
+    values:
+      - name: kIOMultipleRanges
+        value: 0x00000001
+      - name: kIOLogicalRanges
+        value: 0x00000002
+        comment: required; Mac OS does not accept physical ranges
+      - name: kIOMinimalLogicalMapping
+        value: 0x00000004
+      - name: kIOShareMappingTables
+        value: 0x00000008
+      - name: kIOIsInput
+        value: 0x00000010
+        comment: data moves into main memory
+      - name: kIOIsOutput
+        value: 0x00000020
+        comment: data moves out of main memory
+      - name: kIOCoherentDataPath
+        value: 0x00000040
+      - name: kIOClientIsUserMode
+        value: 0x00000080
+
+# ####
+
+- typedef:
+    name: IOPreparationState
+    type: OptionBits
+
+# ####
+
+- enum:
+    values:
+      - name: kIOStateDone
+        value: 0x00000001
+
+# ####
+
+- struct:
+    name: IOPreparationTable
+    members:
+      - name: options
+        type: IOPreparationOptions
+      - name: state
+        type: IOPreparationState
+        comment: "<-- kIOStateDone once the whole range is prepared"
+      - name: preparationID
+        type: IOPreparationID
+        comment: "<-- pass to CheckpointIO"
+      - name: addressSpace
+        type: AddressSpaceID
+      - name: granularity
+        type: ByteCount
+      - name: firstPrepared
+        type: ByteCount
+      - name: lengthPrepared
+        type: ByteCount
+        comment: "<--"
+      - name: mappingEntryCount
+        type: ItemCount
+      - name: logicalMapping
+        type: LogicalMappingTablePtr
+      - name: physicalMapping
+        type: PhysicalMappingTablePtr
+      - name: rangeInfo
+        union:
+          - name: range
+            type: AddressRange
+          - name: multipleRanges
+            type: MultipleAddressRange
+    size: 48
+    comment: |
+      Fields marked <-- are filled in by PrepareMemoryForIO.
+
+# ####
+
+- function:
+    name: PrepareMemoryForIO
+    return: OSStatus
+    args:
+      - name: theIOPreparationTable
+        type: IOPreparationTable*
+    comment: |
+      Locks a buffer down, settles the caches, and returns its physical
+      addresses for a bus-master transfer; CheckpointIO undoes it.  Task
+      level only.
+
+# ####
+
+- typedef:
+    name: IOCheckpointOptions
+    type: OptionBits
+
+# ####
+
+- enum:
+    values:
+      - name: kNextIOIsInput
+        value: 0x00000001
+      - name: kNextIOIsOutput
+        value: 0x00000002
+      - name: kMoreIOTransfers
+        value: 0x00000004
+        comment: keep the preparation for another transfer
+
+# ####
+
+- function:
+    name: CheckpointIO
+    return: OSStatus
+    args:
+      - name: theIOPreparation
+        type: IOPreparationID
+      - name: theOptions
+        type: IOCheckpointOptions
+
+# ####
+
+- typedef:
+    name: DriverDescVersion
+    type: UInt32
+
+# ####
+
+- enum:
+    values:
+      - name: kTheDescriptionSignature
+        value: "'mtej'"
+        comment: first long word of every DriverDescription
+      - name: kInitialDriverDescriptor
+        value: 0
+
+# ####
+
+- enum:
+    values:
+      - name: developStage
+        value: 0x20
+      - name: alphaStage
+        value: 0x40
+      - name: betaStage
+        value: 0x60
+      - name: finalStage
+        value: 0x80
+    comment: |
+      The stage byte of a NumVersion: majorRev, minorAndBugRev, stage and
+      nonRelRev, one byte each from the most significant.
+
+# ####
+
+- struct:
+    name: DriverType
+    members:
+      - name: nameInfoStr
+        type: Str31
+        comment: must match the device's "name" in the Name Registry
+      - name: version
+        type: NumVersion
+    size: 36
+
+# ####
+
+- typedef:
+    name: DriverTypePtr
+    type: DriverType*
+
+# ####
+
+- typedef:
+    name: RuntimeOptions
+    type: OptionBits
+
+# ####
+
+- enum:
+    values:
+      - name: kDriverIsLoadedUponDiscovery
+        value: 0x00000001
+      - name: kDriverIsOpenedUponLoad
+        value: 0x00000002
+      - name: kDriverIsUnderExpertControl
+        value: 0x00000004
+      - name: kDriverIsConcurrent
+        value: 0x00000008
+      - name: kDriverQueuesIOPB
+        value: 0x00000010
+
+# ####
+
+- struct:
+    name: DriverOSRuntime
+    members:
+      - name: driverRuntime
+        type: RuntimeOptions
+      - name: driverName
+        type: Str31
+      - name: driverDescReserved
+        type: UInt32[8]
+    size: 68
+
+# ####
+
+- typedef:
+    name: DriverOSRuntimePtr
+    type: DriverOSRuntime*
+
+# ####
+
+- struct:
+    name: DriverServiceInfo
+    members:
+      - name: serviceCategory
+        type: OSType
+      - name: serviceType
+        type: OSType
+      - name: serviceVersion
+        type: NumVersion
+    size: 12
+
+# ####
+
+- typedef:
+    name: DriverServiceInfoPtr
+    type: DriverServiceInfo*
+
+# ####
+
+- enum:
+    values:
+      - name: kServiceCategoryDisplay
+        value: "'disp'"
+      - name: kServiceCategoryOpentransport
+        value: "'otan'"
+      - name: kServiceCategoryBlockstorage
+        value: "'blok'"
+      - name: kServiceCategorySCSISim
+        value: "'scsi'"
+      - name: kServiceCategoryndrvdriver
+        value: "'ndrv'"
+        comment: generic native driver; also used by display drivers
+    comment: |
+      Values for DriverServiceInfo.serviceCategory.  Other families, such
+      as the ATA Manager's, define their own.
+
+# ####
+
+- typedef:
+    name: ServiceCount
+    type: UInt32
+
+# ####
+
+- struct:
+    name: DriverOSService
+    members:
+      - name: nServices
+        type: ServiceCount
+      - name: service
+        type: DriverServiceInfo[1]
+    size: 16
+    comment: |
+      Variable length: nServices entries.  A driver declaring more than
+      one category needs its own structure with a longer array.
+
+# ####
+
+- typedef:
+    name: DriverOSServicePtr
+    type: DriverOSService*
+
+# ####
+
+- struct:
+    name: DriverDescription
+    members:
+      - name: driverDescSignature
+        type: OSType
+        comment: kTheDescriptionSignature
+      - name: driverDescVersion
+        type: DriverDescVersion
+        comment: kInitialDriverDescriptor
+      - name: driverType
+        type: DriverType
+      - name: driverOSRuntimeInfo
+        type: DriverOSRuntime
+      - name: driverServices
+        type: DriverOSService
+    size: 128
+    comment: |
+      A native driver exports one of these as TheDriverDescription.  The
+      system reads it to match the driver to a device and decide when to
+      load and open it.
+
+# ####
+
+- typedef:
+    name: DriverDescriptionPtr
+    type: DriverDescription*
+
+# ####
+
+- verbatim: |
+    #pragma pack(pop)
