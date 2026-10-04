@@ -3211,6 +3211,14 @@
       - name: p
         type: CGrafPtr
     return: int16_t
+    
+- api: carbon
+  function:
+    name: GetPortTextFace
+    args:
+      - name: p
+        type: CGrafPtr
+    return: int16_t
 
 # ####
 
