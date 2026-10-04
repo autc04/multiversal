@@ -3,9 +3,9 @@
 
 type 'SIZE'
 {
-    boolean reserved;
+    boolean reserved, dontSaveScreen = false, saveScreen = true;
     boolean ignoreSuspendResumeEvents, acceptSuspendResumeEvents;
-    boolean reserved;
+    boolean reserved, enableOptionSwitch = false, disableOptionSwitch = true;
     boolean cannotBackground, canBackground;
     boolean needsActivateOnFGSwitch, doesActivateOnFGSwitch, multiFinderAware = true;
     boolean backgroundAndForeground, onlyBackground;
