@@ -15,17 +15,11 @@
 #
 # These are PowerPC-native structures, laid out with natural (PowerPC)
 # alignment rather than the 2-byte 68k packing the generator applies to
-# everything else; the pragmas at the start and end of the file switch it.
+# everything else: each structure carries `align: power`.
 # That matters once they are embedded in a driver's own structures: an
 # InterruptSetMember after a Boolean has to start on a 4-byte boundary.
 # The structures that matter for layout (DriverDescription above all, which
 # the system reads out of the driver's data section) carry `size:`.
-
-- verbatim: |
-    #pragma pack(push)
-    #pragma pack()
-
-# ####
 
 - typedef:
     name: OSStatus
@@ -158,6 +152,7 @@
 
 - struct:
     name: AbsoluteTime
+    align: power
     members:
       - name: hi
         type: UInt32
@@ -172,6 +167,7 @@
 
 - struct:
     name: Nanoseconds
+    align: power
     members:
       - name: hi
         type: UInt32
@@ -256,8 +252,15 @@
 
 # ####
 
-- verbatim: |
-    typedef OSStatus (*SecondaryInterruptHandler2)(void *p1, void *p2);
+- funptr:
+    name: SecondaryInterruptHandler2
+    return: OSStatus
+    args:
+      - name: p1
+        type: void*
+      - name: p2
+        type: void*
+    callconv: C
 
 # ####
 
@@ -317,6 +320,7 @@
 
 - struct:
     name: InterruptSetMember
+    align: power
     members:
       - name: setID
         type: InterruptSetID
@@ -358,8 +362,10 @@
 
 # ####
 
-- verbatim: |
-    #define kISTPropertyName "driver-ist"
+- define:
+    name: kISTPropertyName
+    value: '"driver-ist"'
+    comment: The Name Registry property that holds a device's ISTProperty.
 
 # ####
 
@@ -399,13 +405,40 @@
 
 # ####
 
-- verbatim: |
-    typedef InterruptMemberNumber (*InterruptHandler)(InterruptSetMember ISTmember,
-                                                      void *refCon,
-                                                      UInt32 theIntCount);
-    typedef void (*InterruptEnabler)(InterruptSetMember ISTmember, void *refCon);
-    typedef InterruptSourceState (*InterruptDisabler)(InterruptSetMember ISTmember,
-                                                      void *refCon);
+- funptr:
+    name: InterruptHandler
+    return: InterruptMemberNumber
+    args:
+      - name: ISTmember
+        type: InterruptSetMember
+      - name: refCon
+        type: void*
+      - name: theIntCount
+        type: UInt32
+    callconv: C
+
+# ####
+
+- funptr:
+    name: InterruptEnabler
+    args:
+      - name: ISTmember
+        type: InterruptSetMember
+      - name: refCon
+        type: void*
+    callconv: C
+
+# ####
+
+- funptr:
+    name: InterruptDisabler
+    return: InterruptSourceState
+    args:
+      - name: ISTmember
+        type: InterruptSetMember
+      - name: refCon
+        type: void*
+    callconv: C
 
 # ####
 
@@ -508,6 +541,7 @@
 
 - struct:
     name: AddressRange
+    align: power
     members:
       - name: base
         type: void*
@@ -525,6 +559,7 @@
 
 - struct:
     name: MultipleAddressRange
+    align: power
     members:
       - name: entryCount
         type: ItemCount
@@ -597,6 +632,7 @@
 
 - struct:
     name: IOPreparationTable
+    align: power
     members:
       - name: options
         type: IOPreparationOptions
@@ -709,6 +745,7 @@
 
 - struct:
     name: DriverType
+    align: power
     members:
       - name: nameInfoStr
         type: Str31
@@ -748,6 +785,7 @@
 
 - struct:
     name: DriverOSRuntime
+    align: power
     members:
       - name: driverRuntime
         type: RuntimeOptions
@@ -767,6 +805,7 @@
 
 - struct:
     name: DriverServiceInfo
+    align: power
     members:
       - name: serviceCategory
         type: OSType
@@ -811,6 +850,7 @@
 
 - struct:
     name: DriverOSService
+    align: power
     members:
       - name: nServices
         type: ServiceCount
@@ -831,6 +871,7 @@
 
 - struct:
     name: DriverDescription
+    align: power
     members:
       - name: driverDescSignature
         type: OSType
@@ -855,8 +896,3 @@
 - typedef:
     name: DriverDescriptionPtr
     type: DriverDescription*
-
-# ####
-
-- verbatim: |
-    #pragma pack(pop)

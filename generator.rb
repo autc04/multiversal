@@ -158,6 +158,10 @@ class Generator
         @out << ";"
     end
 
+    def declare_define(value)
+        @out << "#define #{value["name"]} #{value["value"]}"
+    end
+
     def declare_typedef(value)
         @out << "typedef "
         @out << decl(value["type"], value["name"])
@@ -229,6 +233,9 @@ class Generator
                 when "funptr"
                     @type_size_map[value["name"]] = 4
                     declare_funptr(value)
+
+                when "define"
+                    declare_define(value)
 
                 when "verbatim"
                     declare_verbatim(value)
