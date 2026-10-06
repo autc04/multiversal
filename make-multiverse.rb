@@ -76,6 +76,7 @@ private
     def collect_dep(str)
         tmp = str.to_s.dup
         tmp.gsub!(/'[^']+'/,"")
+        tmp.gsub!(/"(?:[^"\\]|\\.)*"/,"")
         tmp.scan(/[a-zA-Z_][a-zA-Z0-9_]*/).each do |x|
             @required_names << x unless BUILTIN_NAMES.member?(x)
         end
@@ -105,6 +106,8 @@ private
                 end
             when "typedef"
                 collect_dep(value["type"])
+            when "define"
+                collect_dep(value["value"])
             when "struct", "union"
                 collect_members_dependencies value["members"] if value["members"]
             when "function", "funptr"
