@@ -11,17 +11,12 @@
 # reproduced.  This covers the entry ID, iteration and property access; the
 # search, modifier and name-parsing routines are not declared yet.
 #
-# Natural (PowerPC) alignment, like DriverServices.yaml, and for the same
-# reason: RegEntryID is embedded in drivers' own structures.
-
-- verbatim: |
-    #pragma pack(push)
-    #pragma pack()
-
-# ####
+# Natural (PowerPC) alignment through `align: power`, like DriverServices.yaml,
+# and for the same reason: RegEntryID is embedded in drivers' own structures.
 
 - struct:
     name: RegEntryID
+    align: power
     members:
       - name: contents
         type: UInt32[4]
@@ -61,6 +56,7 @@
 
 - struct:
     name: RegEntryIter
+    align: power
     members:
       - name: opaque
         type: void*
@@ -209,8 +205,3 @@
         type: const void*
       - name: propertySize
         type: RegPropertyValueSize
-
-# ####
-
-- verbatim: |
-    #pragma pack(pop)
