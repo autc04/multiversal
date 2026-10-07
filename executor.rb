@@ -368,8 +368,15 @@ class ExecutorGenerator < Generator
                 @out << ");\n"
             end
         elsif fun["selector"] then
-            @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
-            @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
+            ret = (fun["return"] or "void")
+            info = pascal_sub_info(fun, name, cname, trap, ret, arg_types, arg_names, arg_decls)
+            if info then
+                @out << emit_wrapper(info)
+                @entries << info
+            else
+                @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
+                @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
+            end
         elsif trap then
             if name == cname then
                 if args.size == 0 && !fun["return"] then
@@ -397,6 +404,17 @@ class ExecutorGenerator < Generator
         return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
         { kind: :pascal, name: name, object: name, impl: cname, trap: trap, ret: ret,
           arg_types: arg_types, arg_names: arg_names, arg_decls: arg_decls, cc: "" }
+    end
+
+    # A Pascal-convention dispatcher subtrap (PASCAL_SUBTRAP): registered into a
+    # GenericDispatcherTrap under a selector instead of a trap-table slot.
+    def pascal_sub_info(fun, name, cname, trap, ret, arg_types, arg_names, arg_decls)
+        return nil unless fun["dispatcher"] && fun["selector"]
+        return nil unless cname == "C_" + name
+        return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+        { kind: :sub, name: name, object: name, impl: cname, trap: trap, ret: ret,
+          arg_types: arg_types, arg_names: arg_names, arg_decls: arg_decls, cc: "",
+          dispatcher: fun["dispatcher"], selector: hexlit(fun["selector"]) }
     end
 
     # A Register-convention trap is only converted once the sub-step that needs
@@ -576,7 +594,7 @@ class ExecutorGenerator < Generator
         o << "{\n"
         o << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
         e[:arg_types].each_with_index.to_a.reverse_each do |type, i|
-            o << "    #{type} #{names[i]} = callconv::stack::pop<#{type}>();\n"
+            o << "    std::decay_t<#{type}> #{names[i]} = callconv::stack::pop<std::decay_t<#{type}>>();\n"
         end
         o << logging_call(e[:name], callargs)
         if e[:ret] == "void"
@@ -604,7 +622,7 @@ class ExecutorGenerator < Generator
         extras.each_with_index {|x, i| o << "    #{x} e#{i};\n" }
         o << "    syn68k_addr_t retaddr = POPADDR();\n"
         e[:argconvs].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
-        e[:arg_types].each_with_index {|t, i| o << "    #{t} #{names[i]} = c#{i};\n" }
+        e[:arg_types].each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]} = c#{i};\n" }
         o << logging_call(e[:name], callargs)
         if e[:ret] == "void"
             o << "    #{e[:impl]}(#{callargs});\n"
@@ -637,7 +655,7 @@ class ExecutorGenerator < Generator
         unless e[:arg_types].empty?
             o << "    callfromPPC::ParameterPasser argGetter{cpu, guestvalues::GuestTypeTraits<uint8_t*>::reg_to_host(cpu.r[1] + 24)};\n"
             e[:arg_types].each_with_index do |type, i|
-                o << "    #{type} #{names[i]};\n"
+                o << "    std::decay_t<#{type}> #{names[i]};\n"
             end
             o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
         end
@@ -676,6 +694,24 @@ class ExecutorGenerator < Generator
                 o << "    #{e[:target]}(#{argstr}#{flagstr});\n"
             else
                 o << "    return #{e[:target]}(#{argstr}#{flagstr});\n"
+            end
+            o << "}\n\n"
+            return o
+        end
+
+        if e[:kind] == :sub
+            o = +""
+            o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
+            o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", 0,\n"
+            o << "                          &entry_#{e[:object]}, &entry_#{e[:object]}_ppc,\n"
+            o << "                          &#{e[:dispatcher]}, #{e[:selector]})\n"
+            o << "{\n}\n\n"
+            o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
+            o << "{\n"
+            if e[:ret] == "void"
+                o << "    #{e[:impl]}(#{callargs});\n"
+            else
+                o << "    return #{e[:impl]}(#{callargs});\n"
             end
             o << "}\n\n"
             return o
