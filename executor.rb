@@ -390,7 +390,10 @@ class ExecutorGenerator < Generator
     def register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
         return nil if fun["selector"]          # dispatcher subtrap: 4a
         return nil if fun["variants"]          # flag trap + variants: 2d
-        return nil if fun["executor_extras"]   # extras: 2c
+        extras = fun["executor_extras"] ? [fun["executor_extras"]] : []
+        return nil unless extras.all? do |x|
+            x =~ /\A(callconv::)?(ReturnMemErr|ReturnMemErrConditional|SaveA1D1D2|ClearD0|CCFromD0|MoveA1ToA0)(<[^>]*>)?\z/
+        end
         return nil unless cname == name        # all register traps are REGISTER_TRAP2
         args = (fun["args"] or [])
         return nil unless args.all? {|arg| arg["register"] }
@@ -402,7 +405,7 @@ class ExecutorGenerator < Generator
         { kind: :register, name: name, object: "stub_#{name}", impl: cname, trap: trap,
           ret: (fun["return"] or "void"), arg_types: arg_types, arg_names: arg_names,
           arg_decls: arg_decls, retconv: conv[:ret], argconvs: conv[:args],
-          cc: register_cc(conv) }
+          extras: extras, cc: register_cc(conv) }
     end
 
     def register_cc(conv)
@@ -490,9 +493,11 @@ class ExecutorGenerator < Generator
     def gen_68k_register_entry(e)
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
+        extras = (e[:extras] || [])
         o = +""
         o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr [[maybe_unused]])\n"
         o << "{\n"
+        extras.each_with_index {|x, i| o << "    #{x} e#{i};\n" }
         o << "    syn68k_addr_t retaddr = POPADDR();\n"
         e[:argconvs].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
         e[:arg_types].each_with_index {|t, i| o << "    #{t} #{names[i]} = c#{i};\n" }
@@ -504,7 +509,13 @@ class ExecutorGenerator < Generator
         end
         o << logging_return(e[:name], e[:ret], callargs)
         o << "    callconv::#{e[:retconv]}::set(ret);\n" unless e[:retconv] == "void"
-        o << "    return retaddr;\n"
+        if extras.empty?
+            o << "    return retaddr;\n"
+        else
+            o << "    syn68k_addr_t r = retaddr;\n"
+            extras.each_index.to_a.reverse_each {|i| o << "    r = e#{i}.afterwards(r);\n" }
+            o << "    return r;\n"
+        end
         o << "}\n\n"
         o
     end
