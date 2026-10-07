@@ -420,8 +420,7 @@ class ExecutorGenerator < Generator
     # A Register-convention trap is only converted once the sub-step that needs
     # its features has landed; anything unsupported falls back to the macro.
     def register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
-        return nil if fun["selector"]          # dispatcher subtrap: 4a
-        if fun["variants"]
+        if fun["variants"] && !fun["selector"]
             return nil unless [2, 4].include?(fun["variants"].size)
         end
         extras = fun["executor_extras"] ? [fun["executor_extras"]] : []
@@ -435,12 +434,20 @@ class ExecutorGenerator < Generator
         allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord|Out<[^>]*>|InOut<[^>]*>)\z/
         return nil unless conv[:args].all? {|a| a && a =~ allowed_arg }
         return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void)\z/
-        # The macro's object/name is always cname (REGISTER_TRAP2 uses &NAME,
-        # and for flag traps declare_function passes cname as IMPL_NAME).
-        { kind: :register, name: cname, object: "stub_#{cname}", impl: cname, trap: trap,
-          ret: (fun["return"] or "void"), arg_types: arg_types, arg_names: arg_names,
-          arg_decls: arg_decls, retconv: conv[:ret], argconvs: conv[:args],
-          extras: extras, cc: register_cc(conv) }
+        # Object/Entrypoint naming follows the macro: flag traps pass cname as
+        # IMPL_NAME; subtraps and plain register traps pass name.  REGISTER_TRAP2
+        # (name == cname) makes stub_<name>, REGISTER_TRAP/SUBTRAP make <name>.
+        ename = fun["variants"] ? cname : name
+        object = fun["variants"] ? "stub_#{cname}" : ((name == cname) ? "stub_#{name}" : name)
+        info = { kind: :register, name: ename, object: object, impl: cname, trap: trap,
+                 ret: (fun["return"] or "void"), arg_types: arg_types, arg_names: arg_names,
+                 arg_decls: arg_decls, retconv: conv[:ret], argconvs: conv[:args],
+                 extras: extras, cc: register_cc(conv) }
+        if fun["selector"]
+            info[:dispatcher] = fun["dispatcher"]
+            info[:selector] = hexlit(fun["selector"])
+        end
+        info
     end
 
     # The PPC-only adapter objects for a flag trap (NewHandle, NewHandleClear,
@@ -448,6 +455,7 @@ class ExecutorGenerator < Generator
     def register_variant_infos(fun, stub_object, arg_types, arg_names, arg_decls)
         variants = fun["variants"]
         return [] unless variants
+        return [] if fun["selector"]
         nflags = variants.size >= 3 ? 2 : 1
         k = (fun["args"] or []).size - nflags
         return [] if k < 0
@@ -475,11 +483,28 @@ class ExecutorGenerator < Generator
         ft = fun["file_trap"]
         return nil unless ft
         return nil if ft == "mfs"                   # emits only the declaration
-        return nil if fun["selector"]                # file subtrap: 4a
         return nil unless cname == name
         args = (fun["args"] or [])
         return nil if args.size < 2
         return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+
+        if fun["selector"]
+            return nil if ft == "hfs"                # HFS_SUBTRAP: leave to the macro
+            # FILE_SUBTRAP: REGISTER_SUBTRAP2 under a selector, plus Sync/Async.
+            stub = { kind: :register, name: name, object: "stub_#{name}", impl: name,
+                     trap: trap, ret: "OSErr", arg_types: arg_types, arg_names: arg_names,
+                     arg_decls: arg_decls, retconv: "D0", argconvs: ["A0", "TrapBit<ASYNCBIT>"],
+                     extras: [], cc: "callconv::Register<D0(A0, TrapBit<ASYNCBIT>)>",
+                     dispatcher: fun["dispatcher"], selector: hexlit(fun["selector"]) }
+            k = arg_types.size - 1
+            variants = ["#{name}Sync", "#{name}Async"].each_with_index.map do |vn, i|
+                { kind: :variant, name: vn, object: vn, impl: vn, trap: 0, ret: "OSErr",
+                  arg_types: arg_types[0...k], arg_names: arg_names[0...k],
+                  arg_decls: arg_decls[0...k], target: stub[:object],
+                  flags: (i == 0 ? [false] : [true]), cc: "" }
+            end
+            return [stub] + variants
+        end
 
         if ft == "hfs"
             base = name.gsub(/^PBH/, "PB")
@@ -699,7 +724,7 @@ class ExecutorGenerator < Generator
             return o
         end
 
-        if e[:kind] == :sub
+        if e[:kind] == :sub || e[:dispatcher]
             o = +""
             o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
             o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", 0,\n"
