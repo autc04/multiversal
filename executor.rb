@@ -638,28 +638,70 @@ class ExecutorGenerator < Generator
         o
     end
 
-    def logging_call(name, callargs)
-        a = callargs.empty? ? "" : ", #{callargs}"
+    # Key used to deduplicate generated per-type argument/return printers.
+    def log_type_key(type)
+        "std::decay_t<#{type.to_s.strip}>"
+    end
+
+    def log_add_type(types, index, type)
+        key = log_type_key(type)
+        unless index.key?(key)
+            index[key] = types.size
+            types << key
+        end
+    end
+
+    # One printer per distinct decayed argument/return type in a module, shared
+    # by every trap that uses it, so that --logtraps instantiates no template
+    # per trap: each entrypoint passes its values plus a pointer to the shared
+    # printer table and a single non-template function formats them.
+    def log_printer_types(entries)
+        types = []
+        index = {}
+        entries.each do |e|
+            next if e[:kind] == :dispatcher
+            (e[:arg_types] || []).each {|t| log_add_type(types, index, t) }
+            log_add_type(types, index, e[:ret]) if e[:ret] && e[:ret] != "void"
+        end
+        [types, index]
+    end
+
+    def log_desc_args(e)
+        return "nullptr, nullptr, 0" if (e[:arg_types] || []).empty?
+        "logPrinters_#{e[:object]}, lgvals, #{e[:arg_types].size}"
+    end
+
+    def log_values(e, names)
+        return "" if (e[:arg_types] || []).empty?
+        "        const void* lgvals[] = { #{names.map {|n| "&#{n}" }.join(", ")} };\n"
+    end
+
+    def logging_call(e, names)
         "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
         "    logging::LogNestingScope logScope;\n" \
         "    if(logScope.active)\n" \
-        "        logging::logTrapCall(\"#{name}\"#{a});\n" \
+        "    {\n" \
+        "#{log_values(e, names)}" \
+        "        logging::logTrapCallData(\"#{e[:name]}\", #{log_desc_args(e)});\n" \
+        "    }\n" \
         "#endif\n"
     end
 
-    def logging_return(name, ret, callargs)
-        a = callargs.empty? ? "" : ", #{callargs}"
-        if ret == "void"
-            "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
-            "    if(logScope.active)\n" \
-            "        logging::logTrapVoidReturn(\"#{name}\"#{a});\n" \
-            "#endif\n"
+    def logging_return(e, names)
+        o = +""
+        o << "#ifdef EXECUTOR_ENABLE_LOGGING\n"
+        o << "    if(logScope.active)\n"
+        o << "    {\n"
+        o << log_values(e, names)
+        if e[:ret] == "void"
+            o << "        logging::logTrapVoidReturnData(\"#{e[:name]}\", #{log_desc_args(e)});\n"
         else
-            "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
-            "    if(logScope.active)\n" \
-            "        logging::logTrapValReturn(\"#{name}\", ret#{a});\n" \
-            "#endif\n"
+            o << "        logging::logTrapValReturnData(\"#{e[:name]}\", "
+            o << "logArg_#{@log_index[log_type_key(e[:ret])]}, &ret, #{log_desc_args(e)});\n"
         end
+        o << "    }\n"
+        o << "#endif\n"
+        o
     end
 
     # Straight-line 68K entrypoint.  Dispatches on the calling convention: the
@@ -678,13 +720,13 @@ class ExecutorGenerator < Generator
         e[:arg_types].each_with_index.to_a.reverse_each do |type, i|
             o << "    std::decay_t<#{type}> #{names[i]} = callconv::stack::pop<std::decay_t<#{type}>>();\n"
         end
-        o << logging_call(e[:name], callargs)
+        o << logging_call(e, names)
         if e[:ret] == "void"
             o << "    #{e[:impl]}(#{callargs});\n"
         else
             o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
-        o << logging_return(e[:name], e[:ret], callargs)
+        o << logging_return(e, names)
         o << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n" unless e[:ret] == "void"
         o << "    return retaddr;\n"
         o << "}\n\n"
@@ -705,13 +747,13 @@ class ExecutorGenerator < Generator
         o << "    syn68k_addr_t retaddr = POPADDR();\n"
         e[:argconvs].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
         e[:arg_types].each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]} = c#{i};\n" }
-        o << logging_call(e[:name], callargs)
+        o << logging_call(e, names)
         if e[:ret] == "void"
             o << "    #{e[:impl]}(#{callargs});\n"
         else
             o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
-        o << logging_return(e[:name], e[:ret], callargs)
+        o << logging_return(e, names)
         o << "    callconv::#{e[:retconv]}::set(ret);\n" unless e[:retconv] == "void"
         if extras.empty?
             o << "    return retaddr;\n"
@@ -741,13 +783,13 @@ class ExecutorGenerator < Generator
             end
             o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
         end
-        o << logging_call(e[:name], callargs)
+        o << logging_call(e, names)
         if e[:ret] == "void"
             o << "    #{e[:impl]}(#{callargs});\n"
         else
             o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
-        o << logging_return(e[:name], e[:ret], callargs)
+        o << logging_return(e, names)
         o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless e[:ret] == "void"
         o << "    cpu.r[1] = EM_A7;\n"
         o << "    return saveLR;\n"
@@ -835,6 +877,24 @@ class ExecutorGenerator < Generator
         out << "#include <#{module_name}.h>\n\n"
         out << "namespace Executor { namespace trapentries {\n\n"
         entries.each {|e| out << e[:helper] if e[:helper] }
+
+        # Per-type argument/return printers, shared by every trap in the module.
+        log_types, @log_index = log_printer_types(entries)
+        unless log_types.empty?
+            out << "#ifdef EXECUTOR_ENABLE_LOGGING\n"
+            log_types.each_with_index do |t, i|
+                out << "static void logArg_#{i}(const void* p) { logging::logValue(*(const #{t}*)p); }\n"
+            end
+            entries.each do |e|
+                next if e[:kind] == :dispatcher
+                next if (e[:arg_types] || []).empty?
+                out << "static const logging::LogArgFn logPrinters_#{e[:object]}[] = { "
+                out << e[:arg_types].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
+                out << " };\n"
+            end
+            out << "#endif\n"
+        end
+        out << "\n"
         entries.each do |e|
             next if e[:kind] == :dispatcher
             out << gen_68k_entry(e)
