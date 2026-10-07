@@ -268,14 +268,42 @@ class ExecutorGenerator < Generator
             if !sz || sz > 4 then
                 @out << "inline void LMGet#{value["name"]}(#{decl(value["type"]+"*", "val")}) { *val = LM(#{value["name"]}); }\n"
                 @out << "inline void LMSet#{value["name"]}(#{decl("const " + value["type"]+"*", "val")}) { LM(#{value["name"]}) = *val; }\n"
+                declare_notrap("LMGet#{value["name"]}", "void",
+                               [decl(value["type"]+"*", "").strip], ["val"],
+                               [decl(value["type"]+"*", "val")])
+                declare_notrap("LMSet#{value["name"]}", "void",
+                               [decl("const " + value["type"]+"*", "").strip], ["val"],
+                               [decl("const " + value["type"]+"*", "val")])
             else
                 @out << "inline #{decl(value["type"])} LMGet#{value["name"]}() { return LM(#{value["name"]}); }\n"
                 @out << "inline void LMSet#{value["name"]}(#{decl(value["type"],"val")}) { LM(#{value["name"]}) = val; }\n"
+                declare_notrap("LMGet#{value["name"]}", decl(value["type"]).strip, [], [], [])
+                declare_notrap("LMSet#{value["name"]}", "void",
+                               [decl(value["type"], "").strip], ["val"],
+                               [decl(value["type"], "val")])
             end
-            @out << "NOTRAP_FUNCTION2(LMGet#{value["name"]});\n"
-            @out << "NOTRAP_FUNCTION2(LMSet#{value["name"]});\n"
     end
 
+    end
+
+    # A function published to the guest but not installed as a trap
+    # (NOTRAP_FUNCTION / NOTRAP_FUNCTION2).  It still creates a guest-callable
+    # entrypoint and registers itself for PPC and for the debugger.
+    def notrap_entry_info(name, cname, ret, arg_types, arg_names, arg_decls)
+        return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+        object = (name == cname) ? "stub_#{name}" : name
+        { kind: :notrap, name: name, object: object, impl: cname, trap: 0, ret: ret,
+          arg_types: arg_types, arg_names: arg_names, arg_decls: arg_decls, cc: "" }
+    end
+
+    def declare_notrap(name, ret, arg_types, arg_names, arg_decls)
+        info = notrap_entry_info(name, name, ret, arg_types, arg_names, arg_decls)
+        if info then
+            @out << emit_wrapper(info)
+            @entries << info
+        else
+            @out << "NOTRAP_FUNCTION2(#{name});\n"
+        end
     end
 
     # Structured view of a Register<...> spec, shared by the header emitter and
@@ -423,7 +451,14 @@ class ExecutorGenerator < Generator
                 end
             end
         else
-            @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
+            ret = (fun["return"] or "void")
+            info = notrap_entry_info(name, cname, ret, arg_types, arg_names, arg_decls)
+            if info then
+                @out << emit_wrapper(info)
+                @entries << info
+            else
+                @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
+            end
         end
     end
 
