@@ -245,10 +245,7 @@ class ExecutorGenerator < Generator
         name = value["name"]
         conv = selector_kind_masked(value["selector-location"])
         unless conv
-            @out << "EXTERN_" if extern
-            @out << "DISPATCHER_TRAP(#{name}, "
-            @out << "#{hexlit(value["trap"])}, #{value["selector-location"]});\n"
-            return
+            raise "unhandled dispatcher selector-location #{value["selector-location"]} for #{name}"
         end
         @out << "extern traps::GeneratedDispatcherTrap #{name};\n"
         return if extern
@@ -386,15 +383,14 @@ class ExecutorGenerator < Generator
             if infos then
                 infos.each {|e| @out << emit_wrapper(e); @entries << e }
             else
-                @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
-                @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
+                raise "unhandled HFS trap #{name} (#{sub})"
             end
         elsif fun["file_trap"] then
             infos = file_entry_infos(fun, name, cname, trap, arg_types, arg_names, arg_decls)
             if infos then
                 infos.each {|e| @out << emit_wrapper(e); @entries << e }
             else
-                @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
+                raise "unhandled file trap #{name} (#{sub})"
             end
         elsif trap && (fun["executor_extras"] || fun["returnreg"] || args.any? {|arg| arg["register"]}) then
             info = register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
@@ -406,18 +402,10 @@ class ExecutorGenerator < Generator
                     @entries << v
                 end
             else
-                if fun["variants"] then
-                    variants = fun["variants"]
-                    nflagstr = variants.size >= 3 ? "2" : ""
-                    @out << "REGISTER_#{nflagstr}FLAG_TRAP(#{cname}, #{variants.join(", ")}, "
-                    @out << "#{hexlit(trap)}, "
-                    @out << (fun["return"] or "void")
-                    args1 = variants.size >= 3 ? fun["args"][0..-3] : fun["args"][0..-2]
-                    @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
-                    @out << ", "
-                else
-                    @out << "REGISTER_#{sub}TRAP#{two}(#{name}, #{trap_sel_disp}, "
-                end
+                raise "unhandled flag/Register subtrap #{name}" if fun["variants"] || sub == "SUB"
+                # Plain Register trap the generator could not convert (e.g. an
+                # argument type that cannot be a single template argument).
+                @out << "REGISTER_TRAP#{two}(#{name}, #{trap_sel_disp}, "
                 handle_regcall_conv(fun)
                 @out << ");\n"
             end
