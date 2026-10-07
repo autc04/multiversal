@@ -677,19 +677,16 @@ class ExecutorGenerator < Generator
     end
 
     def logging_call(e, names)
-        "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
         "    logging::LogNestingScope logScope;\n" \
         "    if(logScope.active)\n" \
         "    {\n" \
         "#{log_values(e, names)}" \
         "        logging::logTrapCallData(\"#{e[:name]}\", #{log_desc_args(e)});\n" \
-        "    }\n" \
-        "#endif\n"
+        "    }\n"
     end
 
     def logging_return(e, names)
         o = +""
-        o << "#ifdef EXECUTOR_ENABLE_LOGGING\n"
         o << "    if(logScope.active)\n"
         o << "    {\n"
         o << log_values(e, names)
@@ -700,7 +697,6 @@ class ExecutorGenerator < Generator
             o << "logArg_#{@log_index[log_type_key(e[:ret])]}, &ret, #{log_desc_args(e)});\n"
         end
         o << "    }\n"
-        o << "#endif\n"
         o
     end
 
@@ -881,7 +877,6 @@ class ExecutorGenerator < Generator
         # Per-type argument/return printers, shared by every trap in the module.
         log_types, @log_index = log_printer_types(entries)
         unless log_types.empty?
-            out << "#ifdef EXECUTOR_ENABLE_LOGGING\n"
             log_types.each_with_index do |t, i|
                 out << "static void logArg_#{i}(const void* p) { logging::logValue(*(const #{t}*)p); }\n"
             end
@@ -892,7 +887,6 @@ class ExecutorGenerator < Generator
                 out << e[:arg_types].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
                 out << " };\n"
             end
-            out << "#endif\n"
         end
         out << "\n"
         entries.each do |e|
