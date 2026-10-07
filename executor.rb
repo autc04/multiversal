@@ -328,10 +328,20 @@ class ExecutorGenerator < Generator
         if not fun["executor"] then
         elsif fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
-            @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
-            @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
+            infos = file_entry_infos(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+            if infos then
+                infos.each {|e| @out << emit_wrapper(e); @entries << e }
+            else
+                @out << "HFS_#{sub}TRAP(#{name.gsub(/^PBH/,"PB")}, #{name}, "
+                @out << "#{fun["args"][0]["type"]}, #{trap_sel_disp});"
+            end
         elsif fun["file_trap"] then
-            @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
+            infos = file_entry_infos(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+            if infos then
+                infos.each {|e| @out << emit_wrapper(e); @entries << e }
+            else
+                @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
+            end
         elsif trap && (fun["executor_extras"] || fun["returnreg"] || args.any? {|arg| arg["register"]}) then
             info = register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
             if info then
@@ -438,6 +448,57 @@ class ExecutorGenerator < Generator
               ret: (fun["return"] or "void"), arg_types: a_types, arg_names: a_names,
               arg_decls: a_decls, target: stub_object, flags: flag_sets[i], cc: "" }
         end
+    end
+
+    # FILE_TRAP / HFS_TRAP (non-subtrap) as generated entries: a stub wrapping
+    # the (possibly generated) implementation plus the Sync/Async variant
+    # adapters.  Mirrors the FILE_TRAP / HFS_TRAP macros.
+    def file_entry_infos(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+        ft = fun["file_trap"]
+        return nil unless ft
+        return nil if ft == "mfs"                   # emits only the declaration
+        return nil if fun["selector"]                # file subtrap: 4a
+        return nil unless cname == name
+        args = (fun["args"] or [])
+        return nil if args.size < 2
+        return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+
+        if ft == "hfs"
+            base = name.gsub(/^PBH/, "PB")
+            pbtype = args[0]["type"]
+            t = Integer(trap) & 0xA0FF
+            helper = +""
+            helper << "static OSErr #{base}_#{name}(ParmBlkPtr pb, Boolean async, Boolean hfs)\n"
+            helper << "{\n"
+            helper << "    return hfs ? #{name}((#{pbtype})pb, async) : #{base}(pb, async);\n"
+            helper << "}\n\n"
+            stub = { kind: :register, name: "#{base}/#{name}", object: "stub_#{base}",
+                     impl: "#{base}_#{name}", trap: t, ret: "OSErr",
+                     arg_types: ["ParmBlkPtr", "Boolean", "Boolean"],
+                     arg_names: ["pb", "async", "hfs"],
+                     arg_decls: ["ParmBlkPtr pb", "Boolean async", "Boolean hfs"],
+                     retconv: "D0", argconvs: ["A0", "TrapBit<ASYNCBIT>", "TrapBit<HFSBIT>"],
+                     extras: [], cc: "callconv::Register<D0(A0, TrapBit<ASYNCBIT>, TrapBit<HFSBIT>)>",
+                     helper: helper }
+            vnames = ["#{base}Sync", "#{base}Async", "#{name}Sync", "#{name}Async"]
+            vtypes = ["ParmBlkPtr", "ParmBlkPtr", "HParmBlkPtr", "HParmBlkPtr"]
+            vflags = [[false, false], [true, false], [false, true], [true, true]]
+        else
+            stub = { kind: :register, name: name, object: "stub_#{name}", impl: name,
+                     trap: trap, ret: "OSErr", arg_types: arg_types, arg_names: arg_names,
+                     arg_decls: arg_decls, retconv: "D0", argconvs: ["A0", "TrapBit<ASYNCBIT>"],
+                     extras: [], cc: "callconv::Register<D0(A0, TrapBit<ASYNCBIT>)>" }
+            vnames = ["#{name}Sync", "#{name}Async"]
+            vtypes = ["ParmBlkPtr", "ParmBlkPtr"]
+            vflags = [[false], [true]]
+        end
+
+        variants = vnames.each_with_index.map do |vn, i|
+            { kind: :variant, name: vn, object: vn, impl: vn, trap: 0, ret: "OSErr",
+              arg_types: [vtypes[i]], arg_names: ["pb"], arg_decls: ["#{vtypes[i]} pb"],
+              target: stub[:object], flags: vflags[i], cast_types: ["ParmBlkPtr"], cc: "" }
+        end
+        [stub] + variants
     end
 
     def register_cc(conv)
@@ -606,7 +667,10 @@ class ExecutorGenerator < Generator
             o << "{\n}\n\n"
             o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
             o << "{\n"
-            argstr = callargs.empty? ? "" : "#{callargs}, "
+            fwd = names.each_with_index.map {|n, i|
+                e[:cast_types] ? "(#{e[:cast_types][i]})#{n}" : n
+            }.join(", ")
+            argstr = fwd.empty? ? "" : "#{fwd}, "
             flagstr = e[:flags].map {|f| f ? "true" : "false" }.join(", ")
             if e[:ret] == "void"
                 o << "    #{e[:target]}(#{argstr}#{flagstr});\n"
@@ -652,6 +716,7 @@ class ExecutorGenerator < Generator
         out << "#include <base/logging.h>\n"
         out << "#include <#{module_name}.h>\n\n"
         out << "namespace Executor { namespace trapentries {\n\n"
+        entries.each {|e| out << e[:helper] if e[:helper] }
         entries.each do |e|
             out << gen_68k_entry(e)
             out << gen_ppc_entry(e)
