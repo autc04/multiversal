@@ -337,6 +337,10 @@ class ExecutorGenerator < Generator
             if info then
                 @out << emit_wrapper(info)
                 @entries << info
+                register_variant_infos(fun, info[:object], arg_types, arg_names, arg_decls).each do |v|
+                    @out << emit_wrapper(v)
+                    @entries << v
+                end
             else
                 if fun["variants"] then
                     variants = fun["variants"]
@@ -389,12 +393,13 @@ class ExecutorGenerator < Generator
     # its features has landed; anything unsupported falls back to the macro.
     def register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
         return nil if fun["selector"]          # dispatcher subtrap: 4a
-        return nil if fun["variants"]          # flag trap + variants: 2d
+        if fun["variants"]
+            return nil unless [2, 4].include?(fun["variants"].size)
+        end
         extras = fun["executor_extras"] ? [fun["executor_extras"]] : []
         return nil unless extras.all? do |x|
             x =~ /\A(callconv::)?(ReturnMemErr|ReturnMemErrConditional|SaveA1D1D2|ClearD0|CCFromD0|MoveA1ToA0)(<[^>]*>)?\z/
         end
-        return nil unless cname == name        # all register traps are REGISTER_TRAP2
         args = (fun["args"] or [])
         return nil unless args.all? {|arg| arg["register"] }
         return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
@@ -402,10 +407,37 @@ class ExecutorGenerator < Generator
         allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord|Out<[^>]*>|InOut<[^>]*>)\z/
         return nil unless conv[:args].all? {|a| a && a =~ allowed_arg }
         return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void)\z/
-        { kind: :register, name: name, object: "stub_#{name}", impl: cname, trap: trap,
+        # The macro's object/name is always cname (REGISTER_TRAP2 uses &NAME,
+        # and for flag traps declare_function passes cname as IMPL_NAME).
+        { kind: :register, name: cname, object: "stub_#{cname}", impl: cname, trap: trap,
           ret: (fun["return"] or "void"), arg_types: arg_types, arg_names: arg_names,
           arg_decls: arg_decls, retconv: conv[:ret], argconvs: conv[:args],
           extras: extras, cc: register_cc(conv) }
+    end
+
+    # The PPC-only adapter objects for a flag trap (NewHandle, NewHandleClear,
+    # ...): each forwards to the stub with its flag arguments bound.
+    def register_variant_infos(fun, stub_object, arg_types, arg_names, arg_decls)
+        variants = fun["variants"]
+        return [] unless variants
+        nflags = variants.size >= 3 ? 2 : 1
+        k = (fun["args"] or []).size - nflags
+        return [] if k < 0
+        a_types = arg_types[0...k]
+        a_names = arg_names[0...k]
+        a_decls = arg_decls[0...k]
+        return [] if a_types.any? {|t| t =~ /[,\[\]()]/ }
+        # REGISTER_2FLAG_TRAP expands TRAP_VARIANT in the order
+        # NAME00(ff), NAME10(tf), NAME01(ft), NAME11(tt) but takes the names
+        # positionally as NAME00, NAME01, NAME10, NAME11, i.e. the i-th name
+        # gets flags (i&2, i&1).
+        flag_sets = variants.size >= 3 ? [[false, false], [false, true], [true, false], [true, true]]
+                                      : [[false], [true]]
+        variants.each_with_index.map do |vname, i|
+            { kind: :variant, name: vname, object: vname, impl: vname, trap: 0,
+              ret: (fun["return"] or "void"), arg_types: a_types, arg_names: a_names,
+              arg_decls: a_decls, target: stub_object, flags: flag_sets[i], cc: "" }
+        end
     end
 
     def register_cc(conv)
@@ -423,6 +455,16 @@ class ExecutorGenerator < Generator
 
     # The generated callable object + wrapper class, declared in the header.
     def emit_wrapper(e)
+        if e[:kind] == :variant
+            o = +""
+            o << "namespace trapentries { struct Wrapper_#{e[:object]} : traps::GeneratedEntrypoint {\n"
+            o << "    Wrapper_#{e[:object]}();\n"
+            o << "    #{e[:ret]} operator()(#{e[:arg_decls].join(', ')}) const;\n"
+            o << "}; }\n"
+            o << "extern trapentries::Wrapper_#{e[:object]} #{e[:object]};\n"
+            return o
+        end
+
         upp = e[:cc].to_s.empty? ? "UPP<Sig>" : "UPP<Sig, #{e[:cc]}>"
         o = +""
         o << "namespace trapentries { struct Wrapper_#{e[:object]} : traps::GeneratedEntrypoint {\n"
@@ -463,6 +505,7 @@ class ExecutorGenerator < Generator
     # Pascal form mirrors callconv::Pascal; the Register form mirrors
     # callfrom68K::Invoker + RegInvoker.
     def gen_68k_entry(e)
+        return "" if e[:kind] == :variant
         return gen_68k_register_entry(e) if e[:kind] == :register
 
         names = entry_arg_names(e[:arg_names])
@@ -555,6 +598,25 @@ class ExecutorGenerator < Generator
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         params = e[:arg_types].each_with_index.map {|t, i| "#{t} #{names[i]}" }.join(", ")
+        if e[:kind] == :variant
+            o = +""
+            o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
+            o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", 0, nullptr,\n"
+            o << "                          &entry_#{e[:object]}_ppc)\n"
+            o << "{\n}\n\n"
+            o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
+            o << "{\n"
+            argstr = callargs.empty? ? "" : "#{callargs}, "
+            flagstr = e[:flags].map {|f| f ? "true" : "false" }.join(", ")
+            if e[:ret] == "void"
+                o << "    #{e[:target]}(#{argstr}#{flagstr});\n"
+            else
+                o << "    return #{e[:target]}(#{argstr}#{flagstr});\n"
+            end
+            o << "}\n\n"
+            return o
+        end
+
         upp = e[:cc].to_s.empty? ? "UPP<Sig>" : "UPP<Sig, #{e[:cc]}>"
         o = +""
         o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
@@ -596,7 +658,7 @@ class ExecutorGenerator < Generator
             out << gen_wrapper_methods(e)
         end
         out << "void ReferenceEntries_#{module_name}()\n{\n"
-        entries.each {|e| out << "    (void)&entry_#{e[:object]};\n" }
+        entries.each {|e| out << "    (void)&entry_#{e[:object]}_ppc;\n" }
         out << "}\n\n"
         out << "} }\n\n"
         out << "namespace Executor {\n"
