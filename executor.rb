@@ -252,10 +252,11 @@ class ExecutorGenerator < Generator
 
     end
 
-    def handle_regcall_conv(fun)
+    # Structured view of a Register<...> spec, shared by the header emitter and
+    # the generated entrypoints.
+    def regcall_conv(fun)
         args = (fun["args"] or [])
-        @out << (fun["returnreg"] or "void")
-        argregs = args.map do |arg|
+        argconvs = args.map do |arg|
             basetype = $1 if arg["type"] =~ /^(.*)\* *$/
             if arg["register"] =~ /^Out<(.*)>$/ then
                 "Out<#{basetype}, #{$1}>"
@@ -265,8 +266,15 @@ class ExecutorGenerator < Generator
                 arg["register"]
             end
         end
-        @out << "(" << argregs.join(", ") << ")"
-        @out << ", " << fun["executor_extras"] if fun["executor_extras"]
+        { ret: (fun["returnreg"] or "void"), args: argconvs,
+          extras: fun["executor_extras"] }
+    end
+
+    def handle_regcall_conv(fun)
+        conv = regcall_conv(fun)
+        @out << conv[:ret]
+        @out << "(" << conv[:args].join(", ") << ")"
+        @out << ", " << conv[:extras] if conv[:extras]
     end
 
     def declare_function(fun)
@@ -325,20 +333,26 @@ class ExecutorGenerator < Generator
         elsif fun["file_trap"] then
             @out << "FILE_#{sub}TRAP(#{name}, #{fun["args"][0]["type"]}, #{trap_sel_disp});"
         elsif trap && (fun["executor_extras"] || fun["returnreg"] || args.any? {|arg| arg["register"]}) then
-            if fun["variants"] then
-                variants = fun["variants"]
-                nflagstr = variants.size >= 3 ? "2" : ""
-                @out << "REGISTER_#{nflagstr}FLAG_TRAP(#{cname}, #{variants.join(", ")}, "
-                @out << "#{hexlit(trap)}, "
-                @out << (fun["return"] or "void")
-                args1 = variants.size >= 3 ? fun["args"][0..-3] : fun["args"][0..-2]
-                @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
-                @out << ", "
+            info = register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+            if info then
+                @out << emit_wrapper(info)
+                @entries << info
             else
-                @out << "REGISTER_#{sub}TRAP#{two}(#{name}, #{trap_sel_disp}, "
+                if fun["variants"] then
+                    variants = fun["variants"]
+                    nflagstr = variants.size >= 3 ? "2" : ""
+                    @out << "REGISTER_#{nflagstr}FLAG_TRAP(#{cname}, #{variants.join(", ")}, "
+                    @out << "#{hexlit(trap)}, "
+                    @out << (fun["return"] or "void")
+                    args1 = variants.size >= 3 ? fun["args"][0..-3] : fun["args"][0..-2]
+                    @out << "(" << (args1.map {|arg| decl(arg["type"])}).join(", ") << ")"
+                    @out << ", "
+                else
+                    @out << "REGISTER_#{sub}TRAP#{two}(#{name}, #{trap_sel_disp}, "
+                end
+                handle_regcall_conv(fun)
+                @out << ");\n"
             end
-            handle_regcall_conv(fun)
-            @out << ");\n"
         elsif fun["selector"] then
             @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
             @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
@@ -350,26 +364,51 @@ class ExecutorGenerator < Generator
                 end
             else
                 ret = (fun["return"] or "void")
-                @out << emit_pascal_wrapper(name, ret, arg_types, arg_names, arg_decls)
-                record_pascal_entry(name, cname, trap, ret,
-                                    arg_types, arg_names, arg_decls)
+                info = pascal_entry_info(name, cname, trap, ret, arg_types, arg_names, arg_decls)
+                if info then
+                    @out << emit_wrapper(info)
+                    @entries << info
+                else
+                    @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
+                end
             end
         else
             @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
         end
     end
 
-    # Record a plain Pascal trap so the entrypoint generator can emit
-    # straight-line entrypoints and a generated wrapper object for it.
-    def record_pascal_entry(name, cname, trap, ret, arg_types, arg_names, arg_decls)
-        return unless @pascal_entries
-        return unless cname == "C_" + name
-        # Types with commas or brackets can't be used as a single template
-        # argument; Pascal traps never have them, so skip defensively.
-        return if arg_types.any? {|t| t =~ /[,\[\]()]/ }
-        @pascal_entries << { name: name, trap: trap, ret: ret,
-                             arg_types: arg_types, arg_names: arg_names,
-                             arg_decls: arg_decls }
+    def pascal_entry_info(name, cname, trap, ret, arg_types, arg_names, arg_decls)
+        return nil unless cname == "C_" + name
+        # Types with commas or brackets can't be a single template argument.
+        return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+        { kind: :pascal, name: name, object: name, impl: cname, trap: trap, ret: ret,
+          arg_types: arg_types, arg_names: arg_names, arg_decls: arg_decls, cc: "" }
+    end
+
+    # A Register-convention trap is only converted once the sub-step that needs
+    # its features has landed; anything unsupported falls back to the macro.
+    def register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+        return nil if fun["selector"]          # dispatcher subtrap: 4a
+        return nil if fun["variants"]          # flag trap + variants: 2d
+        return nil if fun["executor_extras"]   # extras: 2c
+        return nil unless cname == name        # all register traps are REGISTER_TRAP2
+        args = (fun["args"] or [])
+        return nil unless args.all? {|arg| arg["register"] }
+        return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
+        conv = regcall_conv(fun)
+        allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord)\z/
+        return nil unless conv[:args].all? {|a| a && a =~ allowed_arg }
+        return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void)\z/
+        { kind: :register, name: name, object: "stub_#{name}", impl: cname, trap: trap,
+          ret: (fun["return"] or "void"), arg_types: arg_types, arg_names: arg_names,
+          arg_decls: arg_decls, retconv: conv[:ret], argconvs: conv[:args],
+          cc: register_cc(conv) }
+    end
+
+    def register_cc(conv)
+        s = "callconv::Register<#{conv[:ret]}(#{conv[:args].join(', ')})"
+        s += ", #{conv[:extras]}" if conv[:extras]
+        s + ">"
     end
 
     # Local names used in the generated entrypoints, avoiding collisions with
@@ -380,15 +419,16 @@ class ExecutorGenerator < Generator
     end
 
     # The generated callable object + wrapper class, declared in the header.
-    def emit_pascal_wrapper(name, ret, arg_types, arg_names, arg_decls)
+    def emit_wrapper(e)
+        upp = e[:cc].to_s.empty? ? "UPP<Sig>" : "UPP<Sig, #{e[:cc]}>"
         o = +""
-        o << "namespace trapentries { struct Wrapper_#{name} : traps::GeneratedEntrypoint {\n"
-        o << "    using Sig = #{ret}(#{arg_types.join(', ')});\n"
-        o << "    Wrapper_#{name}();\n"
-        o << "    #{ret} operator()(#{arg_decls.join(', ')}) const;\n"
-        o << "    UPP<Sig> operator&() const { return UPP<Sig>(guestFunction()); }\n"
+        o << "namespace trapentries { struct Wrapper_#{e[:object]} : traps::GeneratedEntrypoint {\n"
+        o << "    using Sig = #{e[:ret]}(#{e[:arg_types].join(', ')});\n"
+        o << "    Wrapper_#{e[:object]}();\n"
+        o << "    #{e[:ret]} operator()(#{e[:arg_decls].join(', ')}) const;\n"
+        o << "    #{upp} operator&() const { return #{upp}(guestFunction()); }\n"
         o << "}; }\n"
-        o << "extern trapentries::Wrapper_#{name} #{name};\n"
+        o << "extern trapentries::Wrapper_#{e[:object]} #{e[:object]};\n"
         o
     end
 
@@ -416,14 +456,16 @@ class ExecutorGenerator < Generator
         end
     end
 
-    # Straight-line 68K entrypoint: pop the return address and the arguments
-    # (right-to-left) off the 68K stack, call the implementation and store the
-    # return value where the caller expects it.  Mirrors callconv::Pascal.
+    # Straight-line 68K entrypoint.  Dispatches on the calling convention: the
+    # Pascal form mirrors callconv::Pascal; the Register form mirrors
+    # callfrom68K::Invoker + RegInvoker.
     def gen_68k_entry(e)
+        return gen_68k_register_entry(e) if e[:kind] == :register
+
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         o = +""
-        o << "static syn68k_addr_t entry_#{e[:name]}(syn68k_addr_t addr [[maybe_unused]])\n"
+        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr [[maybe_unused]])\n"
         o << "{\n"
         o << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
         e[:arg_types].each_with_index.to_a.reverse_each do |type, i|
@@ -431,12 +473,37 @@ class ExecutorGenerator < Generator
         end
         o << logging_call(e[:name], callargs)
         if e[:ret] == "void"
-            o << "    C_#{e[:name]}(#{callargs});\n"
+            o << "    #{e[:impl]}(#{callargs});\n"
         else
-            o << "    #{e[:ret]} ret = C_#{e[:name]}(#{callargs});\n"
+            o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
         o << logging_return(e[:name], e[:ret], callargs)
         o << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n" unless e[:ret] == "void"
+        o << "    return retaddr;\n"
+        o << "}\n\n"
+        o
+    end
+
+    # Descriptor-driven 68K entrypoint for a Register-convention trap.  The
+    # descriptors do the register/bit reads and conversions; this unrolls the
+    # construct -> convert -> call -> set-return sequence.
+    def gen_68k_register_entry(e)
+        names = entry_arg_names(e[:arg_names])
+        callargs = names.join(", ")
+        o = +""
+        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr [[maybe_unused]])\n"
+        o << "{\n"
+        o << "    syn68k_addr_t retaddr = POPADDR();\n"
+        e[:argconvs].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
+        e[:arg_types].each_with_index {|t, i| o << "    #{t} #{names[i]} = c#{i};\n" }
+        o << logging_call(e[:name], callargs)
+        if e[:ret] == "void"
+            o << "    #{e[:impl]}(#{callargs});\n"
+        else
+            o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
+        end
+        o << logging_return(e[:name], e[:ret], callargs)
+        o << "    callconv::#{e[:retconv]}::set(ret);\n" unless e[:retconv] == "void"
         o << "    return retaddr;\n"
         o << "}\n\n"
         o
@@ -448,7 +515,7 @@ class ExecutorGenerator < Generator
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         o = +""
-        o << "static uint32_t entry_#{e[:name]}_ppc(PowerCore& cpu)\n"
+        o << "static uint32_t entry_#{e[:object]}_ppc(PowerCore& cpu)\n"
         o << "{\n"
         o << "    uint32_t saveLR = cpu.lr;\n"
         o << "    EM_A7 = cpu.r[1];\n"
@@ -461,9 +528,9 @@ class ExecutorGenerator < Generator
         end
         o << logging_call(e[:name], callargs)
         if e[:ret] == "void"
-            o << "    C_#{e[:name]}(#{callargs});\n"
+            o << "    #{e[:impl]}(#{callargs});\n"
         else
-            o << "    #{e[:ret]} ret = C_#{e[:name]}(#{callargs});\n"
+            o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
         o << logging_return(e[:name], e[:ret], callargs)
         o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless e[:ret] == "void"
@@ -477,35 +544,36 @@ class ExecutorGenerator < Generator
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         params = e[:arg_types].each_with_index.map {|t, i| "#{t} #{names[i]}" }.join(", ")
+        upp = e[:cc].to_s.empty? ? "UPP<Sig>" : "UPP<Sig, #{e[:cc]}>"
         o = +""
-        o << "Wrapper_#{e[:name]}::Wrapper_#{e[:name]}()\n"
+        o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
         o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", #{hexlit(e[:trap])},\n"
-        o << "                          &entry_#{e[:name]}, &entry_#{e[:name]}_ppc)\n"
+        o << "                          &entry_#{e[:object]}, &entry_#{e[:object]}_ppc)\n"
         o << "{\n}\n\n"
-        o << "#{e[:ret]} Wrapper_#{e[:name]}::operator()(#{params}) const\n"
+        o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
         o << "{\n"
         if e[:ret] == "void"
             o << "    if(isPatched())\n"
             o << "    {\n"
-            o << "        (UPP<Sig>(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
+            o << "        (#{upp}(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
             o << "        return;\n"
             o << "    }\n"
-            o << "    C_#{e[:name]}(#{callargs});\n"
+            o << "    #{e[:impl]}(#{callargs});\n"
         else
             o << "    if(isPatched())\n"
-            o << "        return (UPP<Sig>(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
-            o << "    return C_#{e[:name]}(#{callargs});\n"
+            o << "        return (#{upp}(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
+            o << "    return #{e[:impl]}(#{callargs});\n"
         end
         o << "}\n\n"
         o
     end
 
     # Straight-line 68K/PowerPC entrypoints and wrapper objects for a module's
-    # Pascal-convention traps.
+    # Pascal- and Register-convention traps.
     def generate_trap_entries(module_name, entries)
         out = +""
         out << "// Generated by make-multiverse.rb - DO NOT EDIT\n"
-        out << "// Straight-line 68K/PowerPC entrypoints (Pascal calling convention).\n"
+        out << "// Straight-line 68K/PowerPC entrypoints and wrapper objects.\n"
         out << "#include <base/functions.impl.h>\n"
         out << "#include <base/trap-entry.h>\n"
         out << "#include <base/logging.h>\n"
@@ -517,11 +585,11 @@ class ExecutorGenerator < Generator
             out << gen_wrapper_methods(e)
         end
         out << "void ReferenceEntries_#{module_name}()\n{\n"
-        entries.each {|e| out << "    (void)&entry_#{e[:name]};\n" }
+        entries.each {|e| out << "    (void)&entry_#{e[:object]};\n" }
         out << "}\n\n"
         out << "} }\n\n"
         out << "namespace Executor {\n"
-        entries.each {|e| out << "trapentries::Wrapper_#{e[:name]} #{e[:name]};\n" }
+        entries.each {|e| out << "trapentries::Wrapper_#{e[:object]} #{e[:object]};\n" }
         out << "}\n"
         out
     end
@@ -586,9 +654,9 @@ class ExecutorGenerator < Generator
     def generate_header(header)
         @current_header = header
         @available_dispatchers = Set.new
-        @pascal_entries = []
+        @entries = []
         result = super
-        @entries_for_header = @pascal_entries
+        @entries_for_header = @entries
         result
     end
 
