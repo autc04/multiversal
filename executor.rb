@@ -379,9 +379,12 @@ class ExecutorGenerator < Generator
             end
         elsif trap then
             if name == cname then
-                if args.size == 0 && !fun["return"] then
+                info = register_entry_info(fun, name, cname, trap, arg_types, arg_names, arg_decls)
+                if info then
+                    @out << emit_wrapper(info)
+                    @entries << info
+                elsif args.size == 0 && !fun["return"] then
                     @out << "REGISTER_TRAP2(#{name}, #{hexlit(trap)}, void());\n"
-                else
                 end
             else
                 ret = (fun["return"] or "void")
@@ -423,7 +426,7 @@ class ExecutorGenerator < Generator
         if fun["variants"] && !fun["selector"]
             return nil unless [2, 4].include?(fun["variants"].size)
         end
-        extras = fun["executor_extras"] ? [fun["executor_extras"]] : []
+        extras = (fun["executor_extras"] or "").split(",").map(&:strip).reject(&:empty?)
         return nil unless extras.all? do |x|
             x =~ /\A(callconv::)?(ReturnMemErr|ReturnMemErrConditional|SaveA1D1D2|ClearD0|CCFromD0|MoveA1ToA0)(<[^>]*>)?\z/
         end
@@ -433,7 +436,7 @@ class ExecutorGenerator < Generator
         conv = regcall_conv(fun)
         allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord|Out<[^>]*>|InOut<[^>]*>)\z/
         return nil unless conv[:args].all? {|a| a && a =~ allowed_arg }
-        return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void)\z/
+        return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void|D0Minus1Boolean)\z/
         # Object/Entrypoint naming follows the macro: flag traps pass cname as
         # IMPL_NAME; subtraps and plain register traps pass name.  REGISTER_TRAP2
         # (name == cname) makes stub_<name>, REGISTER_TRAP/SUBTRAP make <name>.
@@ -488,8 +491,7 @@ class ExecutorGenerator < Generator
         return nil if args.size < 2
         return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
 
-        if fun["selector"]
-            return nil if ft == "hfs"                # HFS_SUBTRAP: leave to the macro
+        if fun["selector"] && ft != "hfs"
             # FILE_SUBTRAP: REGISTER_SUBTRAP2 under a selector, plus Sync/Async.
             stub = { kind: :register, name: name, object: "stub_#{name}", impl: name,
                      trap: trap, ret: "OSErr", arg_types: arg_types, arg_names: arg_names,
@@ -523,6 +525,12 @@ class ExecutorGenerator < Generator
                      retconv: "D0", argconvs: ["A0", "TrapBit<ASYNCBIT>", "TrapBit<HFSBIT>"],
                      extras: [], cc: "callconv::Register<D0(A0, TrapBit<ASYNCBIT>, TrapBit<HFSBIT>)>",
                      helper: helper }
+            # HFS_SUBTRAP: the same stub, but registered under a dispatcher
+            # selector instead of a trap-table slot.
+            if fun["selector"]
+                stub[:dispatcher] = fun["dispatcher"]
+                stub[:selector] = hexlit(fun["selector"])
+            end
             vnames = ["#{base}Sync", "#{base}Async", "#{name}Sync", "#{name}Async"]
             vtypes = ["ParmBlkPtr", "ParmBlkPtr", "HParmBlkPtr", "HParmBlkPtr"]
             vflags = [[false, false], [true, false], [false, true], [true, true]]
