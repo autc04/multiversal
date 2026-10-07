@@ -223,11 +223,37 @@ class ExecutorGenerator < Generator
         out << "}\n}}\n"
         out
     end
+    # Selector-location names the generated dispatcher can describe as data
+    # (kind, mask) instead of a template parameter.
+    SELECTOR_KINDS = {
+        "D0W" => ["D0", 0xFFFF],
+        "D0L" => ["D0", 0xFFFFFFFF],
+        "StackW" => ["StackWMasked", 0xFFFF],
+        "StackL" => ["StackLMasked", 0xFFFFFFFF],
+        "TrapBits" => ["D1", 0x600],
+    }
+    def selector_kind_masked(loc)
+        return SELECTOR_KINDS[loc] if SELECTOR_KINDS.key?(loc)
+        if loc =~ /\A(D0|D1|StackWMasked|StackLMasked|StackWLookahead)<(0x[0-9A-Fa-f]+)>\z/
+            return [$1, Integer($2)]
+        end
+        nil
+    end
+
     def declare_dispatcher(value, extern:false)
         @available_dispatchers << value["name"]
-        @out << "EXTERN_" if extern
-        @out << "DISPATCHER_TRAP(#{value["name"]}, "
-        @out << "#{hexlit(value["trap"])}, #{value["selector-location"]});\n"
+        name = value["name"]
+        conv = selector_kind_masked(value["selector-location"])
+        unless conv
+            @out << "EXTERN_" if extern
+            @out << "DISPATCHER_TRAP(#{name}, "
+            @out << "#{hexlit(value["trap"])}, #{value["selector-location"]});\n"
+            return
+        end
+        @out << "extern traps::GeneratedDispatcherTrap #{name};\n"
+        return if extern
+        @entries << { kind: :dispatcher, name: name, object: name, trap: value["trap"],
+                      selkind: conv[0], selmask: conv[1] }
     end
     def declare_lowmem(value)
         @out << "const LowMemGlobal<#{decl(value["type"])}> #{value["name"]}"
@@ -787,16 +813,29 @@ class ExecutorGenerator < Generator
         out << "namespace Executor { namespace trapentries {\n\n"
         entries.each {|e| out << e[:helper] if e[:helper] }
         entries.each do |e|
+            next if e[:kind] == :dispatcher
             out << gen_68k_entry(e)
             out << gen_ppc_entry(e)
             out << gen_wrapper_methods(e)
         end
         out << "void ReferenceEntries_#{module_name}()\n{\n"
-        entries.each {|e| out << "    (void)&entry_#{e[:object]}_ppc;\n" }
+        entries.each do |e|
+            if e[:kind] == :dispatcher
+                out << "    (void)&#{e[:object]};\n"
+            else
+                out << "    (void)&entry_#{e[:object]}_ppc;\n"
+            end
+        end
         out << "}\n\n"
         out << "} }\n\n"
         out << "namespace Executor {\n"
-        entries.each {|e| out << "trapentries::Wrapper_#{e[:object]} #{e[:object]};\n" }
+        entries.each do |e|
+            if e[:kind] == :dispatcher
+                out << "traps::GeneratedDispatcherTrap #{e[:object]}{#{e[:name].inspect}, #{hexlit(e[:trap])}, traps::SelectorKind::#{e[:selkind]}, #{hexlit(e[:selmask])}};\n"
+            else
+                out << "trapentries::Wrapper_#{e[:object]} #{e[:object]};\n"
+            end
+        end
         out << "}\n"
         out
     end
