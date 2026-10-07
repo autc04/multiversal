@@ -297,7 +297,8 @@ class ExecutorGenerator < Generator
 
         args = (fun["args"] or [])
 
-        @out << "(" << (args.map {|arg| decl(arg["type"], arg["name"])}).join(", ") << ");"
+        arg_decls = args.map {|arg| decl(arg["type"], arg["name"])}
+        @out << "(" << arg_decls.join(", ") << ");"
 
         # Argument types without names, captured here so the entrypoint
         # generator sees the same GUEST<>-ness the declaration got.
@@ -348,60 +349,180 @@ class ExecutorGenerator < Generator
                 else
                 end
             else
-                @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
-                record_pascal_entry(name, cname, trap, (fun["return"] or "void"),
-                                    arg_types, arg_names)
+                ret = (fun["return"] or "void")
+                @out << emit_pascal_wrapper(name, ret, arg_types, arg_names, arg_decls)
+                record_pascal_entry(name, cname, trap, ret,
+                                    arg_types, arg_names, arg_decls)
             end
         else
             @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
         end
     end
 
-    # Record a plain Pascal trap so the entrypoint generator can emit a
-    # straight-line 68K entrypoint for it later.
-    def record_pascal_entry(name, cname, trap, ret, arg_types, arg_names)
+    # Record a plain Pascal trap so the entrypoint generator can emit
+    # straight-line entrypoints and a generated wrapper object for it.
+    def record_pascal_entry(name, cname, trap, ret, arg_types, arg_names, arg_decls)
         return unless @pascal_entries
         return unless cname == "C_" + name
         # Types with commas or brackets can't be used as a single template
         # argument; Pascal traps never have them, so skip defensively.
         return if arg_types.any? {|t| t =~ /[,\[\]()]/ }
         @pascal_entries << { name: name, trap: trap, ret: ret,
-                             args: arg_types.zip(arg_names) }
+                             arg_types: arg_types, arg_names: arg_names,
+                             arg_decls: arg_decls }
     end
 
-    # Straight-line 68K entrypoints for a module's Pascal-convention traps.
+    # Local names used in the generated entrypoints, avoiding collisions with
+    # the generated temporaries.
+    RESERVED_LOCALS = ["addr", "retaddr", "ret", "argGetter", "logScope", "saveLR"]
+    def entry_arg_names(arg_names)
+        arg_names.map {|n| RESERVED_LOCALS.include?(n) ? "#{n}_arg" : n }
+    end
+
+    # The generated callable object + wrapper class, declared in the header.
+    def emit_pascal_wrapper(name, ret, arg_types, arg_names, arg_decls)
+        o = +""
+        o << "namespace trapentries { struct Wrapper_#{name} : traps::GeneratedEntrypoint {\n"
+        o << "    using Sig = #{ret}(#{arg_types.join(', ')});\n"
+        o << "    Wrapper_#{name}();\n"
+        o << "    #{ret} operator()(#{arg_decls.join(', ')}) const;\n"
+        o << "    UPP<Sig> operator&() const { return UPP<Sig>(guestFunction()); }\n"
+        o << "}; }\n"
+        o << "extern trapentries::Wrapper_#{name} #{name};\n"
+        o
+    end
+
+    def logging_call(name, callargs)
+        a = callargs.empty? ? "" : ", #{callargs}"
+        "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
+        "    logging::LogNestingScope logScope;\n" \
+        "    if(logScope.active)\n" \
+        "        logging::logTrapCall(\"#{name}\"#{a});\n" \
+        "#endif\n"
+    end
+
+    def logging_return(name, ret, callargs)
+        a = callargs.empty? ? "" : ", #{callargs}"
+        if ret == "void"
+            "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
+            "    if(logScope.active)\n" \
+            "        logging::logTrapVoidReturn(\"#{name}\"#{a});\n" \
+            "#endif\n"
+        else
+            "#ifdef EXECUTOR_ENABLE_LOGGING\n" \
+            "    if(logScope.active)\n" \
+            "        logging::logTrapValReturn(\"#{name}\", ret#{a});\n" \
+            "#endif\n"
+        end
+    end
+
+    # Straight-line 68K entrypoint: pop the return address and the arguments
+    # (right-to-left) off the 68K stack, call the implementation and store the
+    # return value where the caller expects it.  Mirrors callconv::Pascal.
+    def gen_68k_entry(e)
+        names = entry_arg_names(e[:arg_names])
+        callargs = names.join(", ")
+        o = +""
+        o << "static syn68k_addr_t entry_#{e[:name]}(syn68k_addr_t addr [[maybe_unused]])\n"
+        o << "{\n"
+        o << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
+        e[:arg_types].each_with_index.to_a.reverse_each do |type, i|
+            o << "    #{type} #{names[i]} = callconv::stack::pop<#{type}>();\n"
+        end
+        o << logging_call(e[:name], callargs)
+        if e[:ret] == "void"
+            o << "    C_#{e[:name]}(#{callargs});\n"
+        else
+            o << "    #{e[:ret]} ret = C_#{e[:name]}(#{callargs});\n"
+        end
+        o << logging_return(e[:name], e[:ret], callargs)
+        o << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n" unless e[:ret] == "void"
+        o << "    return retaddr;\n"
+        o << "}\n\n"
+        o
+    end
+
+    # Straight-line PowerPC entrypoint.  Reuses callfromPPC::ParameterPasser so
+    # the register/spill ABI is identical to the old callfromPPC::Invoker path.
+    def gen_ppc_entry(e)
+        names = entry_arg_names(e[:arg_names])
+        callargs = names.join(", ")
+        o = +""
+        o << "static uint32_t entry_#{e[:name]}_ppc(PowerCore& cpu)\n"
+        o << "{\n"
+        o << "    uint32_t saveLR = cpu.lr;\n"
+        o << "    EM_A7 = cpu.r[1];\n"
+        unless e[:arg_types].empty?
+            o << "    callfromPPC::ParameterPasser argGetter{cpu, guestvalues::GuestTypeTraits<uint8_t*>::reg_to_host(cpu.r[1] + 24)};\n"
+            e[:arg_types].each_with_index do |type, i|
+                o << "    #{type} #{names[i]};\n"
+            end
+            o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
+        end
+        o << logging_call(e[:name], callargs)
+        if e[:ret] == "void"
+            o << "    C_#{e[:name]}(#{callargs});\n"
+        else
+            o << "    #{e[:ret]} ret = C_#{e[:name]}(#{callargs});\n"
+        end
+        o << logging_return(e[:name], e[:ret], callargs)
+        o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless e[:ret] == "void"
+        o << "    cpu.r[1] = EM_A7;\n"
+        o << "    return saveLR;\n"
+        o << "}\n\n"
+        o
+    end
+
+    def gen_wrapper_methods(e)
+        names = entry_arg_names(e[:arg_names])
+        callargs = names.join(", ")
+        params = e[:arg_types].each_with_index.map {|t, i| "#{t} #{names[i]}" }.join(", ")
+        o = +""
+        o << "Wrapper_#{e[:name]}::Wrapper_#{e[:name]}()\n"
+        o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", #{hexlit(e[:trap])},\n"
+        o << "                          &entry_#{e[:name]}, &entry_#{e[:name]}_ppc)\n"
+        o << "{\n}\n\n"
+        o << "#{e[:ret]} Wrapper_#{e[:name]}::operator()(#{params}) const\n"
+        o << "{\n"
+        if e[:ret] == "void"
+            o << "    if(isPatched())\n"
+            o << "    {\n"
+            o << "        (UPP<Sig>(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
+            o << "        return;\n"
+            o << "    }\n"
+            o << "    C_#{e[:name]}(#{callargs});\n"
+        else
+            o << "    if(isPatched())\n"
+            o << "        return (UPP<Sig>(SYN68K_TO_US(tableEntry())))(#{callargs});\n"
+            o << "    return C_#{e[:name]}(#{callargs});\n"
+        end
+        o << "}\n\n"
+        o
+    end
+
+    # Straight-line 68K/PowerPC entrypoints and wrapper objects for a module's
+    # Pascal-convention traps.
     def generate_trap_entries(module_name, entries)
         out = +""
         out << "// Generated by make-multiverse.rb - DO NOT EDIT\n"
-        out << "// Straight-line 68K entrypoints (Pascal calling convention).\n"
+        out << "// Straight-line 68K/PowerPC entrypoints (Pascal calling convention).\n"
         out << "#include <base/functions.impl.h>\n"
+        out << "#include <base/trap-entry.h>\n"
+        out << "#include <base/logging.h>\n"
         out << "#include <#{module_name}.h>\n\n"
         out << "namespace Executor { namespace trapentries {\n\n"
         entries.each do |e|
-            locals = e[:args].map do |type, aname|
-                safe = ["addr", "retaddr", "ret"].include?(aname) ? "#{aname}_arg" : aname
-                [type, safe]
-            end
-            out << "[[maybe_unused]] static syn68k_addr_t entry_#{e[:name]}(syn68k_addr_t addr)\n"
-            out << "{\n"
-            out << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
-            locals.reverse_each do |type, aname|
-                out << "    #{type} #{aname} = callconv::stack::pop<#{type}>();\n"
-            end
-            callargs = locals.map {|_, aname| aname}.join(", ")
-            if e[:ret] == "void"
-                out << "    C_#{e[:name]}(#{callargs});\n"
-            else
-                out << "    #{e[:ret]} ret = C_#{e[:name]}(#{callargs});\n"
-                out << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n"
-            end
-            out << "    return retaddr;\n"
-            out << "}\n\n"
+            out << gen_68k_entry(e)
+            out << gen_ppc_entry(e)
+            out << gen_wrapper_methods(e)
         end
         out << "void ReferenceEntries_#{module_name}()\n{\n"
         entries.each {|e| out << "    (void)&entry_#{e[:name]};\n" }
         out << "}\n\n"
-        out << "}} // namespace Executor::trapentries\n"
+        out << "} }\n\n"
+        out << "namespace Executor {\n"
+        entries.each {|e| out << "trapentries::Wrapper_#{e[:name]} #{e[:name]};\n" }
+        out << "}\n"
         out
     end
 
@@ -442,6 +563,7 @@ class ExecutorGenerator < Generator
         @out << "#include <cassert>\n"
         @out << "#include <iosfwd>\n"
         @out << "#include <base/lowglobals.h>\n"
+        @out << "#include <base/trap-entry.h>\n"
         #end
 
         header.included.each do |file|
