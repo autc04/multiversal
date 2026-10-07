@@ -396,7 +396,7 @@ class ExecutorGenerator < Generator
         return nil unless args.all? {|arg| arg["register"] }
         return nil if arg_types.any? {|t| t =~ /[,\[\]()]/ }
         conv = regcall_conv(fun)
-        allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord)\z/
+        allowed_arg = /\A(D\d+|A\d+|TrapBit<[^>]*>|D0HighWord|D0LowWord|Out<[^>]*>|InOut<[^>]*>)\z/
         return nil unless conv[:args].all? {|a| a && a =~ allowed_arg }
         return nil unless conv[:ret] =~ /\A(D\d+|A\d+|void)\z/
         { kind: :register, name: name, object: "stub_#{name}", impl: cname, trap: trap,
