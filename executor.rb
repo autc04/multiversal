@@ -295,12 +295,9 @@ class ExecutorGenerator < Generator
 
     def declare_notrap(name, ret, arg_types, arg_names, arg_decls)
         info = notrap_entry_info(name, name, ret, arg_types, arg_names, arg_decls)
-        if info then
-            @out << emit_wrapper(info)
-            @entries << info
-        else
-            @out << "NOTRAP_FUNCTION2(#{name});\n"
-        end
+        raise "unhandled notrap #{name}" if !info
+        @out << emit_wrapper(info)
+        @entries << info
     end
 
     # Structured view of a Register<...> spec, shared by the header emitter and
@@ -362,7 +359,6 @@ class ExecutorGenerator < Generator
                 end
             end    
         end
-        two = name == cname ? "2" : ""
 
         @out << (fun["return"] or "void") << " " << cname
 
@@ -376,14 +372,8 @@ class ExecutorGenerator < Generator
         arg_types = args.map {|arg| decl(arg["type"], "").strip}
         arg_names = args.each_with_index.map {|arg, i| arg["name"] || "arg#{i}"}
 
-        if fun["file_trap"] == "hfs" then
-            trap_sel_disp = hexlit(Integer(trap) & 0xA0FF)
-        else
-            trap_sel_disp = hexlit(trap)
-        end
         if fun["selector"] then
             sub = "SUB"
-            trap_sel_disp += ", #{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])}"
         else
             sub = ""
         end
@@ -414,12 +404,7 @@ class ExecutorGenerator < Generator
                     @entries << v
                 end
             else
-                raise "unhandled flag/Register subtrap #{name}" if fun["variants"] || sub == "SUB"
-                # Plain Register trap the generator could not convert (e.g. an
-                # argument type that cannot be a single template argument).
-                @out << "REGISTER_TRAP#{two}(#{name}, #{trap_sel_disp}, "
-                handle_regcall_conv(fun)
-                @out << ");\n"
+                raise "unhandled flag/Register trap #{name}"
             end
         elsif fun["selector"] then
             ret = (fun["return"] or "void")
@@ -428,8 +413,7 @@ class ExecutorGenerator < Generator
                 @out << emit_wrapper(info)
                 @entries << info
             else
-                @out << "PASCAL_SUBTRAP(#{name}, #{hexlit(trap)}, "
-                @out << "#{hexlit(fun["selector"])}, #{hexlit(fun["dispatcher"])});\n"
+                raise "unhandled Pascal subtrap #{name}"
             end
         elsif trap then
             if name == cname then
@@ -438,7 +422,9 @@ class ExecutorGenerator < Generator
                     @out << emit_wrapper(info)
                     @entries << info
                 elsif args.size == 0 && !fun["return"] then
-                    @out << "REGISTER_TRAP2(#{name}, #{hexlit(trap)}, void());\n"
+                    raise "unhandled void Register trap #{name}"
+                else
+                    raise "unhandled Register trap2 #{name}"
                 end
             else
                 ret = (fun["return"] or "void")
@@ -447,7 +433,7 @@ class ExecutorGenerator < Generator
                     @out << emit_wrapper(info)
                     @entries << info
                 else
-                    @out << "PASCAL_TRAP(#{name}, #{hexlit(trap)});\n"
+                    raise "unhandled Pascal trap #{name}"
                 end
             end
         else
@@ -457,7 +443,7 @@ class ExecutorGenerator < Generator
                 @out << emit_wrapper(info)
                 @entries << info
             else
-                @out << "NOTRAP_FUNCTION#{two}(#{name});\n"
+                raise "unhandled notrap function #{name}"
             end
         end
     end
@@ -1012,9 +998,6 @@ class ExecutorGenerator < Generator
         end
         @out << "\n"
 
-        @out << "#define MODULE_NAME #{header.name}\n"
-        @out << "#include <base/api-module.h>\n"
-
         @out << "\n\n"
 
         @out << "namespace Executor {\n\n"
@@ -1043,7 +1026,6 @@ class ExecutorGenerator < Generator
     def generate(defs)
         print "Writing Headers...\n"
         FileUtils.mkdir_p "#{$options.output_dir}/api"
-        FileUtils.mkdir_p "#{$options.output_dir}/trap_instances"
         FileUtils.mkdir_p "#{$options.output_dir}/structdump"
         FileUtils.mkdir_p "#{$options.output_dir}/trap_entries"
 
@@ -1077,17 +1059,6 @@ class ExecutorGenerator < Generator
                 f << generate_trap_entries(name2, entries)
             end
             entryModules << name2
-            formatted_file "#{$options.output_dir}/trap_instances/#{name2}.cpp" do |f|
-                f << <<END
-#define INSTANTIATE_TRAPS_#{name2}
-#include <#{name2}.h>
-
-// Function for preventing the linker from considering the static constructors in this module unused
-namespace Executor::ReferenceTraps {
-    void #{name2}() {}
-}
-END
-            end
         end
         formatted_file "#{$options.output_dir}/trap_entries/ReferenceAllEntries.cpp" do |f|
             f << "// Generated by make-multiverse.rb - DO NOT EDIT\n"
@@ -1097,22 +1068,8 @@ END
             entryModules.each { |m| f << "    ReferenceEntries_#{m}();\n" }
             f << "}\n}}\n"
         end
-        formatted_file "#{$options.output_dir}/trap_instances/ReferenceAllTraps.cpp" do |f|
-            f << "namespace Executor {\n"
-            f << "namespace ReferenceTraps {\n"
-            moduleList.each { |m| f << "void #{m}();\n" }
-            f << "}\nvoid ReferenceAllTraps() {\n"
-            moduleList.each { |m| f << "ReferenceTraps::#{m}();\n" }
-            f << "}\n}\n"
-        end
         formatted_file "#{$options.output_dir}/structdump/ReferenceAllStructDumps.cpp" do |f|
             f << generate_reference_all_struct_dumps(moduleList)
-        end
-        File.open "#{$options.output_dir}/trap_instances/trap_instances.cmake", "w" do |f|
-            f << "set(trap_instance_sources\n"
-            f << "    \"#{$options.output_dir}/trap_instances/ReferenceAllTraps.cpp\"\n"
-            moduleList.each { |m| f << "    \"#{$options.output_dir}/trap_instances/#{m}.cpp\"\n" }
-            f << ")\n"
         end
         print "Done.\n"
     end
