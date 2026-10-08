@@ -42,5 +42,7 @@
 # ####
 
 - only-for: Executor
-  verbatim: |
-    RAW_68K_TRAP(Pack1, 0xA9E8);
+  function:
+    name: Pack1
+    executor_raw: true
+    trap: 0xA9E8

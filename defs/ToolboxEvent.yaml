@@ -180,3 +180,16 @@
 - function:
     name: GetCaretTime
     return: LONGINT
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: Key1Trans
+    executor_raw: true
+- only-for: Executor
+  function:
+    name: Key2Trans
+    executor_raw: true

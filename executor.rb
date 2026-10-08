@@ -340,6 +340,18 @@ class ExecutorGenerator < Generator
         dispatcher = (fun["dispatcher"] && $global_name_map[fun["dispatcher"]]["dispatcher"])
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
+        # A raw 68K entry: the implementation is a hand-written callconv::Raw
+        # function RAW_<name>, and the wrapper object is stub_<name>.  Only the
+        # prototype is generated; nothing is said about <name> itself.
+        if fun["executor_raw"] then
+            @out << "syn68k_addr_t RAW_#{name}(syn68k_addr_t);"
+            info = { kind: :raw, name: name, object: "stub_#{name}", impl: "RAW_#{name}",
+                     trap: (trap or 0), cc: "" }
+            @out << emit_wrapper(info)
+            @entries << info
+            return
+        end
+
         cname = name
         if fun["executor"] then
             if fun["executor"].is_a?(String) then
@@ -616,6 +628,15 @@ class ExecutorGenerator < Generator
 
     # The generated callable object + wrapper class, declared in the header.
     def emit_wrapper(e)
+        if e[:kind] == :raw
+            o = +""
+            o << "namespace trapentries { struct Wrapper_#{e[:object]} : traps::GeneratedEntrypoint {\n"
+            o << "    Wrapper_#{e[:object]}();\n"
+            o << "    ProcPtr operator&() const { return guestFunction(); }\n"
+            o << "}; }\n"
+            o << "extern trapentries::Wrapper_#{e[:object]} #{e[:object]};\n"
+            return o
+        end
         if e[:kind] == :variant
             o = +""
             o << "namespace trapentries { struct Wrapper_#{e[:object]} : traps::GeneratedEntrypoint {\n"
@@ -705,6 +726,7 @@ class ExecutorGenerator < Generator
     # callfrom68K::Invoker + RegInvoker.
     def gen_68k_entry(e)
         return "" if e[:kind] == :variant
+        return gen_68k_raw_entry(e) if e[:kind] == :raw
         return gen_68k_register_entry(e) if e[:kind] == :register
 
         names = entry_arg_names(e[:arg_names])
@@ -725,6 +747,23 @@ class ExecutorGenerator < Generator
         o << logging_return(e, names)
         o << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n" unless e[:ret] == "void"
         o << "    return retaddr;\n"
+        o << "}\n\n"
+        o
+    end
+
+    # Raw 68K entry: forward to the hand-written RAW_<name> and reproduce
+    # LoggedFunction<callconv::Raw>'s untyped register/stack dump.
+    def gen_68k_raw_entry(e)
+        o = +""
+        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr)\n"
+        o << "{\n"
+        o << "    logging::LogNestingScope logScope;\n"
+        o << "    if(logScope.active)\n"
+        o << "        logging::logUntypedArgs(\"#{e[:name]}\");\n"
+        o << "    syn68k_addr_t ret = #{e[:impl]}(addr);\n"
+        o << "    if(logScope.active)\n"
+        o << "        logging::logUntypedReturn(\"#{e[:name]}\");\n"
+        o << "    return ret;\n"
         o << "}\n\n"
         o
     end
@@ -765,6 +804,7 @@ class ExecutorGenerator < Generator
     # Straight-line PowerPC entrypoint.  Reuses callfromPPC::ParameterPasser so
     # the register/spill ABI is identical to the old callfromPPC::Invoker path.
     def gen_ppc_entry(e)
+        return "" if e[:kind] == :raw
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         o = +""
@@ -794,6 +834,14 @@ class ExecutorGenerator < Generator
     end
 
     def gen_wrapper_methods(e)
+        if e[:kind] == :raw
+            o = +""
+            o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
+            o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", nullptr, #{hexlit(e[:trap])},\n"
+            o << "                          &entry_#{e[:object]}, nullptr)\n"
+            o << "{\n}\n\n"
+            return o
+        end
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         params = e[:arg_types].each_with_index.map {|t, i| "#{t} #{names[i]}" }.join(", ")
@@ -899,6 +947,8 @@ class ExecutorGenerator < Generator
         entries.each do |e|
             if e[:kind] == :dispatcher
                 out << "    (void)&#{e[:object]};\n"
+            elsif e[:kind] == :raw
+                out << "    (void)&entry_#{e[:object]};\n"
             else
                 out << "    (void)&entry_#{e[:object]}_ppc;\n"
             end

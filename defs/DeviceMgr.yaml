@@ -443,3 +443,28 @@
       - name: rn
         type: INTEGER
     executor: true
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: DrvrInstall
+    executor_raw: true
+    trap: 0xA03D
+- only-for: Executor
+  function:
+    name: DrvrRemove
+    executor_raw: true
+    trap: 0xA03E
+- only-for: Executor
+  function:
+    name: SlotManager
+    executor_raw: true
+    trap: 0xA06E
+- only-for: Executor
+  function:
+    name: SCSIDispatch
+    executor_raw: true
+    trap: 0xA815

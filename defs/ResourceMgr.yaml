@@ -188,8 +188,10 @@
 # ####
 
 - only-for: Executor
-  verbatim: |
-    RAW_68K_TRAP(ResourceStub, 0xA0FC); // defined in emustubs.cpp
+  function:
+    name: ResourceStub
+    executor_raw: true
+    trap: 0xA0FC
 
 # ####
 
