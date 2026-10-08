@@ -469,11 +469,12 @@
 
 # ####
 
-- only-for: Executor
-  function:
+- function:
     name: GetGrayRgn
     return: RgnHandle
     executor: C_
+    inline: LMGetGrayRgn()
+    noinline: ppc
 
 # ####
 
