@@ -247,9 +247,15 @@
 # ####
 
 - only-for: Executor
-  verbatim: |
-    extern OSErr C_GetFrontProcess(ProcessSerialNumber *serial_number, int32_t dummy = -1);
-    PASCAL_SUBTRAP(GetFrontProcess, 0xA88F, 0x0039, OSDispatch);
+  function:
+    name: GetFrontProcess
+    return: OSErr
+    args:
+      - name: serial_number
+        type: ProcessSerialNumber*
+    dispatcher: OSDispatch
+    selector: 0x0039
+    executor: C_
 
 # ####
 
