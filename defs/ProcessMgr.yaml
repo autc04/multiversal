@@ -253,6 +253,12 @@
     args:
       - name: serial_number
         type: ProcessSerialNumber*
+      - name: dummy
+        type: int32_t
+    comment: |
+      The second "dummy" parameter is part of the 68K ABI: Apple's inline
+      opcodes make every caller pass -1 for it, and it is ignored.  On PPC
+      there is no second parameter, but the convention makes it harmless.
     dispatcher: OSDispatch
     selector: 0x0039
     executor: C_
