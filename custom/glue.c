@@ -231,6 +231,7 @@ pascal OSErr HOpenRF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
     pb.fileParam.ioDirID = dirid;
     pb.fileParam.ioNamePtr = (StringPtr)name;
     pb.ioParam.ioPermssn = perm;
+    pb.ioParam.ioMisc = NULL;
     OSErr err = PBHOpenRFSync(&pb);
     *refp = pb.ioParam.ioRefNum;
     return err;
@@ -243,6 +244,7 @@ pascal OSErr HOpen(INTEGER vref, LONGINT dirid, ConstStringPtr name,
     pb.fileParam.ioDirID = dirid;
     pb.fileParam.ioNamePtr = (StringPtr)name;
     pb.ioParam.ioPermssn = perm;
+    pb.ioParam.ioMisc = NULL;
     OSErr err = PBHOpenSync(&pb);
     *refp = pb.ioParam.ioRefNum;
     return err;
@@ -256,6 +258,7 @@ pascal OSErr HOpenDF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
     pb.fileParam.ioDirID = dirid;
     pb.fileParam.ioNamePtr = (StringPtr)name;
     pb.ioParam.ioPermssn = perm;
+    pb.ioParam.ioMisc = NULL;
     OSErr err = PBHOpenDFSync(&pb);
     *refp = pb.ioParam.ioRefNum;
     return err;
