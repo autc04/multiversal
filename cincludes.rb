@@ -277,9 +277,13 @@ class CIncludesGenerator < Generator
         @out << "typedef #{what} #{value["name"]} #{value["name"]};"
                 
         if value["members"] then
+            # align: power is PowerPC alignment, in place of the 68k
+            # 2-byte packing every header is wrapped in.
+            @out << "\n#pragma pack(push)\n#pragma pack()\n" if value["align"] == "power"
             @out << "#{what} #{value["name"]} {"
             declare_members(value["members"])
             @out << "};"
+            @out << "\n#pragma pack(pop)\n" if value["align"] == "power"
         end
     end
 
@@ -289,6 +293,16 @@ class CIncludesGenerator < Generator
 
 
     def declare_funptr(value)
+        if value["callconv"] == "C" then
+            # A native C function pointer: no pascal, no UPP, name as given.
+            args = (value["args"] or [])
+            @out << "typedef " << (value["return"] or "void") << " "
+            @out << "(*" << value["name"] << ")("
+            @out << args.map {|arg|decl(arg["type"], arg["name"])}.join(", ")
+            @out << ");\n"
+            return
+        end
+
         @out << "typedef pascal "
 
         name = value["name"]

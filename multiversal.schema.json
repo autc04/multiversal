@@ -50,6 +50,11 @@
                     },
                     {
                         "type": "object",
+                        "required": [ "define" ],
+                        "properties": { "define": { "$ref": "#/definitions/define" } }
+                    },
+                    {
+                        "type": "object",
                         "required": [ "verbatim" ],
                         "properties": { "verbatim": { "$ref": "#/definitions/verbatim" } }
                     },
@@ -168,6 +173,16 @@
             },
             "additionalProperties": false,
             "required": [ "name", "type", "address" ]
+        },
+        "define": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "value": { "$ref": "#/definitions/expr" },
+                "comment": { "type": "string" }
+            },
+            "required": [ "name", "value" ],
+            "additionalProperties": false
         },
         "verbatim": {
             "type": "string"
