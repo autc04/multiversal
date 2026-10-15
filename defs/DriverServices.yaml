@@ -833,7 +833,7 @@
         value: "'blok'"
       - name: kServiceCategorySCSISim
         value: "'scsi'"
-      - name: kServiceCategoryndrvdriver
+      - name: kServiceCategoryNdrvDriver
         value: "'ndrv'"
         comment: generic native driver; also used by display drivers
     comment: |
