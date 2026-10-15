@@ -105,6 +105,7 @@ static AppFile *AppFilePtr(short index)
     {
         AppFile *f = (AppFile *)p;
         p += (8 + 1 + f->fName[0] + 1) & ~1;
+        index--;
     }
     return (AppFile *)p;
 }
