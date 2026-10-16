@@ -495,13 +495,20 @@
     name: _AE_hdlr_table_alloc
     return: OSErr
     args:
-      - type: int32_t
-      - type: int32_t
-      - type: int32_t
-      - type: int8_t
-      - type: AE_hdlr_table_h*
+      - name: n_elts
+        type: int32_t
+      - name: unknown_2
+        type: int32_t
+      - name: unknown_3
+        type: int32_t
+      - name: unknown_p
+        type: int8_t
+      - name: table_return
+        type: AE_hdlr_table_h*
     comment: |
-      "internal". TODO: verify if they really exist as entry points.
+      Private/undocumented entry point.  The first argument is the initial
+      table capacity (the ROM passes 16, HyperCard passes 175 and 105); the
+      remaining arguments are not understood.
     dispatcher: Pack8
     selector: 0x092E
     executor: C_
