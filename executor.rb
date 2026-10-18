@@ -352,9 +352,9 @@ class ExecutorGenerator < Generator
         dispatcher = (fun["dispatcher"] && $global_name_map[fun["dispatcher"]]["dispatcher"])
         trap = (fun["trap"] or (dispatcher and dispatcher["trap"]))
 
-        # A raw 68K entry: the implementation is a hand-written callconv::Raw
-        # function RAW_<name>, and the wrapper object is stub_<name>.  Only the
-        # prototype is generated; nothing is said about <name> itself.
+        # A raw 68K entry: the implementation is a hand-written
+        # syn68k_addr_t RAW_<name>(syn68k_addr_t) function, and the wrapper
+        # object is stub_<name>.
         if fun["executor_raw"] then
             @out << "syn68k_addr_t RAW_#{name}(syn68k_addr_t);"
             info = { kind: :raw, name: name, object: "stub_#{name}", impl: "RAW_#{name}",
