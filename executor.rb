@@ -19,9 +19,12 @@ class ExecutorGenerator < Generator
         @upp_reps = {}
         @upp_defs_by_module = {}
         @upp_checks_by_module = {}
-        # Keys that need a createCallbackUPP definition (the ones a
-        # WrappedFunction can use: funptr signatures and executor_marshaling).
-        @upp_callback_keys = Set.new
+        # The PPC marshaller is keyed on the signature alone, so it needs its own
+        # representative and per-module definition list.
+        @upp_ppc_reps = {}
+        @upp_ppc_defs_by_module = {}
+        @upp_next_id = 0
+        @upp_next_ppc_id = 0
     end
 
     def need_guest
@@ -393,7 +396,7 @@ class ExecutorGenerator < Generator
         if not fun["executor"]
             if fun["executor_marshaling"] then
                 register_upp_candidate((fun["return"] or "void"), arg_types,
-                                       funptr_cc(fun), callback: true)
+                                       funptr_cc(fun), conv: funptr_conv(fun))
             end
         elsif fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
@@ -678,13 +681,17 @@ class ExecutorGenerator < Generator
     # by every trap that uses it, so that --logtraps instantiates no template
     # per trap: each entrypoint passes its values plus a pointer to the shared
     # printer table and a single non-template function formats them.
-    def log_printer_types(entries)
+    def log_printer_types(entries, upp_defs, upp_ppc_defs)
         types = []
         index = {}
         entries.each do |e|
             next if e[:kind] == :dispatcher
             (e[:arg_types] || []).each {|t| log_add_type(types, index, t) }
             log_add_type(types, index, e[:ret]) if e[:ret] && e[:ret] != "void"
+        end
+        (upp_defs + upp_ppc_defs).each do |c|
+            c[:args].each {|t| log_add_type(types, index, t) }
+            log_add_type(types, index, c[:ret]) if c[:ret] != "void"
         end
         [types, index]
     end
@@ -925,8 +932,13 @@ class ExecutorGenerator < Generator
         out << "namespace Executor { namespace trapentries {\n\n"
         entries.each {|e| out << e[:helper] if e[:helper] }
 
-        # Per-type argument/return printers, shared by every trap in the module.
-        log_types, @log_index = log_printer_types(entries)
+        defs = @upp_defs_by_module[module_name] || []
+        ppc_defs = @upp_ppc_defs_by_module[module_name] || []
+        checks = @upp_checks_by_module[module_name] || []
+
+        # Per-type argument/return printers, shared by every trap and marshaller
+        # in the module.
+        log_types, @log_index = log_printer_types(entries, defs, ppc_defs)
         unless log_types.empty?
             log_types.each_with_index do |t, i|
                 out << "static void logArg_#{i}(const void* p) { logging::logValue(*(const #{t}*)p); }\n"
@@ -936,6 +948,18 @@ class ExecutorGenerator < Generator
                 next if (e[:arg_types] || []).empty?
                 out << "static const logging::LogArgFn logPrinters_#{e[:object]}[] = { "
                 out << e[:arg_types].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
+                out << " };\n"
+            end
+            defs.each do |c|
+                next if c[:args].empty?
+                out << "static const logging::LogArgFn logPrintersUpp_#{c[:upp_id]}[] = { "
+                out << c[:args].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
+                out << " };\n"
+            end
+            ppc_defs.each do |c|
+                next if c[:args].empty?
+                out << "static const logging::LogArgFn logPrintersUppPpc_#{c[:ppc_id]}[] = { "
+                out << c[:args].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
                 out << " };\n"
             end
         end
@@ -968,16 +992,15 @@ class ExecutorGenerator < Generator
         end
         out << "}\n"
 
-        defs = @upp_defs_by_module[module_name] || []
-        checks = @upp_checks_by_module[module_name] || []
-        unless defs.empty? && checks.empty?
+        unless defs.empty? && ppc_defs.empty? && checks.empty?
             out << "\nnamespace Executor {\n"
             checks.each do |c|
                 out << "static_assert(std::is_same_v<#{upp_type(c)}, #{upp_canonical_type(c)}>,\n"
                 out << "              \"UPP signature canonicalisation changed the C++ type\");\n"
             end
             out << "\n" unless checks.empty?
-            defs.each {|c| out << upp_definitions(c, with_callback: @upp_callback_keys.include?(upp_key(c))) }
+            defs.each {|c| out << upp_68k_definitions(c) }
+            ppc_defs.each {|c| out << upp_ppc_definition(c) }
             out << "}\n"
         end
         out
@@ -1011,7 +1034,7 @@ class ExecutorGenerator < Generator
 
         register_upp_candidate((value["return"] or "void"),
                                args.map {|arg| decl(arg["type"], "").strip},
-                               funptr_cc(value), callback: true)
+                               funptr_cc(value), conv: funptr_conv(value))
     end
 
     def declare_verbatim(value)
@@ -1033,8 +1056,21 @@ class ExecutorGenerator < Generator
     # that first declares the signature; every other module that mentions it
     # gets declarations (repeating a declaration is harmless).
 
-    def register_upp_candidate(ret, arg_types, cc, callback: false)
-        @upp_pending << { ret: ret, args: arg_types, cc: cc, callback: callback }
+    def register_upp_candidate(ret, arg_types, cc, conv: nil)
+        @upp_pending << { ret: ret, args: arg_types, cc: cc, conv: conv }
+    end
+
+    # The register/extras part of a funptr or executor_marshaling declaration,
+    # or nil for Pascal/CCall.  The 68K marshaller body is generated from it.
+    def funptr_conv(value)
+        args = (value["args"] or [])
+        if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]}
+            conv = regcall_conv(value)
+            { ret: conv[:ret], args: conv[:args],
+              extras: (conv[:extras] || "").split(",").map(&:strip).reject(&:empty?) }
+        else
+            nil
+        end
     end
 
     def funptr_cc(value)
@@ -1111,6 +1147,17 @@ class ExecutorGenerator < Generator
         "#{c[:ret]}(#{c[:args].join(', ')})"
     end
 
+    # The PPC marshaller is keyed on the signature alone; the 68K calling
+    # convention (register/extras descriptors) does not exist on PowerPC.
+    def upp_ppc_key(c)
+        [canon_type(c[:ret]),
+         c[:args].map {|a| canon_type(a, param: true) }].join(" | ")
+    end
+
+    def upp_cc_type(c)
+        c[:cc].to_s.empty? ? "callconv::Pascal" : c[:cc]
+    end
+
     def upp_type(c)
         cc = c[:cc].to_s.empty? ? "" : ", #{c[:cc]}"
         "UPP<#{upp_sig(c)}#{cc}>"
@@ -1133,14 +1180,196 @@ class ExecutorGenerator < Generator
         c[:args].each_with_index.map {|t, i| "a#{i}" }.join(", ")
     end
 
+    def upp_arglist(c)
+        c[:args].each_index.map {|i| "a#{i}" }
+    end
+
     def upp_is_ccall?(c)
         canon_cc(c[:cc]) == "CCall"
     end
 
+    # ---- marshaller bodies ---------------------------------------------
+
+    def upp_printer_name(id_key, c)
+        id_key == :ppc_id ? "trapentries::logPrintersUppPpc_#{c[:ppc_id]}" : "trapentries::logPrintersUpp_#{c[:upp_id]}"
+    end
+
+    def upp_log_values(args)
+        return "" if args.empty?
+        "        const void* lgvals[] = { #{args.map {|a| "&#{a}" }.join(", ")} };\n"
+    end
+
+    def upp_log_call(c, args, id_key)
+        o = +""
+        o << "    logging::LogNestingScope logScope;\n"
+        o << "    if(logScope.active)\n"
+        o << "    {\n"
+        o << upp_log_values(args)
+        if args.empty?
+            o << "        logging::logTrapCallData(ep->name, nullptr, nullptr, 0);\n"
+        else
+            o << "        logging::logTrapCallData(ep->name, #{upp_printer_name(id_key, c)}, lgvals, #{args.size});\n"
+        end
+        o << "    }\n"
+        o
+    end
+
+    def upp_log_return(c, args, id_key)
+        if args.empty?
+            values = "nullptr, nullptr, 0"
+        else
+            values = "#{upp_printer_name(id_key, c)}, lgvals, #{args.size}"
+        end
+        o = +""
+        o << "    if(logScope.active)\n"
+        o << "    {\n"
+        o << upp_log_values(args)
+        if c[:ret] == "void"
+            o << "        logging::logTrapVoidReturnData(ep->name, #{values});\n"
+        else
+            o << "        logging::logTrapValReturnData(ep->name, trapentries::logArg_#{@log_index[log_type_key(c[:ret])]}, &ret, #{values});\n"
+        end
+        o << "    }\n"
+        o
+    end
+
+    def upp_68k_definition(c)
+        names = upp_arglist(c)
+        ret = c[:ret]
+        args = c[:args]
+        conv = c[:conv]
+        o = +""
+        o << "syn68k_addr_t invokeFrom68K(syn68k_addr_t addr [[maybe_unused]], "
+        o << "#{ret} (*f)(#{args.join(', ')}), traps::Entrypoint* ep, const #{upp_cc_type(c)}*)\n"
+        o << "{\n"
+        if conv
+            extras = conv[:extras] || []
+            extras.each_with_index {|x, i| o << "    #{x} e#{i};\n" }
+            o << "    syn68k_addr_t retaddr = POPADDR();\n"
+            conv[:args].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
+            args.each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]} = c#{i};\n" }
+            o << upp_log_call(c, names, :upp_id)
+            if ret == "void"
+                o << "    f(#{names.join(', ')});\n"
+            else
+                o << "    #{ret} ret = f(#{names.join(', ')});\n"
+            end
+            o << upp_log_return(c, names, :upp_id)
+            o << "    callconv::#{conv[:ret]}::set(ret);\n" unless conv[:ret] == "void"
+            if extras.empty?
+                o << "    return retaddr;\n"
+            else
+                o << "    syn68k_addr_t r = retaddr;\n"
+                extras.each_index.to_a.reverse_each {|i| o << "    r = e#{i}.afterwards(r);\n" }
+                o << "    return r;\n"
+            end
+        elsif upp_is_ccall?(c)
+            unless args.empty?
+                o << "    std::tuple<#{args.join(', ')}> args;\n"
+                o << "    syn68k_addr_t p = EM_A7 + 4;\n"
+                args.each_index {|i| o << "    callfrom68K::readCArg(std::get<#{i}>(args), p);\n" }
+            end
+            values = args.each_index.map {|i| "std::get<#{i}>(args)" }
+            o << upp_log_call(c, values, :upp_id)
+            if ret == "void"
+                o << "    f(#{values.join(', ')});\n"
+            else
+                o << "    #{ret} ret = f(#{values.join(', ')});\n"
+            end
+            o << upp_log_return(c, values, :upp_id)
+            o << "    EM_D0 = ret;\n" unless ret == "void"
+            o << "    return callconv::stack::pop<syn68k_addr_t>();\n"
+        else
+            o << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
+            args.each_with_index.to_a.reverse_each do |t, i|
+                o << "    std::decay_t<#{t}> #{names[i]} = callconv::stack::pop<std::decay_t<#{t}>>();\n"
+            end
+            o << upp_log_call(c, names, :upp_id)
+            if ret == "void"
+                o << "    f(#{names.join(', ')});\n"
+            else
+                o << "    #{ret} ret = f(#{names.join(', ')});\n"
+            end
+            o << upp_log_return(c, names, :upp_id)
+            o << "    *ptr_from_longint<GUEST<#{ret}>*>(EM_A7) = ret;\n" unless ret == "void"
+            o << "    return retaddr;\n"
+        end
+        o << "}\n\n"
+        o
+    end
+
+    def upp_ppc_definition(c)
+        names = upp_arglist(c)
+        ret = c[:ret]
+        args = c[:args]
+        o = +""
+        o << "uint32_t invokeFromPPC(PowerCore& cpu, "
+        o << "#{ret} (*f)(#{args.join(', ')}), traps::Entrypoint* ep)\n"
+        o << "{\n"
+        o << "    uint32_t saveLR = cpu.lr;\n"
+        o << "    EM_A7 = cpu.r[1];\n"
+        unless args.empty?
+            o << "    callfromPPC::ParameterPasser argGetter{cpu, guestvalues::GuestTypeTraits<uint8_t*>::reg_to_host(cpu.r[1] + 24)};\n"
+            args.each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]};\n" }
+            o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
+        end
+        o << upp_log_call(c, names, :ppc_id)
+        if ret == "void"
+            o << "    f(#{names.join(', ')});\n"
+        else
+            o << "    #{ret} ret = f(#{names.join(', ')});\n"
+        end
+        o << upp_log_return(c, names, :ppc_id)
+        o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless ret == "void"
+        o << "    cpu.r[1] = EM_A7;\n"
+        o << "    return saveLR;\n"
+        o << "}\n\n"
+        o
+    end
+
+    def upp_call_definition(c)
+        return "" if upp_is_ccall?(c)
+        logcc = upp_cc_type(c)
+        o = +""
+        o << "#{c[:ret]} invokeUPP(const #{upp_type(c)}& f"
+        o << ", #{upp_params(c)}" unless c[:args].empty?
+        o << ")\n{\n"
+        o << "    return callto68K::Invoker<#{upp_sig(c)}, #{logcc}>::invoke68K(f.ptr"
+        o << ", #{upp_argnames(c)}" unless c[:args].empty?
+        o << ");\n}\n\n"
+        o
+    end
+
+    def upp_callback_definition(c)
+        t = upp_type(c)
+        o = +""
+        o << "void createCallbackUPP(#{c[:ret]} (*f)(#{c[:args].join(', ')}), #{t}& out, traps::Entrypoint* ep)\n{\n"
+        o << "    out = #{t}(SYN68K_TO_US(traps::callback_install(\n"
+        o << "        [f, ep](syn68k_addr_t addr)\n"
+        o << "        {\n"
+        o << "            if(auto ret = ep->checkBreak68K(addr); ~ret)\n"
+        o << "                return ret;\n"
+        o << "            return invokeFrom68K(addr, f, ep, (const #{upp_cc_type(c)}*)nullptr);\n"
+        o << "        })));\n"
+        o << "}\n\n"
+        o
+    end
+
+    def upp_68k_definitions(c)
+        upp_68k_definition(c) + upp_call_definition(c) + upp_callback_definition(c)
+    end
+
     def upp_declarations(local_reps)
         o = +""
+        seen_ppc = Set.new
         local_reps.each_value do |c|
             t = upp_type(c)
+            o << "syn68k_addr_t invokeFrom68K(syn68k_addr_t, #{c[:ret]} (*)(#{c[:args].join(', ')}), traps::Entrypoint*, const #{upp_cc_type(c)}*);\n"
+            ppc_key = upp_ppc_key(c)
+            unless seen_ppc.include?(ppc_key)
+                seen_ppc << ppc_key
+                o << "uint32_t invokeFromPPC(PowerCore&, #{c[:ret]} (*)(#{c[:args].join(', ')}), traps::Entrypoint*);\n"
+            end
             unless upp_is_ccall?(c)
                 o << "#{c[:ret]} invokeUPP(const #{t}& f"
                 o << ", #{upp_params(c)}" unless c[:args].empty?
@@ -1149,33 +1378,6 @@ class ExecutorGenerator < Generator
             o << "void createCallbackUPP(#{c[:ret]} (*f)(#{c[:args].join(', ')}), "
             o << "#{t}& out, traps::Entrypoint* ep);\n"
         end
-        o
-    end
-
-    def upp_definitions(c, with_callback:)
-        t = upp_type(c)
-        logcc = c[:cc].to_s.empty? ? "callconv::Pascal" : c[:cc]
-        sig = upp_sig(c)
-        o = +""
-        unless upp_is_ccall?(c)
-            o << "#{c[:ret]} invokeUPP(const #{t}& f"
-            o << ", #{upp_params(c)}" unless c[:args].empty?
-            o << ")\n{\n"
-            o << "    return callto68K::Invoker<#{sig}, #{logcc}>::invoke68K(f.ptr"
-            o << ", #{upp_argnames(c)}" unless c[:args].empty?
-            o << ");\n}\n\n"
-        end
-        return o unless with_callback
-        o << "void createCallbackUPP(#{c[:ret]} (*f)(#{c[:args].join(', ')}), #{t}& out, traps::Entrypoint* ep)\n{\n"
-        o << "    out = #{t}(SYN68K_TO_US(traps::callback_install(\n"
-        o << "        [f, ep](syn68k_addr_t addr)\n"
-        o << "        {\n"
-        o << "            if(auto ret = ep->checkBreak68K(addr); ~ret)\n"
-        o << "                return ret;\n"
-        o << "            return callfrom68K::Invoker<#{sig}, #{logcc}>::invokeFrom68K(addr,\n"
-        o << "                logging::makeLoggedFunction<#{logcc}>(ep->name, f));\n"
-        o << "        })));\n"
-        o << "}\n\n"
         o
     end
      
@@ -1203,21 +1405,32 @@ class ExecutorGenerator < Generator
     def generate_postamble(header)
         @entries.each do |e|
             next unless [:pascal, :register, :sub, :notrap].include?(e[:kind])
-            register_upp_candidate(e[:ret], e[:arg_types], e[:cc])
+            conv = nil
+            if e[:kind] == :register
+                conv = { ret: e[:retconv], args: e[:argconvs], extras: e[:extras] }
+            end
+            register_upp_candidate(e[:ret], e[:arg_types], e[:cc], conv: conv)
         end
 
         module_name = remap_name(header.name)
         local_reps = {}
         @upp_pending.each do |c|
             key = upp_key(c)
-            @upp_callback_keys << key if c[:callback]
             next if local_reps.key?(key)
             local_reps[key] = c
             (@upp_checks_by_module[module_name] ||= []) << c
 
             if !@upp_reps.key?(key)
+                c[:upp_id] = (@upp_next_id += 1)
                 @upp_reps[key] = c
                 (@upp_defs_by_module[module_name] ||= []) << c
+            end
+
+            ppc_key = upp_ppc_key(c)
+            if !@upp_ppc_reps.key?(ppc_key)
+                c[:ppc_id] = (@upp_next_ppc_id += 1)
+                @upp_ppc_reps[ppc_key] = c
+                (@upp_ppc_defs_by_module[module_name] ||= []) << c
             end
         end
         @upp_pending = []
@@ -1265,7 +1478,8 @@ class ExecutorGenerator < Generator
         moduleList = []
         entryModules = []
         generated = []
-        # Pass 1: generate every header so that @upp_callback_keys is complete
+        # Pass 1: generate every header so that the per-module marshaller
+        # definition lists are complete before any definition is written.
         # before any definition is written.
         defs.topsort.each do |name|
             name2 = remap_name(name)
