@@ -650,4 +650,5 @@
 
 - typedef:
     name: ControlRef
-    type: ControlPtr
+    type: ControlHandle
+
