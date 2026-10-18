@@ -1,0 +1,17 @@
+# Executor-specific API declarations.
+#
+# These are ordinary API functions: they are emitted for the CIncludes
+# consumer as well as for Executor.  They are not traps, and they are not
+# exported through the PowerPC CFM entry points.
+
+- function:
+    name: ExecutorUnixMount
+    return: OSErr
+    args:
+      - name: cpbp
+        type: CInfoPBRec*
+    m68k-inline: [0x2078, 0x0058, 0x2068, 0x0020, 0x4E90]
+    executor_marshaling: true
+    comment: |
+      Published to the guest through the table at low-memory address 0x58,
+      which Executor fills in by hand; this is not a trap.
