@@ -1026,3 +1026,42 @@
       - name: dst
         type: char *
     carbon: only
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: EqualString
+    executor_raw: true
+    trap: 0xA03C
+- only-for: Executor
+  function:
+    name: RelString
+    executor_raw: true
+    trap: 0xA050
+- only-for: Executor
+  function:
+    name: UpperString
+    executor_raw: true
+    trap: 0xA054
+- only-for: Executor
+  function:
+    name: IMVI_LowerText
+    executor_raw: true
+    trap: 0xA056
+- only-for: Executor
+  function:
+    name: IMVI_ReadXPRam
+    executor_raw: true
+    trap: 0xA051
+- only-for: Executor
+  function:
+    name: Unimplemented
+    executor_raw: true
+    trap: 0xA89F
+- only-for: Executor
+  function:
+    name: bad_trap_unimplemented
+    executor_raw: true

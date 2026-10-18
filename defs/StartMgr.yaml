@@ -96,3 +96,38 @@
     address: 0xDA6
     comment: |
       StartMgr IMV (false);
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: GetDefaultStartup
+    executor_raw: true
+    trap: 0xA07D
+- only-for: Executor
+  function:
+    name: SetDefaultStartup
+    executor_raw: true
+    trap: 0xA07E
+- only-for: Executor
+  function:
+    name: GetVideoDefault
+    executor_raw: true
+    trap: 0xA080
+- only-for: Executor
+  function:
+    name: SetVideoDefault
+    executor_raw: true
+    trap: 0xA081
+- only-for: Executor
+  function:
+    name: GetOSDefault
+    executor_raw: true
+    trap: 0xA084
+- only-for: Executor
+  function:
+    name: SetOSDefault
+    executor_raw: true
+    trap: 0xA083

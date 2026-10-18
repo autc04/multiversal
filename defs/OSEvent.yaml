@@ -460,3 +460,13 @@
     dispatcher: OSDispatch
     selector: 0x0034
     executor: C_
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: PostEvent
+    executor_raw: true
+    trap: 0xA02F

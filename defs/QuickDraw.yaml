@@ -3282,3 +3282,13 @@
     args:
       - name: bm
         type: BitMap *
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: WackyQD32Trap
+    executor_raw: true
+    trap: 0xAB03

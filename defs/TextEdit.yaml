@@ -414,6 +414,30 @@
 
 # ####
 
+# The native default for LM(TEDoText).  Apple documents the hook as taking its
+# arguments in registers, not on the stack: the TE record in A3, the three
+# INTEGERs in D3/D4/D7, the result in D0.
+- only-for: Executor
+  funptr:
+    return: INTEGER
+    args:
+      - name: tep
+        type: TEPtr
+        register: A3
+      - name: start
+        type: INTEGER
+        register: D3
+      - name: end
+        type: INTEGER
+        register: D4
+      - name: what
+        type: INTEGER
+        register: D7
+    returnreg: D0
+    name: TEDoTextUPP
+
+# ####
+
 - lowmem:
     name: TERecal
     type: ProcPtr

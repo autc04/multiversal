@@ -118,3 +118,13 @@
     executor: true
     trap: 0xA07A
     returnreg: D0
+
+# ####
+# Raw 68K entry points (Executor only).  The wrapper objects and the
+# RAW_<name> prototypes are generated; the bodies live in emustubs.cpp
+# (or pack.cpp/patches.cpp), and emustubs.h keeps only the structs.
+- only-for: Executor
+  function:
+    name: ADBOp
+    executor_raw: true
+    trap: 0xA07C

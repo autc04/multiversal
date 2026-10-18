@@ -93,6 +93,26 @@
 
 # ####
 
+- funptr:
+    args:
+      - name: lMessage
+        type: INTEGER
+      - name: lSelect
+        type: Boolean
+      - name: lRect
+        type: Rect*
+      - name: lCell
+        type: Cell
+      - name: lDataOffset
+        type: INTEGER
+      - name: lDataLen
+        type: INTEGER
+      - name: lHandle
+        type: ListHandle
+    name: ListDefUPP
+
+# ####
+
 - enum:
     values:
       - name: lGrowBox

@@ -650,4 +650,20 @@
 
 - typedef:
     name: ControlRef
-    type: ControlPtr
+    type: ControlHandle
+
+# ####
+
+- funptr:
+    return: LONGINT
+    args:
+      - name: varCode
+        type: INTEGER
+      - name: theControl
+        type: ControlHandle
+      - name: message
+        type: INTEGER
+      - name: param
+        type: LONGINT
+    name: ControlDefUPP
+

@@ -469,10 +469,12 @@
 
 # ####
 
-- only-for: Executor
-  verbatim: |
-    inline RgnHandle GetGrayRgn() { return LM(GrayRgn); }
-    NOTRAP_FUNCTION2(GetGrayRgn);
+- function:
+    name: GetGrayRgn
+    return: RgnHandle
+    executor: C_
+    inline: LMGetGrayRgn()
+    noinline: ppc
 
 # ####
 
