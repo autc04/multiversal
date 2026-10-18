@@ -685,7 +685,7 @@ class ExecutorGenerator < Generator
         types = []
         index = {}
         entries.each do |e|
-            next if e[:kind] == :dispatcher
+            next unless e[:kind] == :variant
             (e[:arg_types] || []).each {|t| log_add_type(types, index, t) }
             log_add_type(types, index, e[:ret]) if e[:ret] && e[:ret] != "void"
         end
@@ -730,94 +730,14 @@ class ExecutorGenerator < Generator
         o
     end
 
-    # Straight-line 68K entrypoint.  Dispatches on the calling convention: the
-    # Pascal form mirrors callconv::Pascal; the Register form mirrors
-    # callfrom68K::Invoker + RegInvoker.
-    def gen_68k_entry(e)
-        return "" if e[:kind] == :variant
-        return gen_68k_raw_entry(e) if e[:kind] == :raw
-        return gen_68k_register_entry(e) if e[:kind] == :register
-
-        names = entry_arg_names(e[:arg_names])
-        callargs = names.join(", ")
-        o = +""
-        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr [[maybe_unused]])\n"
-        o << "{\n"
-        o << "    syn68k_addr_t retaddr = callconv::stack::pop<syn68k_addr_t>();\n"
-        e[:arg_types].each_with_index.to_a.reverse_each do |type, i|
-            o << "    std::decay_t<#{type}> #{names[i]} = callconv::stack::pop<std::decay_t<#{type}>>();\n"
-        end
-        o << logging_call(e, names)
-        if e[:ret] == "void"
-            o << "    #{e[:impl]}(#{callargs});\n"
-        else
-            o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
-        end
-        o << logging_return(e, names)
-        o << "    *ptr_from_longint<GUEST<#{e[:ret]}>*>(EM_A7) = ret;\n" unless e[:ret] == "void"
-        o << "    return retaddr;\n"
-        o << "}\n\n"
-        o
-    end
-
-    # Raw 68K entry: forward to the hand-written RAW_<name> and reproduce
-    # LoggedFunction<callconv::Raw>'s untyped register/stack dump.
-    def gen_68k_raw_entry(e)
-        o = +""
-        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr)\n"
-        o << "{\n"
-        o << "    logging::LogNestingScope logScope;\n"
-        o << "    if(logScope.active)\n"
-        o << "        logging::logUntypedArgs(\"#{e[:name]}\");\n"
-        o << "    syn68k_addr_t ret = #{e[:impl]}(addr);\n"
-        o << "    if(logScope.active)\n"
-        o << "        logging::logUntypedReturn(\"#{e[:name]}\");\n"
-        o << "    return ret;\n"
-        o << "}\n\n"
-        o
-    end
-
-    # Descriptor-driven 68K entrypoint for a Register-convention trap.  The
-    # descriptors do the register/bit reads and conversions; this unrolls the
-    # construct -> convert -> call -> set-return sequence.
-    def gen_68k_register_entry(e)
-        names = entry_arg_names(e[:arg_names])
-        callargs = names.join(", ")
-        extras = (e[:extras] || [])
-        o = +""
-        o << "static syn68k_addr_t entry_#{e[:object]}(syn68k_addr_t addr [[maybe_unused]])\n"
-        o << "{\n"
-        extras.each_with_index {|x, i| o << "    #{x} e#{i};\n" }
-        o << "    syn68k_addr_t retaddr = POPADDR();\n"
-        e[:argconvs].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
-        e[:arg_types].each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]} = c#{i};\n" }
-        o << logging_call(e, names)
-        if e[:ret] == "void"
-            o << "    #{e[:impl]}(#{callargs});\n"
-        else
-            o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
-        end
-        o << logging_return(e, names)
-        o << "    callconv::#{e[:retconv]}::set(ret);\n" unless e[:retconv] == "void"
-        if extras.empty?
-            o << "    return retaddr;\n"
-        else
-            o << "    syn68k_addr_t r = retaddr;\n"
-            extras.each_index.to_a.reverse_each {|i| o << "    r = e#{i}.afterwards(r);\n" }
-            o << "    return r;\n"
-        end
-        o << "}\n\n"
-        o
-    end
-
-    # Straight-line PowerPC entrypoint.  Reuses callfromPPC::ParameterPasser so
-    # the register/spill ABI is identical to the old callfromPPC::Invoker path.
+    # PowerPC adapter for a PPC-only variant entry.  Typed traps use the
+    # per-signature invokeFromPPC marshaller from their constructor instead.
     def gen_ppc_entry(e)
-        return "" if e[:kind] == :raw
+        return "" unless e[:kind] == :variant
         names = entry_arg_names(e[:arg_names])
         callargs = names.join(", ")
         o = +""
-        o << "static uint32_t entry_#{e[:object]}_ppc(PowerCore& cpu)\n"
+        o << "static uint32_t entry_#{e[:object]}_ppc(PowerCore& cpu [[maybe_unused]], traps::Entrypoint* ep [[maybe_unused]])\n"
         o << "{\n"
         o << "    uint32_t saveLR = cpu.lr;\n"
         o << "    EM_A7 = cpu.r[1];\n"
@@ -842,12 +762,36 @@ class ExecutorGenerator < Generator
         o
     end
 
+    def entry_cc_type(e)
+        e[:cc].to_s.empty? ? "callconv::Pascal" : e[:cc]
+    end
+
+    # The two non-capturing entry lambdas passed to GeneratedEntrypoint.  They
+    # name the trap implementation so its type is checked against the
+    # signature's marshaller, with no erased implementation pointer.
+    def entry_lambdas(e)
+        cc = entry_cc_type(e)
+        o = +""
+        o << "                          [](syn68k_addr_t addr, traps::Entrypoint* ep) -> syn68k_addr_t\n"
+        o << "                          {\n"
+        o << "                              return invokeFrom68K(addr, &#{e[:impl]}, ep, (const #{cc}*)nullptr);\n"
+        o << "                          },\n"
+        o << "                          [](PowerCore& cpu, traps::Entrypoint* ep) -> uint32_t\n"
+        o << "                          {\n"
+        o << "                              return invokeFromPPC(cpu, &#{e[:impl]}, ep);\n"
+        o << "                          }"
+        o
+    end
+
     def gen_wrapper_methods(e)
         if e[:kind] == :raw
             o = +""
             o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
             o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", nullptr, #{hexlit(e[:trap])},\n"
-            o << "                          &entry_#{e[:object]}, nullptr)\n"
+            o << "                          [](syn68k_addr_t addr, traps::Entrypoint* ep) -> syn68k_addr_t\n"
+            o << "                          {\n"
+            o << "                              return invokeFromRaw68K(addr, &#{e[:impl]}, ep);\n"
+            o << "                          }, nullptr)\n"
             o << "{\n}\n\n"
             return o
         end
@@ -880,7 +824,7 @@ class ExecutorGenerator < Generator
             o = +""
             o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
             o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", 0,\n"
-            o << "                          &entry_#{e[:object]}, &entry_#{e[:object]}_ppc,\n"
+            o << entry_lambdas(e) << ",\n"
             o << "                          &#{e[:dispatcher]}, #{e[:selector]})\n"
             o << "{\n}\n\n"
             o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
@@ -898,7 +842,7 @@ class ExecutorGenerator < Generator
         o = +""
         o << "Wrapper_#{e[:object]}::Wrapper_#{e[:object]}()\n"
         o << "    : traps::GeneratedEntrypoint(\"#{e[:name]}\", \"InterfaceLib\", #{hexlit(e[:trap])},\n"
-        o << "                          &entry_#{e[:object]}, &entry_#{e[:object]}_ppc)\n"
+        o << entry_lambdas(e) << ")\n"
         o << "{\n}\n\n"
         o << "#{e[:ret]} Wrapper_#{e[:object]}::operator()(#{params}) const\n"
         o << "{\n"
@@ -944,7 +888,7 @@ class ExecutorGenerator < Generator
                 out << "static void logArg_#{i}(const void* p) { logging::logValue(*(const #{t}*)p); }\n"
             end
             entries.each do |e|
-                next if e[:kind] == :dispatcher
+                next unless e[:kind] == :variant
                 next if (e[:arg_types] || []).empty?
                 out << "static const logging::LogArgFn logPrinters_#{e[:object]}[] = { "
                 out << e[:arg_types].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
@@ -966,19 +910,12 @@ class ExecutorGenerator < Generator
         out << "\n"
         entries.each do |e|
             next if e[:kind] == :dispatcher
-            out << gen_68k_entry(e)
             out << gen_ppc_entry(e)
             out << gen_wrapper_methods(e)
         end
         out << "void ReferenceEntries_#{module_name}()\n{\n"
         entries.each do |e|
-            if e[:kind] == :dispatcher
-                out << "    (void)&#{e[:object]};\n"
-            elsif e[:kind] == :raw
-                out << "    (void)&entry_#{e[:object]};\n"
-            else
-                out << "    (void)&entry_#{e[:object]}_ppc;\n"
-            end
+            out << "    (void)&#{e[:object]};\n"
         end
         out << "}\n\n"
         out << "} }\n\n"
