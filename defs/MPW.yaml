@@ -6,7 +6,7 @@
     args:
       - name: file
         type: MPWFile*
-    return: LONGINT
+    return: int32_t
     callconv: C
 
 - funptr:
@@ -19,10 +19,10 @@
       - name: name
         type: char*
       - name: op
-        type: LONGINT
+        type: int32_t
       - name: file
         type: MPWFile*
-    return: LONGINT
+    return: int32_t
     callconv: C
 
 - funptr:
@@ -31,10 +31,10 @@
       - name: file
         type: MPWFile*
       - name: cmd
-        type: LONGINT
+        type: int32_t
       - name: param
         type: void*
-    return: LONGINT
+    return: int32_t
     callconv: C
 
 
