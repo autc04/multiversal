@@ -761,6 +761,37 @@
 
 # ####
 
+- funptr:
+    args:
+      - name: message
+        type: INTEGER
+      - name: theMenu
+        type: MenuRef
+      - name: menuRect
+        type: Rect*
+      - name: hitPt
+        type: Point
+      - name: whichItem
+        type: INTEGER*
+    name: MenuDefUPP
+
+# ####
+
+- funptr:
+    return: LONGINT
+    args:
+      - name: selector
+        type: INTEGER
+      - name: message
+        type: INTEGER
+      - name: parameter1
+        type: INTEGER
+      - name: parameter2
+        type: LONGINT
+    name: MenuBarDefUPP
+
+# ####
+
 - function:
     name: CheckMenuItem
     args:

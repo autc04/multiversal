@@ -739,3 +739,20 @@
     dispatcher: ResourceDispatch
     selector: 0x000A
     executor: C_
+
+# ####
+
+# The decompressor in a `dcmp` resource.  Executor-internal; there is no
+# public Apple name for it.
+- only-for: Executor
+  funptr:
+    args:
+      - name: source
+        type: Ptr
+      - name: dest
+        type: Ptr
+      - name: working
+        type: Ptr
+      - name: len
+        type: Size
+    name: ResourceDecompressionUPP
