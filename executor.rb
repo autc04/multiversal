@@ -395,8 +395,9 @@ class ExecutorGenerator < Generator
 
         if not fun["executor"]
             if fun["executor_marshaling"] then
+                cc, conv = funptr_callconv(fun)
                 register_upp_candidate((fun["return"] or "void"), arg_types,
-                                       funptr_cc(fun), conv: funptr_conv(fun))
+                                       cc, conv: conv)
             end
         elsif fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
@@ -696,38 +697,46 @@ class ExecutorGenerator < Generator
         [types, index]
     end
 
-    def log_desc_args(e)
-        return "nullptr, nullptr, 0" if (e[:arg_types] || []).empty?
-        "logPrinters_#{e[:object]}, lgvals, #{e[:arg_types].size}"
+    def log_values(args)
+        return "" if args.empty?
+        "        const void* lgvals[] = { #{args.map {|n| "&#{n}" }.join(", ")} };\n"
     end
 
-    def log_values(e, names)
-        return "" if (e[:arg_types] || []).empty?
-        "        const void* lgvals[] = { #{names.map {|n| "&#{n}" }.join(", ")} };\n"
-    end
-
-    def logging_call(e, names)
-        "    logging::LogNestingScope logScope;\n" \
-        "    if(logScope.active)\n" \
-        "    {\n" \
-        "#{log_values(e, names)}" \
-        "        logging::logTrapCallData(\"#{e[:name]}\", #{log_desc_args(e)});\n" \
-        "    }\n"
-    end
-
-    def logging_return(e, names)
+    def log_call(name_expr, printer_table, args)
         o = +""
+        o << "    logging::LogNestingScope logScope;\n"
         o << "    if(logScope.active)\n"
         o << "    {\n"
-        o << log_values(e, names)
-        if e[:ret] == "void"
-            o << "        logging::logTrapVoidReturnData(\"#{e[:name]}\", #{log_desc_args(e)});\n"
+        o << log_values(args)
+        if args.empty?
+            o << "        logging::logTrapCallData(#{name_expr}, nullptr, nullptr, 0);\n"
         else
-            o << "        logging::logTrapValReturnData(\"#{e[:name]}\", "
-            o << "logArg_#{@log_index[log_type_key(e[:ret])]}, &ret, #{log_desc_args(e)});\n"
+            o << "        logging::logTrapCallData(#{name_expr}, #{printer_table}, lgvals, #{args.size});\n"
         end
         o << "    }\n"
         o
+    end
+
+    def log_return(name_expr, printer_table, ret, args, qualifier: "")
+        values = args.empty? ? "nullptr, nullptr, 0" : "#{printer_table}, lgvals, #{args.size}"
+        o = +""
+        o << "    if(logScope.active)\n"
+        o << "    {\n"
+        o << log_values(args)
+        if ret == "void"
+            o << "        logging::logTrapVoidReturnData(#{name_expr}, #{values});\n"
+        else
+            o << "        logging::logTrapValReturnData(#{name_expr}, #{qualifier}logArg_#{@log_index[log_type_key(ret)]}, &ret, #{values});\n"
+        end
+        o << "    }\n"
+        o
+    end
+
+    def emit_log_printer_table(out, name, types)
+        return if types.empty?
+        out << "static const logging::LogArgFn #{name}[] = { "
+        out << types.map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
+        out << " };\n"
     end
 
     # PowerPC adapter for a PPC-only variant entry.  Typed traps use the
@@ -748,13 +757,13 @@ class ExecutorGenerator < Generator
             end
             o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
         end
-        o << logging_call(e, names)
+        o << log_call("\"#{e[:name]}\"", "logPrinters_#{e[:object]}", names)
         if e[:ret] == "void"
             o << "    #{e[:impl]}(#{callargs});\n"
         else
             o << "    #{e[:ret]} ret = #{e[:impl]}(#{callargs});\n"
         end
-        o << logging_return(e, names)
+        o << log_return("\"#{e[:name]}\"", "logPrinters_#{e[:object]}", e[:ret], names)
         o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless e[:ret] == "void"
         o << "    cpu.r[1] = EM_A7;\n"
         o << "    return saveLR;\n"
@@ -762,15 +771,11 @@ class ExecutorGenerator < Generator
         o
     end
 
-    def entry_cc_type(e)
-        e[:cc].to_s.empty? ? "callconv::Pascal" : e[:cc]
-    end
-
     # The two non-capturing entry lambdas passed to GeneratedEntrypoint.  They
     # name the trap implementation so its type is checked against the
     # signature's marshaller, with no erased implementation pointer.
     def entry_lambdas(e)
-        cc = entry_cc_type(e)
+        cc = upp_cc_type(e)
         o = +""
         o << "                          [](syn68k_addr_t addr, traps::Entrypoint* ep) -> syn68k_addr_t\n"
         o << "                          {\n"
@@ -889,22 +894,13 @@ class ExecutorGenerator < Generator
             end
             entries.each do |e|
                 next unless e[:kind] == :variant
-                next if (e[:arg_types] || []).empty?
-                out << "static const logging::LogArgFn logPrinters_#{e[:object]}[] = { "
-                out << e[:arg_types].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
-                out << " };\n"
+                emit_log_printer_table(out, "logPrinters_#{e[:object]}", e[:arg_types] || [])
             end
             defs.each do |c|
-                next if c[:args].empty?
-                out << "static const logging::LogArgFn logPrintersUpp_#{c[:upp_id]}[] = { "
-                out << c[:args].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
-                out << " };\n"
+                emit_log_printer_table(out, "logPrintersUpp_#{c[:upp_id]}", c[:args])
             end
             ppc_defs.each do |c|
-                next if c[:args].empty?
-                out << "static const logging::LogArgFn logPrintersUppPpc_#{c[:ppc_id]}[] = { "
-                out << c[:args].map {|t| "logArg_#{@log_index[log_type_key(t)]}" }.join(", ")
-                out << " };\n"
+                emit_log_printer_table(out, "logPrintersUppPpc_#{c[:ppc_id]}", c[:args])
             end
         end
         out << "\n"
@@ -960,18 +956,19 @@ class ExecutorGenerator < Generator
         args = (value["args"] or [])
         @out << args.map {|arg|decl(arg["type"], arg["name"])}.join(", ")
         @out << ")"
-        if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]} then
+        cc, conv = funptr_callconv(value)
+        if cc.start_with?("callconv::Register<")
             @out << ", Register<"
             handle_regcall_conv(value)
             @out << ">"
-        elsif value["callconv"] == "C" then
+        elsif cc == "callconv::CCall" then
             @out << ", callconv::CCall"
         end
         @out << ">;\n"
 
         register_upp_candidate((value["return"] or "void"),
                                args.map {|arg| decl(arg["type"], "").strip},
-                               funptr_cc(value), conv: funptr_conv(value))
+                               cc, conv: conv)
     end
 
     def declare_verbatim(value)
@@ -997,27 +994,20 @@ class ExecutorGenerator < Generator
         @upp_pending << { ret: ret, args: arg_types, cc: cc, conv: conv }
     end
 
-    # The register/extras part of a funptr or executor_marshaling declaration,
-    # or nil for Pascal/CCall.  The 68K marshaller body is generated from it.
-    def funptr_conv(value)
+    # The UPP convention of a funptr or executor_marshaling declaration: the
+    # emitted `cc` string plus the decomposed 68K convention (nil for
+    # Pascal/CCall).  The 68K marshaller body is generated from the latter.
+    def funptr_callconv(value)
         args = (value["args"] or [])
         if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]}
             conv = regcall_conv(value)
-            { ret: conv[:ret], args: conv[:args],
-              extras: (conv[:extras] || "").split(",").map(&:strip).reject(&:empty?) }
-        else
-            nil
-        end
-    end
-
-    def funptr_cc(value)
-        args = (value["args"] or [])
-        if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]}
-            register_cc(regcall_conv(value))
+            [register_cc(conv),
+             { ret: conv[:ret], args: conv[:args],
+               extras: (conv[:extras] || "").split(",").map(&:strip).reject(&:empty?) }]
         elsif value["callconv"] == "C"
-            "callconv::CCall"
+            ["callconv::CCall", nil]
         else
-            ""
+            ["", nil]
         end
     end
 
@@ -1074,47 +1064,45 @@ class ExecutorGenerator < Generator
         prefix + builtin.gsub(/\s+/, " ")
     end
 
-    def upp_key(c)
+    def upp_sig_key(c)
         [canon_type(c[:ret]),
-         c[:args].map {|a| canon_type(a, param: true)},
-         canon_cc(c[:cc])].join(" | ")
+         c[:args].map {|a| canon_type(a, param: true) }]
     end
 
-    def upp_sig(c)
-        "#{c[:ret]}(#{c[:args].join(', ')})"
+    def upp_key(c)
+        (upp_sig_key(c) + [canon_cc(c[:cc])]).join(" | ")
     end
 
     # The PPC marshaller is keyed on the signature alone; the 68K calling
     # convention (register/extras descriptors) does not exist on PowerPC.
     def upp_ppc_key(c)
-        [canon_type(c[:ret]),
-         c[:args].map {|a| canon_type(a, param: true) }].join(" | ")
+        upp_sig_key(c).join(" | ")
     end
 
     def upp_cc_type(c)
         c[:cc].to_s.empty? ? "callconv::Pascal" : c[:cc]
     end
 
+    def upp_type_for(ret, args, cc)
+        cc = cc.to_s.empty? ? "" : ", #{cc}"
+        "UPP<#{ret}(#{args.join(', ')})#{cc}>"
+    end
+
     def upp_type(c)
-        cc = c[:cc].to_s.empty? ? "" : ", #{c[:cc]}"
-        "UPP<#{upp_sig(c)}#{cc}>"
+        upp_type_for(c[:ret], c[:args], c[:cc])
     end
 
     # The same type written from the canonical spelling.  Used to check that a
     # spelling was merged (or kept apart) for the right reason: it is emitted in
     # the spelling's own module, so every name in it is in scope.
     def upp_canonical_type(c)
-        cc = c[:cc].to_s.empty? ? "" : ", #{c[:cc]}"
-        sig = "#{canon_type(c[:ret])}(#{c[:args].map {|a| canon_type(a, param: true)}.join(', ')})"
-        "UPP<#{sig}#{cc}>"
+        upp_type_for(canon_type(c[:ret]),
+                     c[:args].map {|a| canon_type(a, param: true) },
+                     c[:cc])
     end
 
     def upp_params(c)
         c[:args].each_with_index.map {|t, i| "#{t} a#{i}" }.join(", ")
-    end
-
-    def upp_argnames(c)
-        c[:args].each_with_index.map {|t, i| "a#{i}" }.join(", ")
     end
 
     def upp_arglist(c)
@@ -1129,45 +1117,6 @@ class ExecutorGenerator < Generator
 
     def upp_printer_name(id_key, c)
         id_key == :ppc_id ? "trapentries::logPrintersUppPpc_#{c[:ppc_id]}" : "trapentries::logPrintersUpp_#{c[:upp_id]}"
-    end
-
-    def upp_log_values(args)
-        return "" if args.empty?
-        "        const void* lgvals[] = { #{args.map {|a| "&#{a}" }.join(", ")} };\n"
-    end
-
-    def upp_log_call(c, args, id_key)
-        o = +""
-        o << "    logging::LogNestingScope logScope;\n"
-        o << "    if(logScope.active)\n"
-        o << "    {\n"
-        o << upp_log_values(args)
-        if args.empty?
-            o << "        logging::logTrapCallData(ep->name, nullptr, nullptr, 0);\n"
-        else
-            o << "        logging::logTrapCallData(ep->name, #{upp_printer_name(id_key, c)}, lgvals, #{args.size});\n"
-        end
-        o << "    }\n"
-        o
-    end
-
-    def upp_log_return(c, args, id_key)
-        if args.empty?
-            values = "nullptr, nullptr, 0"
-        else
-            values = "#{upp_printer_name(id_key, c)}, lgvals, #{args.size}"
-        end
-        o = +""
-        o << "    if(logScope.active)\n"
-        o << "    {\n"
-        o << upp_log_values(args)
-        if c[:ret] == "void"
-            o << "        logging::logTrapVoidReturnData(ep->name, #{values});\n"
-        else
-            o << "        logging::logTrapValReturnData(ep->name, trapentries::logArg_#{@log_index[log_type_key(c[:ret])]}, &ret, #{values});\n"
-        end
-        o << "    }\n"
-        o
     end
 
     def upp_68k_definition(c)
@@ -1185,13 +1134,13 @@ class ExecutorGenerator < Generator
             o << "    syn68k_addr_t retaddr = POPADDR();\n"
             conv[:args].each_with_index {|cc, i| o << "    callconv::#{cc} c#{i};\n" }
             args.each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]} = c#{i};\n" }
-            o << upp_log_call(c, names, :upp_id)
+            o << log_call("ep->name", upp_printer_name(:upp_id, c), names)
             if ret == "void"
                 o << "    f(#{names.join(', ')});\n"
             else
                 o << "    #{ret} ret = f(#{names.join(', ')});\n"
             end
-            o << upp_log_return(c, names, :upp_id)
+            o << log_return("ep->name", upp_printer_name(:upp_id, c), ret, names, qualifier: "trapentries::")
             o << "    callconv::#{conv[:ret]}::set(ret);\n" unless conv[:ret] == "void"
             if extras.empty?
                 o << "    return retaddr;\n"
@@ -1207,13 +1156,13 @@ class ExecutorGenerator < Generator
                 args.each_index {|i| o << "    callconv::readCArg(std::get<#{i}>(args), p);\n" }
             end
             values = args.each_index.map {|i| "std::get<#{i}>(args)" }
-            o << upp_log_call(c, values, :upp_id)
+            o << log_call("ep->name", upp_printer_name(:upp_id, c), values)
             if ret == "void"
                 o << "    f(#{values.join(', ')});\n"
             else
                 o << "    #{ret} ret = f(#{values.join(', ')});\n"
             end
-            o << upp_log_return(c, values, :upp_id)
+            o << log_return("ep->name", upp_printer_name(:upp_id, c), ret, values, qualifier: "trapentries::")
             o << "    EM_D0 = ret;\n" unless ret == "void"
             o << "    return callconv::stack::pop<syn68k_addr_t>();\n"
         else
@@ -1221,13 +1170,13 @@ class ExecutorGenerator < Generator
             args.each_with_index.to_a.reverse_each do |t, i|
                 o << "    std::decay_t<#{t}> #{names[i]} = callconv::stack::pop<std::decay_t<#{t}>>();\n"
             end
-            o << upp_log_call(c, names, :upp_id)
+            o << log_call("ep->name", upp_printer_name(:upp_id, c), names)
             if ret == "void"
                 o << "    f(#{names.join(', ')});\n"
             else
                 o << "    #{ret} ret = f(#{names.join(', ')});\n"
             end
-            o << upp_log_return(c, names, :upp_id)
+            o << log_return("ep->name", upp_printer_name(:upp_id, c), ret, names, qualifier: "trapentries::")
             o << "    *ptr_from_longint<GUEST<#{ret}>*>(EM_A7) = ret;\n" unless ret == "void"
             o << "    return retaddr;\n"
         end
@@ -1250,13 +1199,13 @@ class ExecutorGenerator < Generator
             args.each_with_index {|t, i| o << "    std::decay_t<#{t}> #{names[i]};\n" }
             o << "    (void)(argGetter >> #{names.join(' >> ')});\n"
         end
-        o << upp_log_call(c, names, :ppc_id)
+        o << log_call("ep->name", upp_printer_name(:ppc_id, c), names)
         if ret == "void"
             o << "    f(#{names.join(', ')});\n"
         else
             o << "    #{ret} ret = f(#{names.join(', ')});\n"
         end
-        o << upp_log_return(c, names, :ppc_id)
+        o << log_return("ep->name", upp_printer_name(:ppc_id, c), ret, names, qualifier: "trapentries::")
         o << "    callfromPPC::ParameterPasser{cpu, nullptr}.set(ret);\n" unless ret == "void"
         o << "    cpu.r[1] = EM_A7;\n"
         o << "    return saveLR;\n"
