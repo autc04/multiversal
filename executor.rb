@@ -1204,7 +1204,7 @@ class ExecutorGenerator < Generator
             unless args.empty?
                 o << "    std::tuple<#{args.join(', ')}> args;\n"
                 o << "    syn68k_addr_t p = EM_A7 + 4;\n"
-                args.each_index {|i| o << "    callfrom68K::readCArg(std::get<#{i}>(args), p);\n" }
+                args.each_index {|i| o << "    callconv::readCArg(std::get<#{i}>(args), p);\n" }
             end
             values = args.each_index.map {|i| "std::get<#{i}>(args)" }
             o << upp_log_call(c, values, :upp_id)
@@ -1266,14 +1266,32 @@ class ExecutorGenerator < Generator
 
     def upp_call_definition(c)
         return "" if upp_is_ccall?(c)
-        logcc = upp_cc_type(c)
+        names = upp_arglist(c)
+        ret = c[:ret]
+        conv = c[:conv]
         o = +""
-        o << "#{c[:ret]} invokeUPP(const #{upp_type(c)}& f"
+        o << "#{ret} invokeUPP(const #{upp_type(c)}& f"
         o << ", #{upp_params(c)}" unless c[:args].empty?
         o << ")\n{\n"
-        o << "    return callto68K::Invoker<#{upp_sig(c)}, #{logcc}>::invoke68K(f.ptr"
-        o << ", #{upp_argnames(c)}" unless c[:args].empty?
-        o << ");\n}\n\n"
+        if conv
+            conv[:args].each_with_index do |cc, i|
+                o << "    callconv::#{cc}::set(#{names[i]});\n"
+            end
+            o << "    execute68K(US_TO_SYN68K(f.ptr));\n"
+            conv[:args].each_index.to_a.reverse_each do |i|
+                o << "    callconv::#{conv[:args][i]}::afterCall(#{names[i]});\n"
+            end
+            o << "    return callconv::#{conv[:ret]}();\n" unless conv[:ret] == "void"
+        else
+            o << "    callconv::stack::push(std::decay_t<#{ret}>());\n" unless ret == "void"
+            names.each {|n| o << "    callconv::stack::push(#{n});\n" }
+            o << "    M68kReg saveregs[14];\n"
+            o << "    memcpy(saveregs, &EM_D1, sizeof(saveregs)); /* d1-d7/a0-a6 */\n"
+            o << "    execute68K(US_TO_SYN68K(f.ptr));\n"
+            o << "    memcpy(&EM_D1, saveregs, sizeof(saveregs)); /* d1-d7/a0-a6 */\n"
+            o << "    return callconv::stack::pop<#{ret}>();\n" unless ret == "void"
+        end
+        o << "}\n\n"
         o
     end
 
