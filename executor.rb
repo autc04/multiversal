@@ -10,6 +10,18 @@ class ExecutorGenerator < Generator
         @need_guest = false
         @noguest_types = Set.new(["void"])
         @expand_common = false
+
+        # Emitted typedef definitions, used to canonicalise signature spellings.
+        @typedef_emitted = {}
+        # Candidates seen while generating one header.
+        @upp_pending = []
+        # Canonical key => representative candidate, and per-module work lists.
+        @upp_reps = {}
+        @upp_defs_by_module = {}
+        @upp_checks_by_module = {}
+        # Keys that need a createCallbackUPP definition (the ones a
+        # WrappedFunction can use: funptr signatures and executor_marshaling).
+        @upp_callback_keys = Set.new
     end
 
     def need_guest
@@ -378,7 +390,11 @@ class ExecutorGenerator < Generator
             sub = ""
         end
 
-        if not fun["executor"] then
+        if not fun["executor"]
+            if fun["executor_marshaling"] then
+                register_upp_candidate((fun["return"] or "void"), arg_types,
+                                       funptr_cc(fun), callback: true)
+            end
         elsif fun["file_trap"] == "mfs" then
         elsif fun["file_trap"] == "hfs" then
             infos = file_entry_infos(fun, name, cname, trap, arg_types, arg_names, arg_decls)
@@ -903,6 +919,7 @@ class ExecutorGenerator < Generator
         out << "// Straight-line 68K/PowerPC entrypoints and wrapper objects.\n"
         out << "#include <base/functions.impl.h>\n"
         out << "#include <base/trap-entry.h>\n"
+        out << "#include <base/traps.impl.h>\n"
         out << "#include <base/logging.h>\n"
         out << "#include <#{module_name}.h>\n\n"
         out << "namespace Executor { namespace trapentries {\n\n"
@@ -950,7 +967,28 @@ class ExecutorGenerator < Generator
             end
         end
         out << "}\n"
+
+        defs = @upp_defs_by_module[module_name] || []
+        checks = @upp_checks_by_module[module_name] || []
+        unless defs.empty? && checks.empty?
+            out << "\nnamespace Executor {\n"
+            checks.each do |c|
+                out << "static_assert(std::is_same_v<#{upp_type(c)}, #{upp_canonical_type(c)}>,\n"
+                out << "              \"UPP signature canonicalisation changed the C++ type\");\n"
+            end
+            out << "\n" unless checks.empty?
+            defs.each {|c| out << upp_definitions(c, with_callback: @upp_callback_keys.include?(upp_key(c))) }
+            out << "}\n"
+        end
         out
+    end
+
+    # Record the emitted definition so that signature canonicalisation can
+    # resolve typedefs exactly the way the generated header does.
+    def declare_typedef(value)
+        t1, pre, post = guestify_type(value["type"], @need_guest)
+        @typedef_emitted[value["name"]] = "#{t1}#{pre}#{post}".strip
+        super
     end
 
     def declare_funptr(value)
@@ -970,6 +1008,10 @@ class ExecutorGenerator < Generator
             @out << ", callconv::CCall"
         end
         @out << ">;\n"
+
+        register_upp_candidate((value["return"] or "void"),
+                               args.map {|arg| decl(arg["type"], "").strip},
+                               funptr_cc(value), callback: true)
     end
 
     def declare_verbatim(value)
@@ -980,6 +1022,161 @@ class ExecutorGenerator < Generator
 
     def remap_name(name)
         name == "MacTypes" ? "ExMacTypes" : name
+    end
+
+    # ---- UPP marshalling -------------------------------------------------
+    #
+    # One `invokeUPP` / `createCallbackUPP` per distinct C++ signature.  The
+    # key is the emitted C++ type, not the YAML spelling: typedefs are
+    # transparent, so LONGINT/int32_t, MenuRef/MenuHandle, DialogPtr/WindowPtr
+    # and friends collapse.  The definitions are emitted once, in the module
+    # that first declares the signature; every other module that mentions it
+    # gets declarations (repeating a declaration is harmless).
+
+    def register_upp_candidate(ret, arg_types, cc, callback: false)
+        @upp_pending << { ret: ret, args: arg_types, cc: cc, callback: callback }
+    end
+
+    def funptr_cc(value)
+        args = (value["args"] or [])
+        if value["returnreg"] || value["executor_extras"] || args.any? {|arg| arg["register"]}
+            register_cc(regcall_conv(value))
+        elsif value["callconv"] == "C"
+            "callconv::CCall"
+        else
+            ""
+        end
+    end
+
+    def canon_cc(cc)
+        cc.to_s.sub(/\Acallconv::/, "").gsub(/\s+/, "")
+    end
+
+    def canon_type(type, param: false, seen: [])
+        t = type.to_s.strip
+        return "void" if t.empty?
+
+        is_const = false
+        if t =~ /\Aconst\s+(.*)\z/
+            is_const = true
+            t = $1.strip
+        elsif t =~ /\A(.*?)\s+const\z/
+            is_const = true
+            t = $1.strip
+        end
+        prefix = is_const ? "const " : ""
+
+        if t =~ /\A(.*?)\s*(\[[^\]]*\])\z/
+            base, suffix = $1.strip, $2
+            return prefix + canon_type(base, param: false, seen: seen) + (param ? "*" : suffix)
+        end
+
+        if t =~ /\A(.*?)\s*\*\z/
+            return prefix + canon_type($1.strip, param: false, seen: seen) + "*"
+        end
+
+        if t =~ /\AGUEST<\s*(.*?)\s*>\z/
+            inner = canon_type($1.strip, param: false, seen: seen)
+            # GuestType<T> is T for GUEST_STRUCT types, so GUEST<Struct> and
+            # Struct are the same C++ type.
+            if @noguest_types && inner != "void" && @noguest_types.include?(inner)
+                return prefix + inner
+            end
+            return prefix + "GUEST<" + inner + ">"
+        end
+
+        if @typedef_emitted && @typedef_emitted.key?(t)
+            raise "typedef cycle through #{t}" if seen.include?(t)
+            return prefix + canon_type(@typedef_emitted[t], param: param, seen: seen + [t])
+        end
+
+        builtin = {
+            "signed char" => "int8_t",
+            "unsigned char" => "uint8_t",
+            "signed short" => "int16_t",
+            "unsigned short" => "uint16_t",
+            "signed int" => "int32_t",
+            "unsigned int" => "uint32_t",
+        }[t] || t
+        prefix + builtin.gsub(/\s+/, " ")
+    end
+
+    def upp_key(c)
+        [canon_type(c[:ret]),
+         c[:args].map {|a| canon_type(a, param: true)},
+         canon_cc(c[:cc])].join(" | ")
+    end
+
+    def upp_sig(c)
+        "#{c[:ret]}(#{c[:args].join(', ')})"
+    end
+
+    def upp_type(c)
+        cc = c[:cc].to_s.empty? ? "" : ", #{c[:cc]}"
+        "UPP<#{upp_sig(c)}#{cc}>"
+    end
+
+    # The same type written from the canonical spelling.  Used to check that a
+    # spelling was merged (or kept apart) for the right reason: it is emitted in
+    # the spelling's own module, so every name in it is in scope.
+    def upp_canonical_type(c)
+        cc = c[:cc].to_s.empty? ? "" : ", #{c[:cc]}"
+        sig = "#{canon_type(c[:ret])}(#{c[:args].map {|a| canon_type(a, param: true)}.join(', ')})"
+        "UPP<#{sig}#{cc}>"
+    end
+
+    def upp_params(c)
+        c[:args].each_with_index.map {|t, i| "#{t} a#{i}" }.join(", ")
+    end
+
+    def upp_argnames(c)
+        c[:args].each_with_index.map {|t, i| "a#{i}" }.join(", ")
+    end
+
+    def upp_is_ccall?(c)
+        canon_cc(c[:cc]) == "CCall"
+    end
+
+    def upp_declarations(local_reps)
+        o = +""
+        local_reps.each_value do |c|
+            t = upp_type(c)
+            unless upp_is_ccall?(c)
+                o << "#{c[:ret]} invokeUPP(const #{t}& f"
+                o << ", #{upp_params(c)}" unless c[:args].empty?
+                o << ");\n"
+            end
+            o << "void createCallbackUPP(#{c[:ret]} (*f)(#{c[:args].join(', ')}), "
+            o << "#{t}& out, traps::Entrypoint* ep);\n"
+        end
+        o
+    end
+
+    def upp_definitions(c, with_callback:)
+        t = upp_type(c)
+        logcc = c[:cc].to_s.empty? ? "callconv::Pascal" : c[:cc]
+        sig = upp_sig(c)
+        o = +""
+        unless upp_is_ccall?(c)
+            o << "#{c[:ret]} invokeUPP(const #{t}& f"
+            o << ", #{upp_params(c)}" unless c[:args].empty?
+            o << ")\n{\n"
+            o << "    return callto68K::Invoker<#{sig}, #{logcc}>::invoke68K(f.ptr"
+            o << ", #{upp_argnames(c)}" unless c[:args].empty?
+            o << ");\n}\n\n"
+        end
+        return o unless with_callback
+        o << "void createCallbackUPP(#{c[:ret]} (*f)(#{c[:args].join(', ')}), #{t}& out, traps::Entrypoint* ep)\n{\n"
+        o << "    out = #{t}(SYN68K_TO_US(traps::callback_install(\n"
+        o << "        [f, ep](syn68k_addr_t addr)\n"
+        o << "        {\n"
+        o << "            if(auto ret = ep->checkBreak68K(addr); ~ret)\n"
+        o << "                return ret;\n"
+        o << "            return callfrom68K::Invoker<#{sig}, #{logcc}>::invokeFrom68K(addr,\n"
+        o << "                logging::makeLoggedFunction<#{logcc}>(ep->name, f));\n"
+        o << "        })));\n"
+        o << "}\n\n"
+        o
     end
      
     def generate_preamble(header)
@@ -1004,6 +1201,29 @@ class ExecutorGenerator < Generator
     end
 
     def generate_postamble(header)
+        @entries.each do |e|
+            next unless [:pascal, :register, :sub, :notrap].include?(e[:kind])
+            register_upp_candidate(e[:ret], e[:arg_types], e[:cc])
+        end
+
+        module_name = remap_name(header.name)
+        local_reps = {}
+        @upp_pending.each do |c|
+            key = upp_key(c)
+            @upp_callback_keys << key if c[:callback]
+            next if local_reps.key?(key)
+            local_reps[key] = c
+            (@upp_checks_by_module[module_name] ||= []) << c
+
+            if !@upp_reps.key?(key)
+                @upp_reps[key] = c
+                (@upp_defs_by_module[module_name] ||= []) << c
+            end
+        end
+        @upp_pending = []
+
+        @out << "\n// UPP marshalling (definitions in trap_entries/)\n"
+        @out << upp_declarations(local_reps)
         @out << "} /* namespace Executor */"
     end
 
@@ -1044,16 +1264,22 @@ class ExecutorGenerator < Generator
 
         moduleList = []
         entryModules = []
+        generated = []
+        # Pass 1: generate every header so that @upp_callback_keys is complete
+        # before any definition is written.
         defs.topsort.each do |name|
             name2 = remap_name(name)
             moduleList << name2
             header_text = generate_header(defs.headers[name])
-            entries = @entries_for_header
+            generated << [defs.headers[name], name2, header_text, @entries_for_header]
+        end
+        # Pass 2: write the files.
+        generated.each do |header, name2, header_text, entries|
             formatted_file "#{$options.output_dir}/api/#{name2}.h" do |f|
                 f << header_text
             end
             formatted_file "#{$options.output_dir}/structdump/#{name2}.cpp" do |f|
-                f << generate_structdump(defs.headers[name], name2, best)
+                f << generate_structdump(header, name2, best)
             end
             formatted_file "#{$options.output_dir}/trap_entries/#{name2}.cpp" do |f|
                 f << generate_trap_entries(name2, entries)
