@@ -83,6 +83,25 @@
 
 # ####
 
+# Internal to the Sound Manager; documented in Inside Macintosh but absent from
+# Apple's headers.
+- only-for: Executor
+  struct:
+    name: ModifierStub
+
+# ####
+
+- only-for: Executor
+  funptr:
+    return: Boolean
+    args:
+      - type: SndChannelPtr
+      - type: SndCommand*
+      - type: ModifierStub*
+    name: SndModifierUPP
+
+# ####
+
 - enum:
     values:
       - name: nullCmd
