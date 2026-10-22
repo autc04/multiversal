@@ -23,6 +23,14 @@
         value: 67
       - name: accUndo
         value: 68
+      - name: accCut
+        value: 70
+      - name: accCopy
+        value: 71
+      - name: accPaste
+        value: 72
+      - name: accClear
+        value: 73
 
 # ####
 

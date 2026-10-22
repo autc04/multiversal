@@ -136,6 +136,13 @@
 
 - enum:
     values:
+      - name: ioDirMask
+        value: 0x10
+
+# ####
+
+- enum:
+    values:
       - name: badMDBErr
         value: -60
       - name: badMovErr
@@ -2673,6 +2680,34 @@
     variants:
       - PBHOpenDFSync
       - PBHOpenDFAsync
+
+# ####
+
+- struct:
+    members:
+      - name: vMVersion
+        type: INTEGER
+      - name: vMAttrib
+        type: LONGINT
+      - name: vMLocalHand
+        type: Handle
+      - name: vMServerAdr
+        type: LONGINT
+      - name: vMVolumeGrade
+        type: LONGINT
+      - name: vMForeignPrivID
+        type: INTEGER
+    name: GetVolParmsInfoBuffer
+    size: 20
+
+# ####
+
+- enum:
+    values:
+      - name: bHasExtFSVol
+        value: 16
+      - name: bHasDesktopMgr
+        value: 12
 
 # ####
 
