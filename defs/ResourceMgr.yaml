@@ -756,3 +756,33 @@
       - name: len
         type: Size
     name: ResourceDecompressionUPP
+
+# A version 9 `dcmp` (System 7.5.5) starts with the offsets of three entry
+# points: init(header), decompress(source, dest, header) and cleanup(header),
+# all of which are handed the resource's header.  Executor-internal; there is
+# no public Apple name for them.
+- only-for: Executor
+  funptr:
+    args:
+      - name: header
+        type: Ptr
+    name: ResourceDecompressionV9InitUPP
+
+- only-for: Executor
+  funptr:
+    return: INTEGER
+    args:
+      - name: source
+        type: Ptr
+      - name: dest
+        type: Ptr
+      - name: header
+        type: Ptr
+    name: ResourceDecompressionV9UPP
+
+- only-for: Executor
+  funptr:
+    args:
+      - name: header
+        type: Ptr
+    name: ResourceDecompressionV9CleanupUPP
