@@ -169,15 +169,16 @@ class CIncludesGenerator < Generator
             args = args[0..-nbits-1]
         end
 
-        declare_trapnum(name, fun["trap"] | trapbits) if fun["trap"] and not fun["selector"]
-        
+        trap = fun["trap"]
+        declare_trap = true
         if fun["m68k-inline"] then
             m68kinlines = fun["m68k-inline"]
         else
             m68kinlines = []
-
+            
             dispatcher = (fun["dispatcher"] and $global_name_map[fun["dispatcher"]]["dispatcher"])
             if dispatcher then
+                declare_trap = false
                 sel = Integer(fun["selector"])
                 case dispatcher["selector-location"]
                 when "D0W", "D0<0xFF>", "D0<0xF>"
@@ -197,14 +198,17 @@ class CIncludesGenerator < Generator
                 when "StackL"
                     m68kinlines << 0x2F3C << (sel >> 16) << (sel & 0xFFFF)
                 when "TrapBits"
+                    trapbits |= sel
+                    declare_trap = sel != 0
                 else
                     complex = true
                 end
-                m68kinlines << ((fun["trap"] || dispatcher["trap"]) | trapbits)
-            else
-                m68kinlines << (fun["trap"] | trapbits) if fun["trap"]
+                trap = fun["trap"] || dispatcher["trap"]
             end
+            m68kinlines << (trap | trapbits) if trap
         end
+        
+        declare_trapnum(name, trap | trapbits) if trap and declare_trap
         
         m68kinlines = m68kinlines.map {|x| hexlit(x)}
         
